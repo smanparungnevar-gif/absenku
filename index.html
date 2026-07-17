@@ -462,6 +462,84 @@
                     <div class="text-center py-8 text-slate-400 text-xs">Tidak ada pengajuan izin tertunda.</div>
                 </div>
             </div>
+
+            <!-- Rekap Panel Grid Sejajar -->
+            <div class="grid grid-cols-1 gap-4">
+                <!-- Rekap Kehadiran Hari Ini -->
+                <div class="bg-white p-4 rounded-3xl border border-slate-100 shadow-sm space-y-3">
+                    <div class="flex justify-between items-center border-b border-slate-100 pb-2">
+                        <h4 class="text-xs font-bold text-slate-550 uppercase tracking-wider flex items-center gap-1.5">
+                            <i class="fa-solid fa-clipboard-user text-emerald-600"></i> Rekap Kehadiran Hari Ini
+                        </h4>
+                        <span id="rekap-today-str" class="text-[9px] bg-emerald-650 text-white px-2.5 py-0.5 rounded-full font-extrabold uppercase">Hari Ini</span>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-2 text-xs">
+                        <!-- Hadir -->
+                        <div class="bg-emerald-50/50 p-2.5 rounded-2xl border border-emerald-100 flex items-center justify-between">
+                            <div>
+                                <span class="text-[10px] text-emerald-800 font-extrabold block uppercase tracking-wider">Hadir</span>
+                                <span id="rekap-count-hadir" class="text-sm font-black text-slate-800">0 siswa</span>
+                            </div>
+                            <i class="fa-solid fa-user-check text-emerald-600 text-lg opacity-80"></i>
+                        </div>
+                        <!-- Sakit -->
+                        <div class="bg-amber-50/50 p-2.5 rounded-2xl border border-amber-100 flex items-center justify-between">
+                            <div>
+                                <span class="text-[10px] text-amber-800 font-extrabold block uppercase tracking-wider">Sakit</span>
+                                <span id="rekap-count-sakit" class="text-sm font-black text-slate-800">0 siswa</span>
+                            </div>
+                            <i class="fa-solid fa-house-medical text-amber-600 text-lg opacity-80"></i>
+                        </div>
+                        <!-- Izin Tidak Masuk -->
+                        <div class="bg-indigo-50/50 p-2.5 rounded-2xl border border-indigo-100 flex items-center justify-between">
+                            <div>
+                                <span class="text-[10px] text-indigo-800 font-extrabold block uppercase tracking-wider">Izin Tidak Masuk</span>
+                                <span id="rekap-count-izin" class="text-sm font-black text-slate-800">0 siswa</span>
+                            </div>
+                            <i class="fa-solid fa-envelope text-indigo-600 text-lg opacity-80"></i>
+                        </div>
+                        <!-- Izin Terlambat -->
+                        <div class="bg-sky-50/50 p-2.5 rounded-2xl border border-sky-100 flex items-center justify-between">
+                            <div>
+                                <span class="text-[10px] text-sky-800 font-extrabold block uppercase tracking-wider">Izin Terlambat</span>
+                                <span id="rekap-count-terlambat" class="text-sm font-black text-slate-800">0 siswa</span>
+                            </div>
+                            <i class="fa-solid fa-clock-rotate-left text-sky-600 text-lg opacity-80"></i>
+                        </div>
+                        <!-- Izin Pulang Cepat -->
+                        <div class="col-span-2 bg-rose-50/40 p-2.5 rounded-2xl border border-rose-100 flex items-center justify-between">
+                            <div>
+                                <span class="text-[10px] text-rose-800 font-extrabold block uppercase tracking-wider">Izin Pulang Cepat</span>
+                                <span id="rekap-count-pulangcepat" class="text-sm font-black text-slate-800">0 siswa</span>
+                            </div>
+                            <i class="fa-solid fa-person-walking-arrow-right text-rose-600 text-lg opacity-80"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Rekap Perizinan -->
+                <div class="bg-white p-4 rounded-3xl border border-slate-100 shadow-sm space-y-3">
+                    <div class="flex justify-between items-center border-b border-slate-100 pb-2">
+                        <h4 class="text-xs font-bold text-slate-550 uppercase tracking-wider flex items-center gap-1.5">
+                            <i class="fa-solid fa-folder-open text-indigo-600"></i> Rekap Perizinan Kelas
+                        </h4>
+                    </div>
+                    
+                    <!-- Kategori Filters -->
+                    <div class="flex gap-1 bg-slate-100 p-1 rounded-2xl text-[10px] font-bold">
+                        <button type="button" onclick="setWaliRekapIzinFilter('Semua')" id="wali-rekap-f-semua" class="flex-1 py-1.5 text-center bg-white rounded-xl shadow-sm text-slate-800">Semua</button>
+                        <button type="button" onclick="setWaliRekapIzinFilter('Menunggu')" id="wali-rekap-f-menunggu" class="flex-1 py-1.5 text-center rounded-xl text-amber-600">Menunggu</button>
+                        <button type="button" onclick="setWaliRekapIzinFilter('Disetujui')" id="wali-rekap-f-disetujui" class="flex-1 py-1.5 text-center rounded-xl text-emerald-600">Disetujui</button>
+                        <button type="button" onclick="setWaliRekapIzinFilter('Ditolak')" id="wali-rekap-f-ditolak" class="flex-1 py-1.5 text-center rounded-xl text-rose-600">Tolak</button>
+                    </div>
+
+                    <!-- List Container -->
+                    <div id="wali-rekap-izin-list" class="space-y-2.5 max-h-60 overflow-y-auto pr-1 text-xs">
+                        <div class="text-center py-4 text-slate-400">Memuat rekap perizinan...</div>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <!-- 3C. VIEW MONITORING GURU WALI -->
@@ -1019,8 +1097,8 @@
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwW679461_MOCK_URL_REPLACE_THIS/exec";
         
         // Konfigurasi Geofencing SMAN 1 Parung
-        const SCHOOL_LAT = -6.437065476066256; 
-        const SCHOOL_LNG = 106.71110028528796;
+        const SCHOOL_LAT = -6.4258; 
+        const SCHOOL_LNG = 106.7322;
         const ABSENCE_RADIUS_METERS = 100;
 
         // STATE UTAMA
@@ -1463,6 +1541,8 @@
                 if (isWali) {
                     document.getElementById('view-wali-izin').classList.remove('hidden');
                     renderWaliIzinApprovalList();
+                    updateWaliRekapKehadiranCounters();
+                    renderWaliRekapIzinList();
                 } else {
                     document.getElementById('view-izin').classList.remove('hidden');
                     renderRiwayatIzin();
@@ -2363,6 +2443,8 @@
                 localStorage.setItem('local_offline_db', JSON.stringify(localDb));
                 showToast(`Izin berhasil ${status}!`);
                 renderWaliIzinApprovalList();
+                updateWaliRekapKehadiranCounters();
+                renderWaliRekapIzinList();
                 if (!isMockUrl()) {
                     fetch(`${scriptUrl}?action=updateStatusIzin`, {
                         method: 'POST',
@@ -2375,6 +2457,123 @@
                 }
             } else {
                 showToast("Data izin tidak ditemukan.");
+            }
+        }
+
+        let waliRekapIzinFilterActive = 'Semua';
+
+        function setWaliRekapIzinFilter(status) {
+            waliRekapIzinFilterActive = status;
+            
+            const btnSemua = document.getElementById('wali-rekap-f-semua');
+            const btnMenunggu = document.getElementById('wali-rekap-f-menunggu');
+            const btnDisetujui = document.getElementById('wali-rekap-f-disetujui');
+            const btnDitolak = document.getElementById('wali-rekap-f-ditolak');
+            
+            if (btnSemua) btnSemua.className = "flex-1 py-1.5 text-center rounded-xl " + (status === 'Semua' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-550 hover:text-slate-800');
+            if (btnMenunggu) btnMenunggu.className = "flex-1 py-1.5 text-center rounded-xl " + (status === 'Menunggu' ? 'bg-white text-amber-600 shadow-sm' : 'text-slate-550 hover:text-slate-800');
+            if (btnDisetujui) btnDisetujui.className = "flex-1 py-1.5 text-center rounded-xl " + (status === 'Disetujui' ? 'bg-white text-emerald-600 shadow-sm' : 'text-slate-550 hover:text-slate-800');
+            if (btnDitolak) btnDitolak.className = "flex-1 py-1.5 text-center rounded-xl " + (status === 'Ditolak' ? 'bg-white text-rose-600 shadow-sm' : 'text-slate-550 hover:text-slate-800');
+            
+            renderWaliRekapIzinList();
+        }
+
+        function renderWaliRekapIzinList() {
+            const container = document.getElementById('wali-rekap-izin-list');
+            if (!container || !currentSiswa) return;
+            const targetKelas = currentSiswa.kelas;
+            
+            const muridKelas = localDb.siswa.filter(s => s.kelas === targetKelas);
+            const muridNisMap = {};
+            muridKelas.forEach(m => { muridNisMap[m.nis] = m.nama; });
+
+            let listIzin = localDb.izin.filter(i => muridNisMap[i.nis]);
+
+            if (waliRekapIzinFilterActive !== 'Semua') {
+                listIzin = listIzin.filter(i => i.status === waliRekapIzinFilterActive);
+            }
+
+            if (listIzin.length === 0) {
+                container.innerHTML = `<div class="text-center py-4 text-slate-400">Tidak ada data perizinan (${waliRekapIzinFilterActive})</div>`;
+                return;
+            }
+
+            container.innerHTML = listIzin.map(item => {
+                const namaSiswa = muridNisMap[item.nis] || "Siswa";
+                let badgeClass = "bg-amber-50 text-amber-700 border-amber-200";
+                if (item.status === 'Disetujui') badgeClass = "bg-emerald-50 text-emerald-700 border-emerald-200";
+                if (item.status === 'Ditolak') badgeClass = "bg-rose-50 text-rose-700 border-rose-200";
+
+                return `
+                    <div class="bg-slate-50 p-2.5 rounded-2xl border border-slate-100 flex justify-between items-start gap-2">
+                        <div>
+                            <p class="font-bold text-slate-800 leading-tight">${namaSiswa}</p>
+                            <p class="text-[9px] text-slate-500 mt-0.5">Kategori: <span class="font-bold text-indigo-700">${item.jenis}</span></p>
+                            <p class="text-[9px] text-slate-400 mt-0.5">Alasan: "${item.keterangan || '-'}"</p>
+                            <p class="text-[8px] text-slate-400 font-semibold mt-1"><i class="fa-regular fa-calendar"></i> ${item.tanggal}</p>
+                        </div>
+                        <span class="px-2 py-0.5 rounded text-[8px] font-bold border shrink-0 ${badgeClass}">${item.status}</span>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function updateWaliRekapKehadiranCounters() {
+            if (!currentSiswa) return;
+            const targetKelas = currentSiswa.kelas;
+            const todayStr = new Date().toISOString().slice(0, 10);
+
+            const muridKelas = localDb.siswa.filter(s => s.kelas === targetKelas);
+            const muridNisList = muridKelas.map(s => s.nis);
+
+            // 1. Hadir - Siswa yang sudah absen 'masuk' hari ini
+            const countHadir = localDb.presensi.filter(p => p.tanggal === todayStr && p.tipe === 'masuk' && muridNisList.includes(p.nis)).length;
+
+            // 2. Sakit - Siswa yang mengajukan izin sakit aktif hari ini
+            const countSakit = localDb.izin.filter(i => 
+                muridNisList.includes(i.nis) && 
+                i.jenis === 'Sakit' && 
+                isTodayInRange(i.tanggal, todayStr)
+            ).length;
+
+            // 3. Izin - Siswa yang mengajukan izin tidak masuk aktif hari ini
+            const countIzin = localDb.izin.filter(i => 
+                muridNisList.includes(i.nis) && 
+                i.jenis === 'Izin' && 
+                isTodayInRange(i.tanggal, todayStr)
+            ).length;
+
+            // 4. Izin Terlambat - Siswa yang mengajukan izin terlambat masuk aktif hari ini
+            const countTerlambat = localDb.izin.filter(i => 
+                muridNisList.includes(i.nis) && 
+                i.jenis === 'Izin Terlambat Masuk' && 
+                isTodayInRange(i.tanggal, todayStr)
+            ).length;
+
+            // 5. Izin Pulang Cepat - Siswa yang mengajukan izin pulang cepat aktif hari ini
+            const countPulangCepat = localDb.izin.filter(i => 
+                muridNisList.includes(i.nis) && 
+                i.jenis === 'Izin Pulang Cepat' && 
+                isTodayInRange(i.tanggal, todayStr)
+            ).length;
+
+            // Update DOM
+            const elHadir = document.getElementById('rekap-count-hadir');
+            const elSakit = document.getElementById('rekap-count-sakit');
+            const elIzin = document.getElementById('rekap-count-izin');
+            const elTerlambat = document.getElementById('rekap-count-terlambat');
+            const elPulangCepat = document.getElementById('rekap-count-pulangcepat');
+            const elTodayStr = document.getElementById('rekap-today-str');
+
+            if (elHadir) elHadir.innerText = `${countHadir} siswa`;
+            if (elSakit) elSakit.innerText = `${countSakit} siswa`;
+            if (elIzin) elIzin.innerText = `${countIzin} siswa`;
+            if (elTerlambat) elTerlambat.innerText = `${countTerlambat} siswa`;
+            if (elPulangCepat) elPulangCepat.innerText = `${countPulangCepat} siswa`;
+
+            if (elTodayStr) {
+                const todayObj = new Date();
+                elTodayStr.innerText = todayObj.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' });
             }
         }
 
@@ -2843,6 +3042,10 @@
                     renderSiswaNilai();
                     populateWaliNilaiJudulFilter();
                     renderWaliNilaiSiswa();
+                    if (currentSiswa && currentSiswa.role === 'walikelas') {
+                        updateWaliRekapKehadiranCounters();
+                        renderWaliRekapIzinList();
+                    }
                     syncIcons.forEach(icon => icon.classList.remove('animate-spin'));
                     if (showFeedback) showToast("Menggunakan data demo lokal.");
                 }, 800);
@@ -2871,6 +3074,10 @@
                         renderSiswaNilai();
                         populateWaliNilaiJudulFilter();
                         renderWaliNilaiSiswa();
+                        if (currentSiswa && currentSiswa.role === 'walikelas') {
+                            updateWaliRekapKehadiranCounters();
+                            renderWaliRekapIzinList();
+                        }
                         
                         if (showFeedback) {
                             showToast("Sinkronisasi database berhasil!");
@@ -2894,6 +3101,10 @@
                         renderSiswaNilai();
                         populateWaliNilaiJudulFilter();
                         renderWaliNilaiSiswa();
+                        if (currentSiswa && currentSiswa.role === 'walikelas') {
+                            updateWaliRekapKehadiranCounters();
+                            renderWaliRekapIzinList();
+                        }
                     }
                     if (showFeedback) showToast("Koneksi gagal. Menggunakan data offline.");
                 });

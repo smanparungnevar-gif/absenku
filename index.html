@@ -63,18 +63,13 @@
                     <p class="text-[10px] text-emerald-100">SMAN 1 Parung</p>
                 </div>
             </div>
-            <div id="status-koneksi-badge" onclick="openConfigModal()" class="cursor-pointer text-[10px] bg-emerald-800 px-3 py-1 rounded-full text-emerald-100 font-bold flex items-center gap-1.5 transition-all">
+            <div id="status-koneksi-badge" class="text-[10px] bg-emerald-800 px-3 py-1 rounded-full text-emerald-100 font-bold flex items-center gap-1.5 transition-all">
                 <i class="fa-solid fa-cloud"></i> Terhubung
             </div>
         </header>
 
         <!-- 1. SCREEN LOGIN -->
         <div id="view-login" class="flex-1 flex flex-col justify-between p-6 bg-gradient-to-b from-emerald-50/50 to-white relative overflow-y-auto">
-            <div class="absolute top-4 right-4 z-50">
-                <button onclick="openConfigModal()" class="w-10 h-10 bg-white/80 hover:bg-white rounded-2xl flex items-center justify-center text-slate-600 shadow-md transition-all border border-slate-100" title="Atur Google Script URL">
-                    <i class="fa-solid fa-gear text-lg"></i>
-                </button>
-            </div>
 
             <div class="flex-1 flex flex-col justify-center items-center py-8">
                 <div class="w-24 h-24 bg-white rounded-3xl p-3 shadow-xl flex items-center justify-center mb-6 border border-slate-50">
@@ -91,25 +86,6 @@
                     <button type="button" onclick="switchRole('walikelas')" id="btn-role-walikelas" class="flex-1 py-3 rounded-xl text-center transition-all duration-300 text-slate-500 hover:text-slate-800">
                         <i class="fa-solid fa-chalkboard-user mr-1.5"></i> Wali Kelas
                     </button>
-                </div>
-
-                <!-- PILIHAN MODE SISTEM -->
-                <div class="w-full bg-slate-100 p-1 rounded-2xl flex mb-4 text-[11px] font-bold shadow-inner">
-                    <button type="button" onclick="setSystemMode('offline')" id="btn-mode-offline" class="flex-1 py-2 rounded-xl text-center transition-all bg-white text-slate-700 shadow-sm">
-                        <i class="fa-solid fa-plane-slash mr-1"></i> Demo Offline
-                    </button>
-                    <button type="button" onclick="setSystemMode('online')" id="btn-mode-online" class="flex-1 py-2 rounded-xl text-center transition-all text-slate-500 hover:text-slate-855">
-                        <i class="fa-solid fa-wifi mr-1"></i> Online Realtime
-                    </button>
-                </div>
-
-                <!-- FORM INPUT URL GOOGLE SCRIPT -->
-                <div id="container-input-url" class="hidden w-full bg-emerald-50/60 border border-emerald-100 p-3.5 rounded-2xl mb-4 space-y-1.5">
-                    <div class="flex justify-between items-center">
-                        <label class="block text-[10px] font-extrabold text-emerald-800 uppercase tracking-wider">URL Google Apps Script</label>
-                        <span class="text-[9px] text-emerald-600 bg-white px-2.5 py-0.5 rounded-full font-bold">Terhubung Realtime</span>
-                    </div>
-                    <input type="text" id="login-script-url" oninput="syncScriptUrlFromLogin()" placeholder="https://script.google.com/macros/s/.../exec" class="w-full px-3.5 py-2.5 bg-white border border-emerald-200 rounded-xl outline-none focus:ring-2 focus:ring-emerald-500 text-[10px] font-mono shadow-sm">
                 </div>
 
                 <!-- FORM INPUT LOGIN -->
@@ -1056,45 +1032,14 @@
         </div>
     </div>
 
-    <!-- MODAL CONFIGURATION SETTING -->
-    <div id="config-modal" class="hidden fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4 backdrop-blur-sm">
-        <div class="bg-white rounded-3xl p-6 w-full max-w-sm space-y-4 shadow-2xl">
-            <div class="flex justify-between items-center border-b border-slate-100 pb-2">
-                <h3 class="font-bold text-sm text-slate-800 flex items-center gap-2">
-                    <i class="fa-solid fa-link text-emerald-600"></i> Konfigurasi Google Script
-                </h3>
-                <button type="button" onclick="closeConfigModal()" class="text-slate-400 text-lg hover:text-slate-600">
-                    <i class="fa-solid fa-xmark"></i>
-                </button>
-            </div>
-            
-            <div class="space-y-2 text-xs">
-                <p class="text-slate-500 leading-relaxed">https://script.google.com/macros/s/AKfycbzc59hTelanRoAHW6t8xjGPdsMqSlTuWAHfOHkP-X3VePXQwTSlmbaC3_ZYYA2IhnC9/exec</p>
-                <div>
-                    <label class="block font-bold text-slate-600 mb-1">URL Web App (Google Apps Script)</label>
-                    <input type="text" id="config-script-url" class="w-full p-3 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-emerald-500 font-mono text-[11px]" placeholder="https://script.google.com/macros/s/.../exec">
-                </div>
-            </div>
-            
-            <div class="flex gap-2">
-                <button onclick="resetConfigUrl()" class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-3 rounded-xl text-xs transition active:scale-95">
-                    Reset Default
-                </button>
-                <button onclick="saveConfigUrl()" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-xl text-xs transition active:scale-95 shadow-md shadow-emerald-600/20">
-                    Simpan Setelan
-                </button>
-            </div>
-        </div>
-    </div>
-
     <!-- TOAST NOTIFICATION -->
     <div id="toast" class="hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-slate-900 text-white px-5 py-3 rounded-full text-xs shadow-xl flex items-center gap-2 max-w-xs text-center transition-all duration-300">
         <span id="toast-message">Notifikasi</span>
     </div>
 
     <script>
-        // URL Google Apps Script Default
-        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwW679461_MOCK_URL_REPLACE_THIS/exec";
+        // URL Google Apps Script (hardcoded — tidak perlu diinput manual oleh siswa/wali kelas)
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzc59hTelanRoAHW6t8xjGPdsMqSlTuWAHfOHkP-X3VePXQwTSlmbaC3_ZYYA2IhnC9/exec";
         
         // Konfigurasi Geofencing SMAN 1 Parung
         const SCHOOL_LAT = -6.4258; 
@@ -1127,60 +1072,34 @@
             nilai: []
         };
 
+        // Karena SCRIPT_URL sudah di-hardcode dengan URL Apps Script yang sebenarnya,
+        // aplikasi selalu berjalan mode Online Realtime. Fungsi ini hanya jadi
+        // pengaman kalau suatu saat URL belum diganti dari template.
         function isMockUrl() {
-            const systemMode = localStorage.getItem('sigesit_system_mode') || 'offline';
-            if (systemMode === 'offline') return true;
-            return !scriptUrl || scriptUrl.includes("MOCK_URL_REPLACE_THIS");
+            return !scriptUrl || scriptUrl.includes("MOCK_URL_REPLACE_THIS") || scriptUrl.trim() === "";
         }
 
-        function setSystemMode(mode) {
-            localStorage.setItem('sigesit_system_mode', mode);
-            const btnOffline = document.getElementById('btn-mode-offline');
-            const btnOnline = document.getElementById('btn-mode-online');
-            const containerUrl = document.getElementById('container-input-url');
-            
-            if (mode === 'online') {
-                if (btnOnline) btnOnline.className = "flex-1 py-2 rounded-xl text-center transition-all bg-emerald-600 text-white shadow-sm";
-                if (btnOffline) btnOffline.className = "flex-1 py-2 rounded-xl text-center transition-all text-slate-500 hover:text-slate-855";
-                if (containerUrl) containerUrl.classList.remove('hidden');
-                
-                const savedUrl = localStorage.getItem('sigesit_script_url');
-                if (savedUrl && savedUrl !== SCRIPT_URL) {
-                    scriptUrl = savedUrl;
-                    document.getElementById('login-script-url').value = savedUrl;
+        function updateIntegrationStatus() {
+            const statusLabel = document.getElementById('status-koneksi-badge');
+            if (statusLabel) {
+                if (isMockUrl()) {
+                    statusLabel.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> Demo Offline';
+                    statusLabel.className = "text-[10px] bg-amber-600 px-3 py-1 rounded-full text-white font-bold flex items-center gap-1.5";
+                } else {
+                    statusLabel.innerHTML = '<i class="fa-solid fa-cloud"></i> Online';
+                    statusLabel.className = "text-[10px] bg-emerald-800 px-3 py-1 rounded-full text-emerald-100 font-bold flex items-center gap-1.5 transition-all";
                 }
-            } else {
-                if (btnOffline) btnOffline.className = "flex-1 py-2 rounded-xl text-center transition-all bg-white text-slate-700 shadow-sm";
-                if (btnOnline) btnOnline.className = "flex-1 py-2 rounded-xl text-center transition-all text-slate-500 hover:text-slate-855";
-                if (containerUrl) containerUrl.classList.add('hidden');
-            }
-            updateIntegrationStatus();
-        }
-
-        function syncScriptUrlFromLogin() {
-            const val = document.getElementById('login-script-url').value.trim();
-            if (val) {
-                scriptUrl = val;
-                localStorage.setItem('sigesit_script_url', val);
-                updateIntegrationStatus();
             }
         }
 
         window.onload = function() {
-            const savedUrl = localStorage.getItem('sigesit_script_url');
-            if (savedUrl) {
-                scriptUrl = savedUrl;
-            }
-            
+            // scriptUrl selalu memakai SCRIPT_URL yang sudah di-hardcode di atas.
             const storedLocal = localStorage.getItem('local_offline_db');
             if (!storedLocal) {
                 initializeLocalDatabaseWithDemoData();
             } else {
                 localDb = JSON.parse(storedLocal);
             }
-
-            const savedMode = localStorage.getItem('sigesit_system_mode') || 'offline';
-            setSystemMode(savedMode);
 
             startClock();
             initLocationTracking();
@@ -1221,19 +1140,6 @@
             };
             localStorage.setItem('local_offline_db', JSON.stringify(sampleDB));
             localDb = sampleDB;
-        }
-
-        function updateIntegrationStatus() {
-            const statusLabel = document.getElementById('status-koneksi-badge');
-            if (statusLabel) {
-                if (isMockUrl()) {
-                    statusLabel.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> Demo Offline';
-                    statusLabel.className = "text-[10px] bg-amber-600 px-3 py-1 rounded-full text-white font-bold flex items-center gap-1.5 cursor-pointer";
-                } else {
-                    statusLabel.innerHTML = '<i class="fa-solid fa-cloud"></i> Online';
-                    statusLabel.className = "text-[10px] bg-emerald-800 px-3 py-1 rounded-full text-emerald-100 font-bold flex items-center gap-1.5 transition-all cursor-pointer";
-                }
-            }
         }
 
         function populateTanggalOptions() {
@@ -3256,38 +3162,6 @@
                 setTimeout(() => { initDispenMap(); }, 200);
             } else {
                 dispenMapContainer.classList.add('hidden');
-            }
-        }
-
-        // CONFIG MODAL SYSTEM CONTROL
-        function openConfigModal() {
-            document.getElementById('config-modal').classList.remove('hidden');
-            document.getElementById('config-script-url').value = scriptUrl;
-        }
-
-        function closeConfigModal() {
-            document.getElementById('config-modal').classList.add('hidden');
-        }
-
-        function resetConfigUrl() {
-            scriptUrl = SCRIPT_URL;
-            localStorage.removeItem('sigesit_script_url');
-            document.getElementById('config-script-url').value = SCRIPT_URL;
-            showToast("URL dikembalikan ke default.");
-            updateIntegrationStatus();
-        }
-
-        function saveConfigUrl() {
-            const val = document.getElementById('config-script-url').value.trim();
-            if (val) {
-                scriptUrl = val;
-                localStorage.setItem('sigesit_script_url', val);
-                showToast("URL kustom disimpan!");
-                closeConfigModal();
-                updateIntegrationStatus();
-                fetchDatabaseState();
-            } else {
-                showToast("URL tidak boleh kosong!");
             }
         }
 

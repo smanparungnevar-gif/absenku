@@ -1645,8 +1645,12 @@
             const btnMasuk = document.getElementById('btn-presensi-masuk');
             const textMasukEl = document.getElementById('time-presensi-masuk');
             const masukBukaMenit = getMasukBukaMenit(currentSiswa.kelas);
-            if (btnMasuk && !statusAbsen.masuk) {
-                if (masukBukaMenit !== null && currentMinutes < masukBukaMenit) {
+            if (btnMasuk) {
+                if (statusAbsen.masuk) {
+                    // Sudah presensi masuk hari ini - status "DONE", tombol tetap terkunci
+                    // secara permanen (tidak boleh aktif lagi walau di-refresh/logout-login).
+                    btnMasuk.disabled = true;
+                } else if (masukBukaMenit !== null && currentMinutes < masukBukaMenit) {
                     btnMasuk.disabled = true;
                     if (textMasukEl) textMasukEl.innerText = `Dibuka pukul ${formatMenitKeJam(masukBukaMenit)} WIB`;
                 } else {
@@ -1879,6 +1883,9 @@
                 if (status.masuk) {
                     // Presensi masuk sudah dilakukan hari ini: lonceng menampilkan status DONE
                     // dan terkunci total sampai jadwal presensi masuk dibuka kembali (hari berikutnya).
+                    // Kondisi ini SELALU dihitung ulang dari data presensi yang tersimpan di localStorage,
+                    // sehingga status "DONE" ini tetap bertahan walau halaman di-refresh atau
+                    // pengguna logout lalu login kembali di hari yang sama.
                     btnMasuk.className = "w-16 h-16 bg-slate-100 border border-emerald-500 text-emerald-600 rounded-full flex items-center justify-center my-2 disabled:opacity-100";
                     btnMasuk.disabled = true;
                     iconMasuk.className = "fa-solid fa-circle-check text-2xl text-emerald-500 animate-none";
@@ -1914,7 +1921,8 @@
             if (btnPulang && iconPulang && textPulang) {
                 if (status.pulang) {
                     // Presensi pulang sudah dilakukan hari ini: lonceng menampilkan status DONE
-                    // dan terkunci sampai hari berikutnya.
+                    // dan terkunci sampai hari berikutnya. Sama seperti presensi masuk, status ini
+                    // dihitung ulang dari localStorage sehingga tetap bertahan walau refresh/logout.
                     btnPulang.className = "w-16 h-16 bg-slate-100 border border-orange-500 text-orange-600 rounded-full flex items-center justify-center my-2 disabled:opacity-100";
                     btnPulang.disabled = true;
                     iconPulang.className = "fa-solid fa-circle-check text-2xl text-orange-500";
@@ -3113,7 +3121,22 @@
                     syncIcons.forEach(icon => icon.classList.remove('animate-spin'));
                     if (data.success) {
                         localDb.siswa = data.siswa_all || [];
-                        localDb.presensi = data.presensi || [];
+
+                        // ==============================================================
+                        // FIX: Merge presensi dari server dengan presensi lokal, bukan
+                        // menimpa (overwrite) total. Ini mencegah status "Sudah Presensi"
+                        // (lonceng dicentang/DONE dan terkunci) hilang/reset ketika
+                        // sinkronisasi ke Google Sheets belum sempat mencatat baris yang
+                        // baru saja ditambahkan (delay/latensi Apps Script). Dengan begini,
+                        // status presensi masuk & pulang hari ini tetap konsisten walaupun
+                        // pengguna logout lalu login kembali, atau me-refresh halaman.
+                        // ==============================================================
+                        const serverPresensi = data.presensi || [];
+                        const localOnlyPresensi = localDb.presensi.filter(lp =>
+                            !serverPresensi.some(sp => sp.nis === lp.nis && sp.tanggal === lp.tanggal && sp.tipe === lp.tipe)
+                        );
+                        localDb.presensi = [...serverPresensi, ...localOnlyPresensi];
+
                         localDb.izin = data.izin || [];
                         localDb.poin = data.poin || [];
                         localDb.nilai = data.nilai || []; 

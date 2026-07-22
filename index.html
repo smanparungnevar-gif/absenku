@@ -188,6 +188,9 @@
                         <span id="status-terlambat-masuk-badge" class="hidden text-[9px] text-rose-600 font-extrabold bg-rose-50 px-2.5 py-0.5 rounded-full mt-1.5 border border-rose-100">
                             <i class="fa-solid fa-circle-exclamation"></i> Terlambat
                         </span>
+                        <span id="badge-done-masuk" class="hidden text-[9px] text-emerald-600 font-extrabold bg-emerald-50 px-2.5 py-0.5 rounded-full mt-1.5 border border-emerald-100">
+                            <i class="fa-solid fa-check"></i> DONE
+                        </span>
                     </div>
                 </div>
 
@@ -205,6 +208,9 @@
                     <div class="text-center w-full mt-2 min-h-[48px] flex flex-col justify-start items-center">
                         <p class="text-xs font-extrabold text-slate-700">Presensi Pulang</p>
                         <p id="time-presensi-pulang" class="text-[10px] text-slate-455 mt-0.5 font-medium">Belum Presensi</p>
+                        <span id="badge-done-pulang" class="hidden text-[9px] text-emerald-600 font-extrabold bg-emerald-50 px-2.5 py-0.5 rounded-full mt-1.5 border border-emerald-100">
+                            <i class="fa-solid fa-check"></i> DONE
+                        </span>
                     </div>
                 </div>
             </div>
@@ -1428,6 +1434,10 @@
                     document.getElementById('profil-foto').src = currentSiswa.foto;
                 }
                 updateLabelJadwalUI();
+                // Tampilkan segera status presensi hari ini dari data lokal yang tersimpan
+                // agar waktu presensi masuk/pulang tidak "hilang" saat aplikasi dibuka kembali,
+                // tanpa perlu menunggu proses sinkronisasi server selesai terlebih dahulu.
+                updateHomePresensiUI();
                 switchView('home');
             }
 
@@ -1496,6 +1506,7 @@
                 } else {
                     document.getElementById('view-home').classList.remove('hidden');
                     renderLivePresensiKelas();
+                    updateHomePresensiUI();
                 }
                 document.getElementById('nav-home').className = "flex flex-col items-center gap-1 text-emerald-600";
             } else if (target === 'izin') {
@@ -1608,15 +1619,25 @@
             }
 
             const btnPulang = document.getElementById('btn-presensi-pulang');
+            const textPulangEl = document.getElementById('time-presensi-pulang');
             const statusAbsen = checkHariIniAbsenStatus(todayStr);
 
             if (btnPulang) {
                 if (statusAbsen.pulang) {
+                    // Sudah presensi pulang - status "DONE", tombol tetap terkunci.
                     btnPulang.disabled = true;
                 } else if (currentMinutes >= allowedPulangMinutes) {
+                    // Sudah melewati batas/waktu buka pulang - lonceng terbuka (bisa absen).
                     btnPulang.disabled = false;
+                    if (textPulangEl && textPulangEl.innerText.startsWith('Terkunci hingga')) {
+                        textPulangEl.innerText = "Belum Presensi";
+                    }
                 } else {
+                    // Masih sebelum waktu pulang dibuka - lonceng pulang terkunci.
                     btnPulang.disabled = true;
+                    if (textPulangEl) {
+                        textPulangEl.innerText = `Terkunci hingga ${formatMenitKeJam(allowedPulangMinutes)} WIB`;
+                    }
                 }
             }
 
@@ -1686,6 +1707,31 @@
                 const masukBukaMenit = getMasukBukaMenit(currentSiswa.kelas);
                 if (masukBukaMenit !== null && currentMenitSekarang < masukBukaMenit) {
                     showToast(`Presensi masuk belum dibuka. Mulai pukul ${formatMenitKeJam(masukBukaMenit)} WIB.`);
+                    return;
+                }
+            }
+            if (type === 'pulang') {
+                const now = new Date();
+                const currentMenitSekarang = now.getHours() * 60 + now.getMinutes();
+                const todayStr = now.toISOString().slice(0, 10);
+                const hasDispenActive = hasApprovedDispenToday();
+                const izinPulangCepat = localDb.izin.find(i =>
+                    i.nis === currentSiswa.nis &&
+                    i.jenis === 'Izin Pulang Cepat' &&
+                    i.status === 'Disetujui' &&
+                    i.tanggal === todayStr
+                );
+                let allowedPulangMinutes = getPulangBukaMenit(currentSiswa.kelas, 15 * 60);
+                if (hasDispenActive) {
+                    allowedPulangMinutes = 0;
+                } else if (izinPulangCepat && izinPulangCepat.waktu && izinPulangCepat.waktu !== '-') {
+                    const [pH, pM] = izinPulangCepat.waktu.split(':').map(Number);
+                    if (!isNaN(pH) && !isNaN(pM)) {
+                        allowedPulangMinutes = pH * 60 + pM;
+                    }
+                }
+                if (currentMenitSekarang < allowedPulangMinutes) {
+                    showToast(`Presensi pulang masih terkunci. Dibuka pukul ${formatMenitKeJam(allowedPulangMinutes)} WIB.`);
                     return;
                 }
             }
@@ -1819,21 +1865,26 @@
         }
 
         function updateHomePresensiUI() {
+            if (!currentSiswa || currentSiswa.role === 'walikelas') return;
             const hariIni = new Date().toISOString().slice(0, 10);
             const status = checkHariIniAbsenStatus(hariIni);
             const btnMasuk = document.getElementById('btn-presensi-masuk');
             const iconMasuk = document.getElementById('icon-masuk');
             const textMasuk = document.getElementById('time-presensi-masuk');
             const bageTerlambatMasuk = document.getElementById('status-terlambat-masuk-badge');
+            const badgeDoneMasuk = document.getElementById('badge-done-masuk');
             const batasMasukMenitSaatIni = getBatasMasukMenit(currentSiswa ? currentSiswa.kelas : null, 6 * 60 + 30);
             
             if (btnMasuk && iconMasuk && textMasuk) {
                 if (status.masuk) {
+                    // Presensi masuk sudah dilakukan hari ini: lonceng menampilkan status DONE
+                    // dan terkunci total sampai jadwal presensi masuk dibuka kembali (hari berikutnya).
                     btnMasuk.className = "w-16 h-16 bg-slate-100 border border-emerald-500 text-emerald-600 rounded-full flex items-center justify-center my-2 disabled:opacity-100";
                     btnMasuk.disabled = true;
                     iconMasuk.className = "fa-solid fa-circle-check text-2xl text-emerald-500 animate-none";
                     textMasuk.className = "text-[10px] text-emerald-600 font-bold mt-0.5";
                     textMasuk.innerText = `Masuk - ${status.masuk.jam} WIB`;
+                    if (badgeDoneMasuk) badgeDoneMasuk.classList.remove('hidden');
                     const [h, m] = status.masuk.jam.split(':').map(Number);
                     if (h * 60 + m > batasMasukMenitSaatIni) {
                         if (bageTerlambatMasuk) bageTerlambatMasuk.classList.remove('hidden');
@@ -1851,24 +1902,32 @@
                     textMasuk.className = "text-[10px] text-slate-400 mt-0.5";
                     textMasuk.innerText = belumDibuka ? `Dibuka pukul ${formatMenitKeJam(masukBukaMenit)} WIB` : "Belum Presensi";
                     if (bageTerlambatMasuk) bageTerlambatMasuk.classList.add('hidden');
+                    if (badgeDoneMasuk) badgeDoneMasuk.classList.add('hidden');
                 }
             }
 
             const btnPulang = document.getElementById('btn-presensi-pulang');
             const iconPulang = document.getElementById('icon-pulang');
             const textPulang = document.getElementById('time-presensi-pulang');
+            const badgeDonePulang = document.getElementById('badge-done-pulang');
             
             if (btnPulang && iconPulang && textPulang) {
                 if (status.pulang) {
+                    // Presensi pulang sudah dilakukan hari ini: lonceng menampilkan status DONE
+                    // dan terkunci sampai hari berikutnya.
                     btnPulang.className = "w-16 h-16 bg-slate-100 border border-orange-500 text-orange-600 rounded-full flex items-center justify-center my-2 disabled:opacity-100";
                     btnPulang.disabled = true;
                     iconPulang.className = "fa-solid fa-circle-check text-2xl text-orange-500";
                     textPulang.className = "text-[10px] text-emerald-600 font-bold mt-0.5";
                     textPulang.innerText = `Pulang - ${status.pulang.jam} WIB`;
+                    if (badgeDonePulang) badgeDonePulang.classList.remove('hidden');
                 } else {
                     iconPulang.className = "fa-solid fa-bell text-2xl";
                     textPulang.className = "text-[10px] text-slate-455 mt-0.5";
                     textPulang.innerText = "Belum Presensi";
+                    if (badgeDonePulang) badgeDonePulang.classList.add('hidden');
+                    // Status kunci/buka tombol pulang (disabled + pesan waktu) dikelola
+                    // secara realtime tiap detik oleh updateClockColorAndButtons().
                 }
             }
         }

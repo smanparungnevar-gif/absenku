@@ -868,6 +868,21 @@
                 </div>
             </div>
 
+            <div id="profil-card-tautan-link" class="bg-white p-4 rounded-3xl border border-slate-100 shadow-sm space-y-3">
+                <h5 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Tautan Link</h5>
+                <div class="space-y-2">
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400">
+                            <i class="fa-solid fa-link"></i>
+                        </span>
+                        <input type="url" id="profil-tautan-link" placeholder="https://contoh-tautan-anda.com" class="w-full pl-11 pr-4 py-3.5 bg-white border border-slate-200 rounded-2xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition text-xs">
+                    </div>
+                    <button onclick="saveTautanLink()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-2xl transition-all text-xs flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-floppy-disk"></i> Simpan Tautan
+                    </button>
+                </div>
+            </div>
+
             <div id="profil-card-alamat-tinggal" class="bg-white p-4 rounded-3xl border border-slate-100 shadow-sm space-y-3">
                 <h5 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Alamat Tempat Tinggal</h5>
                 <div class="space-y-2">
@@ -1448,6 +1463,7 @@
             const rowWali1 = document.getElementById('profil-row-wali-1');
             const rowWali2 = document.getElementById('profil-row-wali-2');
             const mapCard = document.getElementById('profil-card-alamat-tinggal');
+            const tautanCard = document.getElementById('profil-card-tautan-link');
             const profileFotoSiswa = document.getElementById('profil-container-foto-siswa');
             const profileFotoWali = document.getElementById('profil-container-foto-wali');
             const badgeIdentitas = document.getElementById('badge-identitas-user');
@@ -1456,6 +1472,7 @@
                 if (rowWali1) rowWali1.classList.add('hidden');
                 if (rowWali2) rowWali2.classList.add('hidden');
                 if (mapCard) mapCard.classList.add('hidden');
+                if (tautanCard) tautanCard.classList.add('hidden');
                 if (profileFotoSiswa) profileFotoSiswa.classList.add('hidden');
                 if (profileFotoWali) profileFotoWali.classList.remove('hidden');
                 if (badgeIdentitas) {
@@ -1466,6 +1483,7 @@
                 if (rowWali1) rowWali1.classList.remove('hidden');
                 if (rowWali2) rowWali2.classList.remove('hidden');
                 if (mapCard) mapCard.classList.remove('hidden');
+                if (tautanCard) tautanCard.classList.remove('hidden');
                 if (profileFotoSiswa) profileFotoSiswa.classList.remove('hidden');
                 if (profileFotoWali) profileFotoWali.classList.add('hidden');
                 if (badgeIdentitas) {
@@ -1478,6 +1496,9 @@
                 
                 if (currentSiswa.alamat_teks) {
                     document.getElementById('profil-alamat-text').value = currentSiswa.alamat_teks;
+                }
+                if (currentSiswa.tautan_link) {
+                    document.getElementById('profil-tautan-link').value = currentSiswa.tautan_link;
                 }
             }
 
@@ -1881,11 +1902,6 @@
             
             if (btnMasuk && iconMasuk && textMasuk) {
                 if (status.masuk) {
-                    // Presensi masuk sudah dilakukan hari ini: lonceng menampilkan status DONE
-                    // dan terkunci total sampai jadwal presensi masuk dibuka kembali (hari berikutnya).
-                    // Kondisi ini SELALU dihitung ulang dari data presensi yang tersimpan di localStorage,
-                    // sehingga status "DONE" ini tetap bertahan walau halaman di-refresh atau
-                    // pengguna logout lalu login kembali di hari yang sama.
                     btnMasuk.className = "w-16 h-16 bg-slate-100 border border-emerald-500 text-emerald-600 rounded-full flex items-center justify-center my-2 disabled:opacity-100";
                     btnMasuk.disabled = true;
                     iconMasuk.className = "fa-solid fa-circle-check text-2xl text-emerald-500 animate-none";
@@ -1920,9 +1936,6 @@
             
             if (btnPulang && iconPulang && textPulang) {
                 if (status.pulang) {
-                    // Presensi pulang sudah dilakukan hari ini: lonceng menampilkan status DONE
-                    // dan terkunci sampai hari berikutnya. Sama seperti presensi masuk, status ini
-                    // dihitung ulang dari localStorage sehingga tetap bertahan walau refresh/logout.
                     btnPulang.className = "w-16 h-16 bg-slate-100 border border-orange-500 text-orange-600 rounded-full flex items-center justify-center my-2 disabled:opacity-100";
                     btnPulang.disabled = true;
                     iconPulang.className = "fa-solid fa-circle-check text-2xl text-orange-500";
@@ -1934,8 +1947,6 @@
                     textPulang.className = "text-[10px] text-slate-455 mt-0.5";
                     textPulang.innerText = "Belum Presensi";
                     if (badgeDonePulang) badgeDonePulang.classList.add('hidden');
-                    // Status kunci/buka tombol pulang (disabled + pesan waktu) dikelola
-                    // secara realtime tiap detik oleh updateClockColorAndButtons().
                 }
             }
         }
@@ -2459,7 +2470,6 @@
             if (!container || !currentSiswa) return;
             const targetKelas = currentSiswa.kelas;
             
-            // Map items dengan indeks aslinya di localDb.izin agar pencocokan 100% akurat
             const waitingIzin = [];
             localDb.izin.forEach((item, index) => {
                 const murid = localDb.siswa.find(s => s.nis === item.nis);
@@ -2588,38 +2598,32 @@
             const muridKelas = localDb.siswa.filter(s => s.kelas === targetKelas);
             const muridNisList = muridKelas.map(s => s.nis);
 
-            // 1. Hadir - Siswa yang sudah absen 'masuk' hari ini
             const countHadir = localDb.presensi.filter(p => p.tanggal === todayStr && p.tipe === 'masuk' && muridNisList.includes(p.nis)).length;
 
-            // 2. Sakit - Siswa yang mengajukan izin sakit aktif hari ini
             const countSakit = localDb.izin.filter(i => 
                 muridNisList.includes(i.nis) && 
                 i.jenis === 'Sakit' && 
                 isTodayInRange(i.tanggal, todayStr)
             ).length;
 
-            // 3. Izin - Siswa yang mengajukan izin tidak masuk aktif hari ini
             const countIzin = localDb.izin.filter(i => 
                 muridNisList.includes(i.nis) && 
                 i.jenis === 'Izin' && 
                 isTodayInRange(i.tanggal, todayStr)
             ).length;
 
-            // 4. Izin Terlambat - Siswa yang mengajukan izin terlambat masuk aktif hari ini
             const countTerlambat = localDb.izin.filter(i => 
                 muridNisList.includes(i.nis) && 
                 i.jenis === 'Izin Terlambat Masuk' && 
                 isTodayInRange(i.tanggal, todayStr)
             ).length;
 
-            // 5. Izin Pulang Cepat - Siswa yang mengajukan izin pulang cepat aktif hari ini
             const countPulangCepat = localDb.izin.filter(i => 
                 muridNisList.includes(i.nis) && 
                 i.jenis === 'Izin Pulang Cepat' && 
                 isTodayInRange(i.tanggal, todayStr)
             ).length;
 
-            // Update DOM
             const elHadir = document.getElementById('rekap-count-hadir');
             const elSakit = document.getElementById('rekap-count-sakit');
             const elIzin = document.getElementById('rekap-count-izin');
@@ -3122,15 +3126,6 @@
                     if (data.success) {
                         localDb.siswa = data.siswa_all || [];
 
-                        // ==============================================================
-                        // FIX: Merge presensi dari server dengan presensi lokal, bukan
-                        // menimpa (overwrite) total. Ini mencegah status "Sudah Presensi"
-                        // (lonceng dicentang/DONE dan terkunci) hilang/reset ketika
-                        // sinkronisasi ke Google Sheets belum sempat mencatat baris yang
-                        // baru saja ditambahkan (delay/latensi Apps Script). Dengan begini,
-                        // status presensi masuk & pulang hari ini tetap konsisten walaupun
-                        // pengguna logout lalu login kembali, atau me-refresh halaman.
-                        // ==============================================================
                         const serverPresensi = data.presensi || [];
                         const localOnlyPresensi = localDb.presensi.filter(lp =>
                             !serverPresensi.some(sp => sp.nis === lp.nis && sp.tanggal === lp.tanggal && sp.tipe === lp.tipe)
@@ -3287,6 +3282,39 @@
                         alamat_teks: alamatTeks
                     })
                 }).catch(() => console.log("Gagal sync alamat ke server."));
+            }
+        }
+
+        function saveTautanLink() {
+            const linkVal = document.getElementById('profil-tautan-link').value.trim();
+            if (!linkVal) {
+                showToast("Tautan link tidak boleh kosong!");
+                return;
+            }
+            if (!/^https?:\/\//i.test(linkVal)) {
+                showToast("Format tautan harus diawali http:// atau https://");
+                return;
+            }
+
+            currentSiswa.tautan_link = linkVal;
+
+            const match = localDb.siswa.find(s => s.nis === currentSiswa.nis);
+            if (match) {
+                match.tautan_link = linkVal;
+                localStorage.setItem('local_offline_db', JSON.stringify(localDb));
+            }
+            localStorage.setItem('sigesit_active_user', JSON.stringify(currentSiswa));
+            showToast("Tautan link berhasil disimpan.");
+
+            if (!isMockUrl() && scriptUrl) {
+                fetch(`${scriptUrl}`, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        action: "updateTautanLink",
+                        nis: currentSiswa.nis,
+                        tautan_link: linkVal
+                    })
+                }).catch(() => console.log("Gagal sync tautan link ke server."));
             }
         }
 

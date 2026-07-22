@@ -175,7 +175,7 @@
                 <div class="flex-1 glass-card rounded-3xl p-4 text-center flex flex-col items-center justify-between shadow-sm border-t-4 border-emerald-500">
                     <div class="text-center w-full mb-2">
                         <span class="text-[9px] text-slate-455 font-bold uppercase block tracking-wider">Batas Masuk</span>
-                        <span class="text-[11px] font-extrabold text-emerald-600 bg-emerald-50 px-2.5 py-0.5 rounded-full">06.15 WIB</span>
+                        <span id="label-batas-masuk-jam" class="text-[11px] font-extrabold text-emerald-600 bg-emerald-50 px-2.5 py-0.5 rounded-full">06.30 WIB</span>
                     </div>
                     
                     <button id="btn-presensi-masuk" onclick="triggerPresensi('masuk')" class="w-16 h-16 bg-emerald-500 hover:bg-emerald-600 text-white rounded-full flex items-center justify-center shadow-lg shadow-emerald-500/30 transition-all duration-300 transform active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed my-2">
@@ -195,7 +195,7 @@
                 <div class="flex-1 glass-card rounded-3xl p-4 text-center flex flex-col items-center justify-between shadow-sm border-t-4 border-orange-500">
                     <div class="text-center w-full mb-2">
                         <span class="text-[9px] text-slate-455 font-bold uppercase block tracking-wider">Batas Pulang</span>
-                        <span class="text-[11px] font-extrabold text-orange-600 bg-orange-50 px-2.5 py-0.5 rounded-full">15.00 WIB</span>
+                        <span id="label-batas-pulang-jam" class="text-[11px] font-extrabold text-orange-600 bg-orange-50 px-2.5 py-0.5 rounded-full">15.00 WIB</span>
                     </div>
                     
                     <button id="btn-presensi-pulang" onclick="triggerPresensi('pulang')" class="w-16 h-16 bg-orange-500 hover:bg-orange-600 text-white rounded-full flex items-center justify-center shadow-lg shadow-orange-500/30 transition-all duration-300 transform active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed my-2">
@@ -857,8 +857,8 @@
 
             <div id="profil-card-skema-absensi" class="bg-white rounded-3xl border border-slate-100 shadow-sm divide-y divide-slate-100">
                 <div class="p-4 flex justify-between items-center text-xs">
-                    <span class="text-slate-500 font-semibold">Skema Kerja</span>
-                    <span class="font-bold text-slate-800">5 Hari Kerja (06.30 - 15.00)</span>
+                    <span class="text-slate-500 font-semibold">Skema Masuk Sekolah</span>
+                    <span class="font-bold text-slate-800">5 Hari Masuk Sekolah (06.30 - 15.00)</span>
                 </div>
             </div>
 
@@ -1045,6 +1045,60 @@
         const SCHOOL_LAT = -6.4258; 
         const SCHOOL_LNG = 106.7322;
         const ABSENCE_RADIUS_METERS = 100;
+
+        // ================================================================
+        // KONFIGURASI JADWAL PRESENSI PER JENJANG KELAS (X, XI, XII)
+        // Kelas XII TIDAK diubah - tetap memakai nilai/aturan asli aplikasi.
+        // ================================================================
+        const JADWAL_PRESENSI = {
+            'X':   { masukBuka: 5 * 60,  masukBatas: 6 * 60 + 30,  pulangBuka: 12 * 60 },
+            'XI':  { masukBuka: 10 * 60, masukBatas: 12 * 60 + 30, pulangBuka: 17 * 60 }
+        };
+
+        function getJenjangKelas(kelasStr) {
+            if (!kelasStr) return 'XII';
+            const k = kelasStr.toString().trim().toUpperCase();
+            if (k.startsWith('XII')) return 'XII';
+            if (k.startsWith('XI')) return 'XI';
+            if (k.startsWith('X')) return 'X';
+            return 'XII';
+        }
+
+        // Jam buka presensi masuk. Kelas XII tidak dibatasi (sesuai aturan lama / tidak diubah).
+        function getMasukBukaMenit(kelasStr) {
+            const jenjang = getJenjangKelas(kelasStr);
+            if (jenjang === 'XII') return null;
+            return JADWAL_PRESENSI[jenjang].masukBuka;
+        }
+
+        // Batas jam masuk (lewat dari ini dianggap terlambat). Kelas XII memakai nilai default lama.
+        function getBatasMasukMenit(kelasStr, defaultXII) {
+            const jenjang = getJenjangKelas(kelasStr);
+            if (jenjang === 'XII') return defaultXII;
+            return JADWAL_PRESENSI[jenjang].masukBatas;
+        }
+
+        // Jam mulai dibukanya presensi pulang. Kelas XII memakai nilai default lama.
+        function getPulangBukaMenit(kelasStr, defaultXII) {
+            const jenjang = getJenjangKelas(kelasStr);
+            if (jenjang === 'XII') return defaultXII;
+            return JADWAL_PRESENSI[jenjang].pulangBuka;
+        }
+
+        function formatMenitKeJam(menit) {
+            if (menit === null || menit === undefined) return "-";
+            const h = Math.floor(menit / 60).toString().padStart(2, '0');
+            const m = (menit % 60).toString().padStart(2, '0');
+            return `${h}.${m}`;
+        }
+
+        function updateLabelJadwalUI() {
+            if (!currentSiswa || currentSiswa.role === 'walikelas') return;
+            const labelMasuk = document.getElementById('label-batas-masuk-jam');
+            const labelPulang = document.getElementById('label-batas-pulang-jam');
+            if (labelMasuk) labelMasuk.innerText = `${formatMenitKeJam(getBatasMasukMenit(currentSiswa.kelas, 6 * 60 + 30))} WIB`;
+            if (labelPulang) labelPulang.innerText = `${formatMenitKeJam(getPulangBukaMenit(currentSiswa.kelas, 15 * 60))} WIB`;
+        }
 
         // STATE UTAMA
         let currentSiswa = null;
@@ -1373,6 +1427,7 @@
                     document.getElementById('home-foto').src = currentSiswa.foto;
                     document.getElementById('profil-foto').src = currentSiswa.foto;
                 }
+                updateLabelJadwalUI();
                 switchView('home');
             }
 
@@ -1516,7 +1571,7 @@
             if (!currentSiswa || currentSiswa.role === 'walikelas') return;
             const todayStr = now.toISOString().slice(0, 10);
             const currentMinutes = parseInt(hh) * 60 + parseInt(mm);
-            const limitMasukMinutes = 6 * 60 + 30; 
+            const limitMasukMinutes = getBatasMasukMenit(currentSiswa.kelas, 6 * 60 + 30);
             const hasIzinTerlambat = localDb.izin.some(i => 
                 i.nis === currentSiswa.nis && 
                 i.jenis === 'Izin Terlambat Masuk' && 
@@ -1534,7 +1589,7 @@
                 }
             }
 
-            const limitPulangDefaultMinutes = 15 * 60; 
+            const limitPulangDefaultMinutes = getPulangBukaMenit(currentSiswa.kelas, 15 * 60);
             const izinPulangCepat = localDb.izin.find(i => 
                 i.nis === currentSiswa.nis && 
                 i.jenis === 'Izin Pulang Cepat' && 
@@ -1562,6 +1617,22 @@
                     btnPulang.disabled = false;
                 } else {
                     btnPulang.disabled = true;
+                }
+            }
+
+            // Buka/tutup tombol presensi masuk berdasarkan jadwal per jenjang kelas
+            const btnMasuk = document.getElementById('btn-presensi-masuk');
+            const textMasukEl = document.getElementById('time-presensi-masuk');
+            const masukBukaMenit = getMasukBukaMenit(currentSiswa.kelas);
+            if (btnMasuk && !statusAbsen.masuk) {
+                if (masukBukaMenit !== null && currentMinutes < masukBukaMenit) {
+                    btnMasuk.disabled = true;
+                    if (textMasukEl) textMasukEl.innerText = `Dibuka pukul ${formatMenitKeJam(masukBukaMenit)} WIB`;
+                } else {
+                    btnMasuk.disabled = false;
+                    if (textMasukEl && textMasukEl.innerText.startsWith('Dibuka pukul')) {
+                        textMasukEl.innerText = "Belum Presensi";
+                    }
                 }
             }
         }
@@ -1608,6 +1679,15 @@
             if (!isDispenApproved && currentDistance > ABSENCE_RADIUS_METERS) {
                 showToast(`Anda di luar jangkauan SMAN 1 Parung (> ${ABSENCE_RADIUS_METERS}m)!`);
                 return;
+            }
+            if (type === 'masuk') {
+                const now = new Date();
+                const currentMenitSekarang = now.getHours() * 60 + now.getMinutes();
+                const masukBukaMenit = getMasukBukaMenit(currentSiswa.kelas);
+                if (masukBukaMenit !== null && currentMenitSekarang < masukBukaMenit) {
+                    showToast(`Presensi masuk belum dibuka. Mulai pukul ${formatMenitKeJam(masukBukaMenit)} WIB.`);
+                    return;
+                }
             }
             const hariIni = new Date().toISOString().slice(0, 10);
             const statusAbsen = checkHariIniAbsenStatus(hariIni);
@@ -1660,6 +1740,8 @@
             const hariIni = new Date().toISOString().slice(0, 10);
             const record = {
                 nis: currentSiswa.nis,
+                nama: currentSiswa.nama,
+                kelas: currentSiswa.kelas,
                 tanggal: hariIni,
                 tipe: type,
                 jam: jam,
@@ -1743,6 +1825,7 @@
             const iconMasuk = document.getElementById('icon-masuk');
             const textMasuk = document.getElementById('time-presensi-masuk');
             const bageTerlambatMasuk = document.getElementById('status-terlambat-masuk-badge');
+            const batasMasukMenitSaatIni = getBatasMasukMenit(currentSiswa ? currentSiswa.kelas : null, 6 * 60 + 30);
             
             if (btnMasuk && iconMasuk && textMasuk) {
                 if (status.masuk) {
@@ -1752,17 +1835,21 @@
                     textMasuk.className = "text-[10px] text-emerald-600 font-bold mt-0.5";
                     textMasuk.innerText = `Masuk - ${status.masuk.jam} WIB`;
                     const [h, m] = status.masuk.jam.split(':').map(Number);
-                    if (h * 60 + m > 6 * 60 + 15) {
+                    if (h * 60 + m > batasMasukMenitSaatIni) {
                         if (bageTerlambatMasuk) bageTerlambatMasuk.classList.remove('hidden');
                     } else {
                         if (bageTerlambatMasuk) bageTerlambatMasuk.classList.add('hidden');
                     }
                 } else {
+                    const masukBukaMenit = getMasukBukaMenit(currentSiswa ? currentSiswa.kelas : null);
+                    const now = new Date();
+                    const currentMenitSekarang = now.getHours() * 60 + now.getMinutes();
+                    const belumDibuka = masukBukaMenit !== null && currentMenitSekarang < masukBukaMenit;
                     btnMasuk.className = "w-16 h-16 bg-emerald-500 hover:bg-emerald-600 text-white rounded-full flex items-center justify-center shadow-lg shadow-emerald-500/30 transition my-2";
-                    btnMasuk.disabled = false;
+                    btnMasuk.disabled = belumDibuka;
                     iconMasuk.className = "fa-solid fa-bell text-2xl animate-pulse";
                     textMasuk.className = "text-[10px] text-slate-400 mt-0.5";
-                    textMasuk.innerText = "Belum Presensi";
+                    textMasuk.innerText = belumDibuka ? `Dibuka pukul ${formatMenitKeJam(masukBukaMenit)} WIB` : "Belum Presensi";
                     if (bageTerlambatMasuk) bageTerlambatMasuk.classList.add('hidden');
                 }
             }
@@ -1792,6 +1879,7 @@
             const targetKelas = currentSiswa.kelas;
             const hariIniStr = new Date().toISOString().slice(0, 10);
             const rekanSiswa = localDb.siswa.filter(s => s.kelas === targetKelas);
+            const batasMasukKelasIni = getBatasMasukMenit(targetKelas, 6 * 60 + 30);
 
             if (rekanSiswa.length === 0) {
                 container.innerHTML = `<div class="text-center py-4 text-slate-400 text-xs">Belum ada rekan sekelas terdaftar.</div>`;
@@ -1811,7 +1899,7 @@
                     let masukClass = "bg-slate-100 text-slate-400";
                     if (masukToday) {
                         const [h, m] = masukTime.split(':').map(Number);
-                        if (h * 60 + m > 6 * 60 + 30) {
+                        if (h * 60 + m > batasMasukKelasIni) {
                             masukClass = "bg-rose-50 text-rose-700 border border-rose-200 font-bold";
                         } else {
                             masukClass = "bg-emerald-50 text-emerald-700 border border-emerald-200 font-bold";
@@ -1858,6 +1946,7 @@
                 todayDateText.innerText = new Date().toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'short' });
             }
             const muridKelas = localDb.siswa.filter(s => s.kelas === targetKelas);
+            const batasMasukKelasIni = getBatasMasukMenit(targetKelas, 6 * 60 + 30);
 
             if (muridKelas.length === 0) {
                 listEl.innerHTML = `<div class="p-6 text-center text-xs text-slate-400">Belum ada siswa terdaftar di kelas bimbingan Anda.</div>`;
@@ -1877,7 +1966,7 @@
                     let masukClass = "bg-slate-100 text-slate-400";
                     if (masukToday) {
                         const [h, m] = masukTime.split(':').map(Number);
-                        if (h * 60 + m > 6 * 60 + 30) {
+                        if (h * 60 + m > batasMasukKelasIni) {
                             masukClass = "bg-rose-50 text-rose-700 border border-rose-200 font-bold";
                         } else {
                             masukClass = "bg-emerald-50 text-emerald-700 border border-emerald-200 font-bold";
@@ -2731,6 +2820,7 @@
             const bln = document.getElementById('rekap-bulan').value;
             const tgl = document.getElementById('rekap-tanggal').value;
             const userAbsens = localDb.presensi.filter(p => p.nis === currentSiswa.nis);
+            const batasMasukSiswaIni = getBatasMasukMenit(currentSiswa.kelas, 6 * 60 + 15);
 
             const filtered = userAbsens.filter(p => {
                 const parts = p.tanggal.split('-');
@@ -2779,7 +2869,7 @@
             filtered.forEach(p => {
                 if (p.tipe === 'masuk') {
                     const [h, m] = p.jam.split(':').map(Number);
-                    const limitMinutes = 6 * 60 + 15; 
+                    const limitMinutes = batasMasukSiswaIni; 
                     const absenMinutes = h * 60 + m;
                     if (absenMinutes > limitMinutes) {
                         totalTerlambatMenit += (absenMinutes - limitMinutes);
@@ -2817,7 +2907,7 @@
                 let masukClass = "bg-slate-100 text-slate-400";
                 if (row.masuk !== '--:--') {
                     const [h, m] = row.masuk.split(':').map(Number);
-                    if (h * 60 + m > 6 * 60 + 15) {
+                    if (h * 60 + m > batasMasukSiswaIni) {
                         masukClass = "bg-rose-50 text-rose-700 border border-rose-150 font-bold";
                     } else {
                         masukClass = "bg-emerald-50 text-emerald-700 border border-emerald-100";

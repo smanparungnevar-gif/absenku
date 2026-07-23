@@ -386,7 +386,7 @@
             <div id="tab-content-riwayat" class="hidden space-y-4">
                 <div class="bg-white p-4 rounded-3xl shadow-sm border border-slate-100 space-y-3">
                     <h4 class="text-xs font-extrabold text-slate-455 uppercase tracking-widest">Filter Periode & Status</h4>
-                    <div class="grid grid-cols-2 gap-2">
+                    <div class="grid grid-cols-3 gap-2">
                         <div>
                             <label class="text-[10px] font-bold text-slate-500">Pilih Tahun</label>
                             <select id="filter-izin-tahun" onchange="renderRiwayatIzin()" class="w-full p-2 border border-slate-200 rounded-2xl text-xs outline-none bg-white font-semibold">
@@ -410,6 +410,12 @@
                                 <option value="10">Oktober</option>
                                 <option value="11">November</option>
                                 <option value="12">Desember</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="text-[10px] font-bold text-slate-500">Pilih Tanggal</label>
+                            <select id="filter-izin-tanggal" onchange="renderRiwayatIzin()" class="w-full p-2 border border-slate-200 rounded-2xl text-xs outline-none bg-white font-semibold">
+                                <option value="Semua">Semua</option>
                             </select>
                         </div>
                     </div>
@@ -1281,7 +1287,7 @@
         }
 
         function populateTanggalOptions() {
-            const els = ['rekap-tanggal', 'rekap-poin-tanggal'];
+            const els = ['rekap-tanggal', 'rekap-poin-tanggal', 'filter-izin-tanggal'];
             els.forEach(id => {
                 const el = document.getElementById(id);
                 if (el) {
@@ -2961,13 +2967,37 @@
             if (!container || !currentSiswa) return;
             const thn = document.getElementById('filter-izin-tahun').value;
             const bln = document.getElementById('filter-izin-bulan').value;
+            const tglFilterEl = document.getElementById('filter-izin-tanggal');
+            const tgl = tglFilterEl ? tglFilterEl.value : 'Semua';
+
             let filtered = localDb.izin.filter(i => i.nis === currentSiswa.nis);
 
             filtered = filtered.filter(i => {
-                const tglSource = i.tanggal.includes(" s/d ") ? i.tanggal.split(" s/d ")[0] : i.tanggal;
-                const parts = tglSource.split('-');
-                if (parts.length !== 3) return false;
-                return parts[0] === thn && (bln === 'Semua' || parts[1] === bln);
+                const isRange = i.tanggal.includes(" s/d ");
+                const startStr = isRange ? i.tanggal.split(" s/d ")[0].trim() : i.tanggal.trim();
+                const endStr = isRange ? i.tanggal.split(" s/d ")[1].trim() : startStr;
+
+                const startDate = new Date(startStr);
+                const endDate = new Date(endStr);
+                if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) return false;
+
+                // Telusuri setiap hari dalam rentang tanggal pengajuan (mendukung
+                // izin/dispen/sakit yang berupa rentang "s/d"), lalu cocokkan
+                // dengan filter Tahun/Bulan/Tanggal yang sedang aktif.
+                const cursor = new Date(startDate);
+                while (cursor <= endDate) {
+                    const y = cursor.getFullYear().toString();
+                    const m = (cursor.getMonth() + 1).toString().padStart(2, '0');
+                    const d = cursor.getDate().toString().padStart(2, '0');
+
+                    const matchTahun = y === thn;
+                    const matchBulan = bln === 'Semua' || m === bln;
+                    const matchTanggal = tgl === 'Semua' || d === tgl;
+
+                    if (matchTahun && matchBulan && matchTanggal) return true;
+                    cursor.setDate(cursor.getDate() + 1);
+                }
+                return false;
             });
 
             const activeFilter = (typeof statusIzinFilterActive !== 'undefined') ? statusIzinFilterActive : currentIzinFilter;

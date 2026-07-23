@@ -1693,7 +1693,7 @@
             );
 
             let allowedPulangMinutes = limitPulangDefaultMinutes;
-            if (hasDispenActive) {
+            if (hasDispenActiveForPulang || izinPulangCepat) {
                 allowedPulangMinutes = 0; 
             } else if (izinPulangCepat && izinPulangCepat.waktu && izinPulangCepat.waktu !== '-') {
                 const [pH, pM] = izinPulangCepat.waktu.split(':').map(Number);
@@ -1810,7 +1810,7 @@
                     i.tanggal === todayStr
                 );
                 let allowedPulangMinutes = getPulangBukaMenit(currentSiswa.kelas, 15 * 60);
-                if (hasDispenActive) {
+                if (hasDispenActive || izinPulangCepat) {
                     allowedPulangMinutes = 0;
                 } else if (izinPulangCepat && izinPulangCepat.waktu && izinPulangCepat.waktu !== '-') {
                     const [pH, pM] = izinPulangCepat.waktu.split(':').map(Number);

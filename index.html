@@ -1339,6 +1339,7 @@
         function calculateDistance() {
             if (!currentLatitude || !currentLongitude || !currentSiswa || currentSiswa.role === 'walikelas') return;
             const isDispenApproved = hasApprovedDispenToday();
+            const isPulangCepatApproved = hasApprovedIzinPulangCepatToday();
             const statusText = document.getElementById('geo-status');
             const distanceMeter = document.getElementById('current-distance');
             const divMeter = document.getElementById('distance-meter');
@@ -1351,6 +1352,20 @@
                 if (distanceMeter) distanceMeter.innerText = "Radius Dinonaktifkan";
                 if (divMeter) {
                     divMeter.className = "bg-emerald-50 rounded-2xl p-3 flex justify-between items-center text-xs text-emerald-800 border border-emerald-100 font-semibold";
+                }
+                return;
+            }
+
+            // TAMBAHAN BARU: jika izin pulang cepat sudah disetujui, tampilkan info
+            // bahwa radius dilonggarkan khusus untuk presensi pulang.
+            if (isPulangCepatApproved) {
+                if (statusText) {
+                    statusText.innerText = "Radius Presensi Pulang Dilonggarkan (Izin Pulang Cepat Disetujui)";
+                    statusText.className = "text-xs text-sky-600 font-bold mt-0.5";
+                }
+                if (distanceMeter) distanceMeter.innerText = "Radius Pulang Dinonaktifkan";
+                if (divMeter) {
+                    divMeter.className = "bg-sky-50 rounded-2xl p-3 flex justify-between items-center text-xs text-sky-800 border border-sky-100 font-semibold";
                 }
                 return;
             }
@@ -1771,6 +1786,20 @@
             );
         }
 
+        // Cek apakah siswa punya izin pulang cepat yang sudah disetujui hari ini.
+        // Digunakan untuk melonggarkan aturan radius geofencing KHUSUS saat siswa
+        // melakukan presensi PULANG (tidak berlaku untuk presensi masuk).
+        function hasApprovedIzinPulangCepatToday() {
+            if (!currentSiswa || currentSiswa.role === 'walikelas') return false;
+            const todayStr = new Date().toISOString().slice(0, 10);
+            return localDb.izin.some(i => 
+                i.nis === currentSiswa.nis && 
+                i.jenis === 'Izin Pulang Cepat' && 
+                i.status === 'Disetujui' && 
+                i.tanggal === todayStr
+            );
+        }
+
         function checkHariIniAbsenStatus(tanggalStr) {
             if (!currentSiswa) return { masuk: null, pulang: null };
             const list = localDb.presensi.filter(p => p.nis === currentSiswa.nis && p.tanggal === tanggalStr);
@@ -1789,7 +1818,10 @@
                 return;
             }
             const isDispenApproved = hasApprovedDispenToday();
-            if (!isDispenApproved && currentDistance > ABSENCE_RADIUS_METERS) {
+            // Radius dilonggarkan jika: dispen aktif, ATAU siswa melakukan presensi
+            // PULANG dan izin pulang cepatnya sudah disetujui wali kelas hari ini.
+            const isPulangCepatApproved = type === 'pulang' && hasApprovedIzinPulangCepatToday();
+            if (!isDispenApproved && !isPulangCepatApproved && currentDistance > ABSENCE_RADIUS_METERS) {
                 showToast(`Anda di luar jangkauan SMAN 1 Parung (> ${ABSENCE_RADIUS_METERS}m)!`);
                 return;
             }

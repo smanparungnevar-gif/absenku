@@ -1693,13 +1693,17 @@
             );
 
             let allowedPulangMinutes = limitPulangDefaultMinutes;
-            if (hasDispenActiveForPulang || izinPulangCepat) {
-                allowedPulangMinutes = 0; 
+            if (hasDispenActive) {
+                allowedPulangMinutes = 0;
             } else if (izinPulangCepat && izinPulangCepat.waktu && izinPulangCepat.waktu !== '-') {
                 const [pH, pM] = izinPulangCepat.waktu.split(':').map(Number);
                 if (!isNaN(pH) && !isNaN(pM)) {
                     allowedPulangMinutes = pH * 60 + pM;
+                } else {
+                    allowedPulangMinutes = 0;
                 }
+            } else if (izinPulangCepat) {
+                allowedPulangMinutes = 0;
             }
 
             const btnPulang = document.getElementById('btn-presensi-pulang');
@@ -1810,13 +1814,17 @@
                     i.tanggal === todayStr
                 );
                 let allowedPulangMinutes = getPulangBukaMenit(currentSiswa.kelas, 15 * 60);
-                if (hasDispenActive || izinPulangCepat) {
+                if (hasDispenActive) {
                     allowedPulangMinutes = 0;
                 } else if (izinPulangCepat && izinPulangCepat.waktu && izinPulangCepat.waktu !== '-') {
                     const [pH, pM] = izinPulangCepat.waktu.split(':').map(Number);
                     if (!isNaN(pH) && !isNaN(pM)) {
                         allowedPulangMinutes = pH * 60 + pM;
+                    } else {
+                        allowedPulangMinutes = 0;
                     }
+                } else if (izinPulangCepat) {
+                    allowedPulangMinutes = 0;
                 }
                 if (currentMenitSekarang < allowedPulangMinutes) {
                     showToast(`Presensi pulang masih terkunci. Dibuka pukul ${formatMenitKeJam(allowedPulangMinutes)} WIB.`);

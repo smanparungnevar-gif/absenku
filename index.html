@@ -1072,7 +1072,7 @@
         // Kelas XII TIDAK diubah - tetap memakai nilai/aturan asli aplikasi.
         // ================================================================
         const JADWAL_PRESENSI = {
-            'X':   { masukBuka: 5 * 60,  masukBatas: 6 * 60 + 30,  pulangBuka: 11 * 45 },
+            'X':   { masukBuka: 5 * 60,  masukBatas: 6 * 60 + 30,  pulangBuka: 11 * 60 },
             'XI':  { masukBuka: 10 * 60, masukBatas: 12 * 60 + 30, pulangBuka: 17 * 60 }
         };
 
@@ -3322,7 +3322,7 @@
             const file = input.files[0];
             if (!file) return;
             if (file.size > 100 * 1024) {
-                showToast("Ukuran foto profil melebihi batasan 50KB!");
+                showToast("Ukuran foto profil melebihi batasan 2MB!");
                 input.value = "";
                 return;
             }

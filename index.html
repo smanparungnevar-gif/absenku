@@ -333,7 +333,7 @@
                     </div>
                     
                     <div class="space-y-1">
-                        <label id="th-file-title-label" class="block text-xs font-bold text-slate-500 uppercase ml-1">Surat Bukti (Maks 50KB)</label>
+                        <label id="th-file-title-label" class="block text-xs font-bold text-slate-500 uppercase ml-1">Surat Bukti (Maks 2MB)</label>
                         <div class="border-2 border-dashed border-slate-200 rounded-2xl p-4 text-center cursor-pointer relative hover:bg-slate-50 transition-all">
                             <input type="file" id="th-file" accept=".pdf, .jpg, .jpeg, .png" required onchange="validateFileSize(this)" class="absolute inset-0 opacity-0 cursor-pointer">
                             <i class="fa-solid fa-cloud-arrow-up text-2xl text-slate-400 mb-1"></i>
@@ -369,7 +369,7 @@
                         <textarea id="kd-keterangan" rows="3" required placeholder="Tuliskan keterangan..." class="w-full px-3.5 py-3 border border-slate-200 rounded-2xl text-sm outline-none focus:ring-2 focus:ring-emerald-500"></textarea>
                     </div>
                     <div class="space-y-1">
-                        <label class="block text-xs font-bold text-slate-555 uppercase ml-1">Bukti Pendukung (Maks 50KB)</label>
+                        <label class="block text-xs font-bold text-slate-555 uppercase ml-1">Bukti Pendukung (Maks 2MB)</label>
                         <div class="border-2 border-dashed border-slate-200 rounded-2xl p-4 text-center cursor-pointer relative hover:bg-slate-50 transition-all">
                             <input type="file" id="kd-file" accept=".pdf, .jpg, .jpeg, .png" required onchange="validateFileSize(this)" class="absolute inset-0 opacity-0 cursor-pointer">
                             <i class="fa-solid fa-cloud-arrow-up text-2xl text-slate-400 mb-1"></i>
@@ -1072,7 +1072,7 @@
         // Kelas XII TIDAK diubah - tetap memakai nilai/aturan asli aplikasi.
         // ================================================================
         const JADWAL_PRESENSI = {
-            'X':   { masukBuka: 5 * 60,  masukBatas: 6 * 60 + 30,  pulangBuka: 12 * 60 },
+            'X':   { masukBuka: 5 * 60,  masukBatas: 6 * 60 + 30,  pulangBuka: 11 * 45 },
             'XI':  { masukBuka: 10 * 60, masukBatas: 12 * 60 + 30, pulangBuka: 17 * 60 }
         };
 
@@ -2686,7 +2686,7 @@
         function validateFileSize(input) {
             const file = input.files[0];
             if (!file) return;
-            if (file.size > 50 * 1024) {
+            if (file.size > 100 * 1024) {
                 showToast("Berkas melebihi batasan 50KB!");
                 input.value = "";
                 const labelId = input.id === 'th-file' ? 'th-file-label' : 'kd-file-label';
@@ -2891,7 +2891,7 @@
             const bln = document.getElementById('rekap-bulan').value;
             const tgl = document.getElementById('rekap-tanggal').value;
             const userAbsens = localDb.presensi.filter(p => p.nis === currentSiswa.nis);
-            const batasMasukSiswaIni = getBatasMasukMenit(currentSiswa.kelas, 6 * 60 + 15);
+            const batasMasukSiswaIni = getBatasMasukMenit(currentSiswa.kelas, 6 * 60 + 30);
 
             const filtered = userAbsens.filter(p => {
                 const parts = p.tanggal.split('-');
@@ -3321,7 +3321,7 @@
         function uploadFotoSiswa(input) {
             const file = input.files[0];
             if (!file) return;
-            if (file.size > 50 * 1024) {
+            if (file.size > 100 * 1024) {
                 showToast("Ukuran foto profil melebihi batasan 50KB!");
                 input.value = "";
                 return;

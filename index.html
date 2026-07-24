@@ -2618,6 +2618,11 @@
             // lama) lewat atribut data-*, dan record yang tepat dicari ulang
             // dari localDb.izin saat tombol benar-benar diklik — bukan lewat
             // index array yang sudah usang.
+            //
+            // CATATAN: sejak Izin Pulang Cepat & Izin Dispen kini di-AUTO-APPROVE
+            // saat pengajuan (lihat submitIzinKondisional & submitIzinTidakHadir),
+            // kedua jenis izin tersebut tidak akan pernah berstatus "Menunggu"
+            // lagi, sehingga otomatis tidak akan muncul di daftar persetujuan ini.
             const waitingIzin = localDb.izin.filter(item => {
                 const murid = localDb.siswa.find(s => s.nis === item.nis);
                 return murid && murid.kelas === targetKelas && item.status === 'Menunggu';
@@ -2910,6 +2915,12 @@
             const fileInput = document.getElementById('th-file');
             const rangeTanggal = tglMulai === tglSelesai ? tglMulai : `${tglMulai} s/d ${tglSelesai}`;
 
+            // AUTO-APPROVE: khusus jenis "Dispen", pengajuan langsung berstatus
+            // "Disetujui" tanpa perlu persetujuan wali kelas, sehingga siswa
+            // bisa langsung melakukan presensi masuk & pulang dari mana saja
+            // (tidak terikat radius sekolah) begitu pengajuan terkirim.
+            const statusAwal = (jenis === 'Dispen') ? 'Disetujui' : 'Menunggu';
+
             const record = {
                 id: 'IZ-' + Date.now() + '-' + Math.random().toString(36).slice(2, 8),
                 nis: currentSiswa.nis,
@@ -2920,7 +2931,7 @@
                 waktu: "-",
                 keterangan: ket,
                 file: "", 
-                status: "Menunggu",
+                status: statusAwal,
                 created_at: new Date().toISOString(),
                 dispen_alamat: jenis === 'Dispen' ? document.getElementById('dispen-alamat-text').value.trim() : "",
                 dispen_koordinat: jenis === 'Dispen' ? dispenCoords : ""
@@ -2940,6 +2951,19 @@
                     if (data.success) {
                         if (data.id) record.id = data.id;
                         saveIzinToState(record);
+                        // Pastikan status "Disetujui" untuk Dispen juga tersinkron
+                        // ke server, karena endpoint addIzin pada Apps Script lama
+                        // kemungkinan menyimpan status default "Menunggu".
+                        if (jenis === 'Dispen') {
+                            fetch(`${scriptUrl}?action=updateStatusIzin`, {
+                                method: 'POST',
+                                body: JSON.stringify({
+                                    idKey: record.id,
+                                    nis: record.nis,
+                                    status: 'Disetujui'
+                                })
+                            }).catch(() => console.log("Gagal sync auto-approve dispen ke server."));
+                        }
                     } else {
                         showToast("Gagal mengirim pengajuan.");
                     }
@@ -2969,6 +2993,11 @@
             const ket = document.getElementById('kd-keterangan').value.trim();
             const fileInput = document.getElementById('kd-file');
 
+            // AUTO-APPROVE: khusus jenis "Izin Pulang Cepat", pengajuan langsung
+            // berstatus "Disetujui" tanpa perlu persetujuan wali kelas, sehingga
+            // lonceng presensi pulang siswa otomatis terbuka hari itu juga.
+            const statusAwal = (jenis === 'Izin Pulang Cepat') ? 'Disetujui' : 'Menunggu';
+
             const record = {
                 id: 'IZ-' + Date.now() + '-' + Math.random().toString(36).slice(2, 8),
                 nis: currentSiswa.nis,
@@ -2979,7 +3008,7 @@
                 waktu: waktu,
                 keterangan: ket,
                 file: "",
-                status: "Menunggu",
+                status: statusAwal,
                 created_at: new Date().toISOString(),
                 dispen_alamat: "",
                 dispen_koordinat: ""
@@ -2999,6 +3028,19 @@
                     if (data.success) {
                         if (data.id) record.id = data.id;
                         saveIzinToState(record);
+                        // Pastikan status "Disetujui" untuk Izin Pulang Cepat juga
+                        // tersinkron ke server, karena endpoint addIzin pada Apps
+                        // Script lama kemungkinan menyimpan status default "Menunggu".
+                        if (jenis === 'Izin Pulang Cepat') {
+                            fetch(`${scriptUrl}?action=updateStatusIzin`, {
+                                method: 'POST',
+                                body: JSON.stringify({
+                                    idKey: record.id,
+                                    nis: record.nis,
+                                    status: 'Disetujui'
+                                })
+                            }).catch(() => console.log("Gagal sync auto-approve izin pulang cepat ke server."));
+                        }
                     } else {
                         showToast("Gagal mengirim.");
                     }
@@ -3023,11 +3065,28 @@
         function saveIzinToState(record) {
             localDb.izin.push(record);
             localStorage.setItem('local_offline_db', JSON.stringify(localDb));
-            showToast("Pengajuan izin berhasil terkirim!");
+            // Pesan konfirmasi disesuaikan: untuk Dispen & Izin Pulang Cepat yang
+            // otomatis disetujui, beri tahu siswa bahwa izin sudah aktif tanpa
+            // menunggu persetujuan wali kelas.
+            if (record.status === 'Disetujui') {
+                if (record.jenis === 'Dispen') {
+                    showToast("Izin Dispen otomatis disetujui! Presensi masuk & pulang bisa dilakukan di mana saja hari ini.");
+                } else if (record.jenis === 'Izin Pulang Cepat') {
+                    showToast("Izin Pulang Cepat otomatis disetujui! Presensi pulang sudah terbuka.");
+                } else {
+                    showToast("Pengajuan izin berhasil terkirim!");
+                }
+            } else {
+                showToast("Pengajuan izin berhasil terkirim!");
+            }
             document.getElementById('form-izin-tidak-hadir').reset();
             document.getElementById('form-izin-kondisional').reset();
             document.getElementById('th-file-label').innerText = "Pilih berkas PDF, JPG, atau PNG";
             document.getElementById('kd-file-label').innerText = "Pilih berkas PDF, JPG, atau PNG";
+            // Refresh UI terkait supaya lonceng presensi & radius langsung
+            // ter-update begitu izin auto-approve tersimpan.
+            updateHomePresensiUI();
+            calculateDistance();
             switchIzinTab('riwayat');
         }
 

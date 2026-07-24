@@ -3337,7 +3337,28 @@
                         );
                         localDb.presensi = [...serverPresensi, ...localOnlyPresensi];
 
-                        localDb.izin = data.izin || [];
+                        // --- MERGE data izin agar status yang sudah diproses wali kelas
+                        // (Disetujui/Ditolak) tidak tertimpa balik oleh data server yang
+                        // mungkin belum ter-update (mis. update ke Sheets sedang delay,
+                        // atau baris tidak match sempurna). Record lokal yang belum
+                        // pernah tersinkron ke server juga tetap dipertahankan. ---
+                        const serverIzin = data.izin || [];
+                        const mergedIzin = serverIzin.map(si => {
+                            const li = localDb.izin.find(l =>
+                                l.nis === si.nis && l.jenis === si.jenis && l.tanggal === si.tanggal
+                            );
+                            if (li && li.status !== 'Menunggu' && si.status === 'Menunggu') {
+                                return { ...si, status: li.status };
+                            }
+                            return si;
+                        });
+                        const localOnlyIzin = localDb.izin.filter(li =>
+                            !serverIzin.some(si =>
+                                si.nis === li.nis && si.jenis === li.jenis && si.tanggal === li.tanggal
+                            )
+                        );
+                        localDb.izin = [...mergedIzin, ...localOnlyIzin];
+
                         localDb.poin = data.poin || [];
                         localDb.nilai = data.nilai || []; 
                         localStorage.setItem('local_offline_db', JSON.stringify(localDb));

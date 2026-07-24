@@ -1342,39 +1342,22 @@
             }
         }
 
+        // ================================================================
+        // FIX (permintaan pengguna): pada menu Beranda role Siswa, kartu
+        // "Jarak Anda ke Sekolah" SELALU menampilkan jarak aktual ke sekolah
+        // dalam meter — status khusus "Bebas Absen Di Mana Saja (Dispensasi
+        // Aktif)" dan "Radius Presensi Pulang Dilonggarkan (Izin Pulang Cepat
+        // Disetujui)" beserta teks "Radius Dinonaktifkan" DIHAPUS dari
+        // tampilan. Logika pelonggaran radius untuk keperluan validasi saat
+        // presensi (triggerPresensi, getAllowedPulangMinutesForToday, dsb)
+        // TIDAK diubah — hanya kartu info jarak ini yang disederhanakan.
+        // ================================================================
         function calculateDistance() {
             if (!currentLatitude || !currentLongitude || !currentSiswa || currentSiswa.role === 'walikelas') return;
-            const isDispenApproved = hasApprovedDispenToday();
-            const isPulangCepatApproved = hasApprovedIzinPulangCepatToday();
+
             const statusText = document.getElementById('geo-status');
             const distanceMeter = document.getElementById('current-distance');
             const divMeter = document.getElementById('distance-meter');
-
-            if (isDispenApproved) {
-                if (statusText) {
-                    statusText.innerText = "Bebas Absen Di Mana Saja (Dispensasi Aktif)";
-                    statusText.className = "text-xs text-emerald-600 font-bold mt-0.5";
-                }
-                if (distanceMeter) distanceMeter.innerText = "Radius Dinonaktifkan";
-                if (divMeter) {
-                    divMeter.className = "bg-emerald-50 rounded-2xl p-3 flex justify-between items-center text-xs text-emerald-800 border border-emerald-100 font-semibold";
-                }
-                return;
-            }
-
-            // TAMBAHAN BARU: jika izin pulang cepat sudah disetujui, tampilkan info
-            // bahwa radius dilonggarkan khusus untuk presensi pulang.
-            if (isPulangCepatApproved) {
-                if (statusText) {
-                    statusText.innerText = "Radius Presensi Pulang Dilonggarkan (Izin Pulang Cepat Disetujui)";
-                    statusText.className = "text-xs text-sky-600 font-bold mt-0.5";
-                }
-                if (distanceMeter) distanceMeter.innerText = "Radius Pulang Dinonaktifkan";
-                if (divMeter) {
-                    divMeter.className = "bg-sky-50 rounded-2xl p-3 flex justify-between items-center text-xs text-sky-800 border border-sky-100 font-semibold";
-                }
-                return;
-            }
 
             const R = 6371e3; 
             const phi1 = currentLatitude * Math.PI / 180;

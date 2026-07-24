@@ -1587,6 +1587,22 @@
             }
 
             fetchDatabaseState();
+
+            // Auto-refresh berkala khusus untuk siswa, agar status izin
+            // yang baru disetujui/ditolak wali kelas (dan unlock presensi
+            // pulang terkait izin pulang cepat) ikut ter-update tanpa
+            // harus logout/login ulang.
+            if (!isWali) {
+                if (window._sigesitPollInterval) clearInterval(window._sigesitPollInterval);
+                window._sigesitPollInterval = setInterval(() => {
+                    if (currentSiswa && currentSiswa.role !== 'walikelas') {
+                        fetchDatabaseState();
+                    }
+                }, 30000);
+            } else if (window._sigesitPollInterval) {
+                clearInterval(window._sigesitPollInterval);
+                window._sigesitPollInterval = null;
+            }
         }
 
         function switchView(target) {
@@ -1623,6 +1639,10 @@
                 } else {
                     document.getElementById('view-izin').classList.remove('hidden');
                     renderRiwayatIzin();
+                    // Tarik status izin terbaru dari server setiap kali siswa
+                    // membuka tab Layanan Izin, agar status "Menunggu" yang
+                    // sudah diproses wali kelas segera terlihat di sini.
+                    fetchDatabaseState();
                 }
                 document.getElementById('nav-izin').className = "flex flex-col items-center gap-1 text-emerald-600";
             } else if (target === 'middle') {
@@ -1671,6 +1691,10 @@
         function handleLogout() {
             localStorage.removeItem('sigesit_active_user');
             currentSiswa = null;
+            if (window._sigesitPollInterval) {
+                clearInterval(window._sigesitPollInterval);
+                window._sigesitPollInterval = null;
+            }
             const views = ['home', 'wali-home', 'izin', 'wali-izin', 'wali-guru', 'riwayat', 'laporan', 'profil', 'nilai', 'wali-nilai'];
             views.forEach(v => {
                 const el = document.getElementById(`view-${v}`);
@@ -2782,6 +2806,8 @@
                 contentR.classList.remove('hidden');
                 contentP.classList.add('hidden');
                 renderRiwayatIzin();
+                // Tarik status terbaru juga saat pindah ke tab riwayat.
+                fetchDatabaseState();
             }
         }
 
@@ -3317,6 +3343,8 @@
                     if (currentSiswa && currentSiswa.role === 'walikelas') {
                         updateWaliRekapKehadiranCounters();
                         renderWaliRekapIzinList();
+                    } else if (currentSiswa) {
+                        renderRiwayatIzin();
                     }
                     syncIcons.forEach(icon => icon.classList.remove('animate-spin'));
                     if (showFeedback) showToast("Menggunakan data demo lokal.");
@@ -3376,6 +3404,11 @@
                         if (currentSiswa && currentSiswa.role === 'walikelas') {
                             updateWaliRekapKehadiranCounters();
                             renderWaliRekapIzinList();
+                        } else if (currentSiswa) {
+                            // Refresh daftar riwayat izin siswa agar status
+                            // Disetujui/Ditolak dari wali kelas langsung terlihat
+                            // tanpa perlu logout/login ulang.
+                            renderRiwayatIzin();
                         }
                         
                         if (showFeedback) {
@@ -3403,6 +3436,8 @@
                         if (currentSiswa && currentSiswa.role === 'walikelas') {
                             updateWaliRekapKehadiranCounters();
                             renderWaliRekapIzinList();
+                        } else if (currentSiswa) {
+                            renderRiwayatIzin();
                         }
                     }
                     if (showFeedback) showToast("Koneksi gagal. Menggunakan data offline.");

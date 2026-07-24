@@ -2654,11 +2654,34 @@
                     fetch(`${scriptUrl}?action=updateStatusIzin`, {
                         method: 'POST',
                         body: JSON.stringify({
-                            idKey: match.created_at || match.tanggal,
+                            idKey: match.id,
                             nis: match.nis,
                             status: status
                         })
-                    }).catch(() => console.log("Gagal sync status izin."));
+                    })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (!data.success) {
+                            // Sync ke server gagal (mis. id tidak ditemukan / data
+                            // lama sebelum migrasi kolom id) -> beri tahu wali
+                            // kelas secara jujur, JANGAN biarkan status lokal
+                            // "kelihatan berhasil" padahal sheet tidak berubah.
+                            showToast("Peringatan: status TIDAK tersimpan di server (" + (data.message || 'gagal sinkron') + "). Coba lagi atau cek koneksi.");
+                            match.status = 'Menunggu';
+                            localStorage.setItem('local_offline_db', JSON.stringify(localDb));
+                            renderWaliIzinApprovalList();
+                            updateWaliRekapKehadiranCounters();
+                            renderWaliRekapIzinList();
+                        }
+                    })
+                    .catch(() => {
+                        showToast("Peringatan: gagal terhubung ke server, status belum tersimpan permanen.");
+                        match.status = 'Menunggu';
+                        localStorage.setItem('local_offline_db', JSON.stringify(localDb));
+                        renderWaliIzinApprovalList();
+                        updateWaliRekapKehadiranCounters();
+                        renderWaliRekapIzinList();
+                    });
                 }
             } else {
                 showToast("Data izin tidak ditemukan.");
@@ -2855,6 +2878,7 @@
             const rangeTanggal = tglMulai === tglSelesai ? tglMulai : `${tglMulai} s/d ${tglSelesai}`;
 
             const record = {
+                id: 'IZ-' + Date.now() + '-' + Math.random().toString(36).slice(2, 8),
                 nis: currentSiswa.nis,
                 nama: currentSiswa.nama,
                 kategori: "Tidak Masuk/Sakit",
@@ -2881,6 +2905,7 @@
                 .then(res => res.json())
                 .then(data => {
                     if (data.success) {
+                        if (data.id) record.id = data.id;
                         saveIzinToState(record);
                     } else {
                         showToast("Gagal mengirim pengajuan.");
@@ -2912,6 +2937,7 @@
             const fileInput = document.getElementById('kd-file');
 
             const record = {
+                id: 'IZ-' + Date.now() + '-' + Math.random().toString(36).slice(2, 8),
                 nis: currentSiswa.nis,
                 nama: currentSiswa.nama,
                 kategori: "Kondisional",
@@ -2938,6 +2964,7 @@
                 .then(res => res.json())
                 .then(data => {
                     if (data.success) {
+                        if (data.id) record.id = data.id;
                         saveIzinToState(record);
                     } else {
                         showToast("Gagal mengirim.");
@@ -3365,27 +3392,21 @@
                         );
                         localDb.presensi = [...serverPresensi, ...localOnlyPresensi];
 
-                        // --- MERGE data izin agar status yang sudah diproses wali kelas
-                        // (Disetujui/Ditolak) tidak tertimpa balik oleh data server yang
-                        // mungkin belum ter-update (mis. update ke Sheets sedang delay,
-                        // atau baris tidak match sempurna). Record lokal yang belum
-                        // pernah tersinkron ke server juga tetap dipertahankan. ---
+                        // --- MERGE data izin: SERVER SELALU JADI KEBENARAN.
+                        // Sebelumnya ada logika yang menimpa balik status server
+                        // dengan status lokal ("li.status !== 'Menunggu'"), yang
+                        // menyembunyikan kegagalan sinkron approve/reject (status
+                        // kelihatan "Disetujui" di device wali kelas padahal sheet
+                        // masih "Menunggu"). Sekarang kita percaya penuh pada
+                        // server untuk baris yang sudah ada di server (dicocokkan
+                        // via id unik), dan hanya menyimpan baris yang BENAR-BENAR
+                        // belum pernah sampai ke server (belum punya pasangan id
+                        // di server sama sekali) sebagai data lokal sementara.
                         const serverIzin = data.izin || [];
-                        const mergedIzin = serverIzin.map(si => {
-                            const li = localDb.izin.find(l =>
-                                l.nis === si.nis && l.jenis === si.jenis && l.tanggal === si.tanggal
-                            );
-                            if (li && li.status !== 'Menunggu' && si.status === 'Menunggu') {
-                                return { ...si, status: li.status };
-                            }
-                            return si;
-                        });
                         const localOnlyIzin = localDb.izin.filter(li =>
-                            !serverIzin.some(si =>
-                                si.nis === li.nis && si.jenis === li.jenis && si.tanggal === li.tanggal
-                            )
+                            !serverIzin.some(si => si.id && li.id && si.id === li.id)
                         );
-                        localDb.izin = [...mergedIzin, ...localOnlyIzin];
+                        localDb.izin = [...serverIzin, ...localOnlyIzin];
 
                         localDb.poin = data.poin || [];
                         localDb.nilai = data.nilai || []; 

@@ -1729,27 +1729,7 @@
                 }
             }
 
-            const limitPulangDefaultMinutes = getPulangBukaMenit(currentSiswa.kelas, 15 * 60);
-            const izinPulangCepat = localDb.izin.find(i => 
-                i.nis === currentSiswa.nis && 
-                i.jenis === 'Izin Pulang Cepat' && 
-                i.status === 'Disetujui' && 
-                i.tanggal === todayStr
-            );
-
-            let allowedPulangMinutes = limitPulangDefaultMinutes;
-            if (hasDispenActive) {
-                allowedPulangMinutes = 0;
-            } else if (izinPulangCepat && izinPulangCepat.waktu && izinPulangCepat.waktu !== '-') {
-                const [pH, pM] = izinPulangCepat.waktu.split(':').map(Number);
-                if (!isNaN(pH) && !isNaN(pM)) {
-                    allowedPulangMinutes = pH * 60 + pM;
-                } else {
-                    allowedPulangMinutes = 0;
-                }
-            } else if (izinPulangCepat) {
-                allowedPulangMinutes = 0;
-            }
+            const allowedPulangMinutes = getAllowedPulangMinutesForToday(todayStr);
 
             const btnPulang = document.getElementById('btn-presensi-pulang');
             const textPulangEl = document.getElementById('time-presensi-pulang');
@@ -1830,6 +1810,39 @@
             );
         }
 
+        // ====================================================================
+        // FIX: helper terpusat untuk menentukan menit-mulai presensi pulang
+        // boleh dilakukan hari ini. Sebelumnya logika ini diduplikasi di
+        // updateClockColorAndButtons() dan triggerPresensi(), dan untuk
+        // "Izin Pulang Cepat" tombol pulang baru terbuka pada JAM yang
+        // diajukan siswa (mis. jam 13:00), padahal begitu wali kelas
+        // MENYETUJUI izin tersebut, siswa seharusnya bisa langsung
+        // presensi pulang saat itu juga — sama seperti perlakuan untuk
+        // Izin Dispen yang sudah langsung membuka presensi pulang begitu
+        // disetujui. Sekarang kedua jenis izin (Dispen & Izin Pulang
+        // Cepat) sama-sama langsung membuka presensi pulang begitu
+        // berstatus "Disetujui" oleh wali kelas.
+        // ====================================================================
+        function getAllowedPulangMinutesForToday(todayStr) {
+            if (!currentSiswa || currentSiswa.role === 'walikelas') {
+                return getPulangBukaMenit(null, 15 * 60);
+            }
+            // Dispen disetujui -> presensi pulang langsung terbuka (bebas jam & lokasi).
+            if (hasApprovedDispenToday()) return 0;
+
+            // Izin Pulang Cepat disetujui -> presensi pulang langsung terbuka
+            // SEJAK SAAT DISETUJUI, tidak perlu menunggu jam yang diajukan.
+            const izinPulangCepat = localDb.izin.find(i =>
+                i.nis === currentSiswa.nis &&
+                i.jenis === 'Izin Pulang Cepat' &&
+                i.status === 'Disetujui' &&
+                i.tanggal === todayStr
+            );
+            if (izinPulangCepat) return 0;
+
+            return getPulangBukaMenit(currentSiswa.kelas, 15 * 60);
+        }
+
         function checkHariIniAbsenStatus(tanggalStr) {
             if (!currentSiswa) return { masuk: null, pulang: null };
             const list = localDb.presensi.filter(p => p.nis === currentSiswa.nis && p.tanggal === tanggalStr);
@@ -1868,26 +1881,7 @@
                 const now = new Date();
                 const currentMenitSekarang = now.getHours() * 60 + now.getMinutes();
                 const todayStr = now.toISOString().slice(0, 10);
-                const hasDispenActive = hasApprovedDispenToday();
-                const izinPulangCepat = localDb.izin.find(i =>
-                    i.nis === currentSiswa.nis &&
-                    i.jenis === 'Izin Pulang Cepat' &&
-                    i.status === 'Disetujui' &&
-                    i.tanggal === todayStr
-                );
-                let allowedPulangMinutes = getPulangBukaMenit(currentSiswa.kelas, 15 * 60);
-                if (hasDispenActive) {
-                    allowedPulangMinutes = 0;
-                } else if (izinPulangCepat && izinPulangCepat.waktu && izinPulangCepat.waktu !== '-') {
-                    const [pH, pM] = izinPulangCepat.waktu.split(':').map(Number);
-                    if (!isNaN(pH) && !isNaN(pM)) {
-                        allowedPulangMinutes = pH * 60 + pM;
-                    } else {
-                        allowedPulangMinutes = 0;
-                    }
-                } else if (izinPulangCepat) {
-                    allowedPulangMinutes = 0;
-                }
+                const allowedPulangMinutes = getAllowedPulangMinutesForToday(todayStr);
                 if (currentMenitSekarang < allowedPulangMinutes) {
                     showToast(`Presensi pulang masih terkunci. Dibuka pukul ${formatMenitKeJam(allowedPulangMinutes)} WIB.`);
                     return;
@@ -2076,9 +2070,16 @@
                     textPulang.innerText = `Pulang - ${status.pulang.jam} WIB`;
                     if (badgeDonePulang) badgeDonePulang.classList.remove('hidden');
                 } else {
+                    const todayStr = hariIni;
+                    const allowedPulangMinutes = getAllowedPulangMinutesForToday(todayStr);
+                    const now = new Date();
+                    const currentMenitSekarang = now.getHours() * 60 + now.getMinutes();
+                    const belumDibukaPulang = currentMenitSekarang < allowedPulangMinutes;
+                    btnPulang.className = "w-16 h-16 bg-orange-500 hover:bg-orange-600 text-white rounded-full flex items-center justify-center shadow-lg shadow-orange-500/30 transition-all duration-300 transform active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed my-2";
+                    btnPulang.disabled = belumDibukaPulang;
                     iconPulang.className = "fa-solid fa-bell text-2xl";
                     textPulang.className = "text-[10px] text-slate-455 mt-0.5";
-                    textPulang.innerText = "Belum Presensi";
+                    textPulang.innerText = belumDibukaPulang ? `Terkunci hingga ${formatMenitKeJam(allowedPulangMinutes)} WIB` : "Belum Presensi";
                     if (badgeDonePulang) badgeDonePulang.classList.add('hidden');
                 }
             }
@@ -2602,13 +2603,24 @@
             const container = document.getElementById('wali-izin-list-container');
             if (!container || !currentSiswa) return;
             const targetKelas = currentSiswa.kelas;
-            
-            const waitingIzin = [];
-            localDb.izin.forEach((item, index) => {
+
+            // FIX: sebelumnya daftar ini merender tombol Setujui/Tolak dengan
+            // menempelkan INDEX posisi item di array localDb.izin (mis.
+            // onclick="approveOrRejectWaliIzin(7, ...)"). Index tersebut bisa
+            // menjadi USANG (stale) apabila localDb.izin sempat disusun ulang
+            // oleh fetchDatabaseState() (mis. urutan server + data lokal yang
+            // berbeda) sebelum tombol benar-benar diklik. Akibatnya klik
+            // "Setujui" pada Izin Pulang Cepat / Izin Dispen bisa mengenai
+            // baris yang salah, atau baris yang sudah tidak berstatus
+            // "Menunggu" lagi — sehingga TERLIHAT seolah tidak bisa
+            // di-approve. Sekarang setiap tombol menyimpan penanda unik
+            // (id, atau kombinasi nis+created_at sebagai fallback untuk data
+            // lama) lewat atribut data-*, dan record yang tepat dicari ulang
+            // dari localDb.izin saat tombol benar-benar diklik — bukan lewat
+            // index array yang sudah usang.
+            const waitingIzin = localDb.izin.filter(item => {
                 const murid = localDb.siswa.find(s => s.nis === item.nis);
-                if (murid && murid.kelas === targetKelas && item.status === 'Menunggu') {
-                    waitingIzin.push({ item, index });
-                }
+                return murid && murid.kelas === targetKelas && item.status === 'Menunggu';
             });
 
             if (waitingIzin.length === 0) {
@@ -2616,8 +2628,11 @@
                 return;
             }
 
-            container.innerHTML = waitingIzin.map(({ item, index }) => {
+            container.innerHTML = waitingIzin.map((item) => {
                 const murid = localDb.siswa.find(s => s.nis === item.nis);
+                const dataId = item.id ? String(item.id).replace(/"/g, '&quot;') : '';
+                const dataNis = (item.nis || '').toString().replace(/"/g, '&quot;');
+                const dataCreated = (item.created_at || '').toString().replace(/"/g, '&quot;');
                 return `
                     <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100 space-y-2.5 text-xs">
                         <div class="flex justify-between items-start">
@@ -2633,17 +2648,34 @@
                             ${item.waktu && item.waktu !== '-' ? '<span><i class="fa-regular fa-clock"></i> Jam: ' + item.waktu + '</span>' : ''}
                         </div>
                         <div class="flex gap-2 pt-1">
-                            <button onclick="approveOrRejectWaliIzin(${index}, 'Disetujui')" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 rounded-xl transition text-[11px]">Setujui</button>
-                            <button onclick="approveOrRejectWaliIzin(${index}, 'Ditolak')" class="flex-1 bg-rose-50 hover:bg-rose-100 text-rose-600 font-bold py-2.5 rounded-xl transition text-[11px] border border-rose-100">Tolak</button>
+                            <button onclick="approveOrRejectWaliIzin(this, 'Disetujui')" data-id="${dataId}" data-nis="${dataNis}" data-created="${dataCreated}" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 rounded-xl transition text-[11px]">Setujui</button>
+                            <button onclick="approveOrRejectWaliIzin(this, 'Ditolak')" data-id="${dataId}" data-nis="${dataNis}" data-created="${dataCreated}" class="flex-1 bg-rose-50 hover:bg-rose-100 text-rose-600 font-bold py-2.5 rounded-xl transition text-[11px] border border-rose-100">Tolak</button>
                         </div>
                     </div>
                 `;
             }).join('');
         }
 
-        function approveOrRejectWaliIzin(index, status) {
-            const match = localDb.izin[index];
+        // FIX: mencari record izin berdasarkan id unik (atau fallback
+        // nis+created_at untuk data lama yang belum punya id), BUKAN
+        // berdasarkan posisi/index di array — supaya tidak salah sasaran
+        // saat array localDb.izin berubah urutan akibat sinkronisasi data.
+        function findIzinRecord(dataId, dataNis, dataCreated) {
+            if (dataId) {
+                const byId = localDb.izin.find(i => i.id && String(i.id) === String(dataId));
+                if (byId) return byId;
+            }
+            return localDb.izin.find(i => (i.nis || '') === (dataNis || '') && (i.created_at || '') === (dataCreated || ''));
+        }
+
+        function approveOrRejectWaliIzin(btnEl, status) {
+            const dataId = btnEl && btnEl.dataset ? btnEl.dataset.id : '';
+            const dataNis = btnEl && btnEl.dataset ? btnEl.dataset.nis : '';
+            const dataCreated = btnEl && btnEl.dataset ? btnEl.dataset.created : '';
+            const match = findIzinRecord(dataId, dataNis, dataCreated);
+
             if (match) {
+                const previousStatus = match.status;
                 match.status = status;
                 localStorage.setItem('local_offline_db', JSON.stringify(localDb));
                 showToast(`Izin berhasil ${status}!`);
@@ -2667,7 +2699,7 @@
                             // kelas secara jujur, JANGAN biarkan status lokal
                             // "kelihatan berhasil" padahal sheet tidak berubah.
                             showToast("Peringatan: status TIDAK tersimpan di server (" + (data.message || 'gagal sinkron') + "). Coba lagi atau cek koneksi.");
-                            match.status = 'Menunggu';
+                            match.status = previousStatus;
                             localStorage.setItem('local_offline_db', JSON.stringify(localDb));
                             renderWaliIzinApprovalList();
                             updateWaliRekapKehadiranCounters();
@@ -2676,7 +2708,7 @@
                     })
                     .catch(() => {
                         showToast("Peringatan: gagal terhubung ke server, status belum tersimpan permanen.");
-                        match.status = 'Menunggu';
+                        match.status = previousStatus;
                         localStorage.setItem('local_offline_db', JSON.stringify(localDb));
                         renderWaliIzinApprovalList();
                         updateWaliRekapKehadiranCounters();
@@ -2684,7 +2716,8 @@
                     });
                 }
             } else {
-                showToast("Data izin tidak ditemukan.");
+                showToast("Data izin tidak ditemukan atau sudah diperbarui. Menyegarkan daftar...");
+                renderWaliIzinApprovalList();
             }
         }
 

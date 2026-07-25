@@ -1343,14 +1343,18 @@
         }
 
         // ================================================================
-        // FIX (permintaan pengguna): pada menu Beranda role Siswa, kartu
-        // "Jarak Anda ke Sekolah" SELALU menampilkan jarak aktual ke sekolah
-        // dalam meter — status khusus "Bebas Absen Di Mana Saja (Dispensasi
-        // Aktif)" dan "Radius Presensi Pulang Dilonggarkan (Izin Pulang Cepat
-        // Disetujui)" beserta teks "Radius Dinonaktifkan" DIHAPUS dari
-        // tampilan. Logika pelonggaran radius untuk keperluan validasi saat
-        // presensi (triggerPresensi, getAllowedPulangMinutesForToday, dsb)
-        // TIDAK diubah — hanya kartu info jarak ini yang disederhanakan.
+        // FIX (permintaan pengguna terbaru): pada menu Beranda role Siswa,
+        // kartu "Lokasi Presensi" / "Jarak Anda ke Sekolah" sekarang secara
+        // otomatis menampilkan status "Bebas Presensi Di Mana Saja" (hijau)
+        // apabila siswa memiliki pengajuan Izin Dispen ATAU Izin Pulang
+        // Cepat yang berstatus "Disetujui" untuk hari ini — jarak aktual ke
+        // sekolah tetap dihitung & tersedia (tidak disembunyikan), namun
+        // status/koloring tidak lagi menampilkan "di luar jangkauan" karena
+        // lokasi presensi memang sudah bebas (tidak wajib di area sekolah).
+        // Logika inti pelonggaran radius saat proses presensi
+        // (triggerPresensi, getAllowedPulangMinutesForToday, dsb) TIDAK
+        // diubah — perubahan ini hanya menyelaraskan tampilan status di
+        // kartu lokasi dengan logika presensi yang sudah berjalan.
         // ================================================================
         function calculateDistance() {
             if (!currentLatitude || !currentLongitude || !currentSiswa || currentSiswa.role === 'walikelas') return;
@@ -1373,6 +1377,28 @@
             currentDistance = Math.round(R * c);
 
             if (distanceMeter) distanceMeter.innerText = `${currentDistance} meter`;
+
+            // Cek status izin aktif hari ini yang membebaskan lokasi presensi.
+            const isDispenApproved = hasApprovedDispenToday();
+            const isPulangCepatApproved = hasApprovedIzinPulangCepatToday();
+
+            if (isDispenApproved) {
+                if (statusText) {
+                    statusText.innerText = "Dispensasi disetujui — presensi masuk & pulang bebas lokasi (di mana saja)";
+                    statusText.className = "text-xs text-emerald-600 font-semibold mt-0.5";
+                }
+                if (divMeter) divMeter.className = "bg-emerald-50 rounded-2xl p-3 flex justify-between items-center text-xs text-emerald-800 border border-emerald-100";
+                return;
+            }
+
+            if (isPulangCepatApproved) {
+                if (statusText) {
+                    statusText.innerText = "Izin Pulang Cepat disetujui — presensi pulang bebas lokasi (di mana saja)";
+                    statusText.className = "text-xs text-emerald-600 font-semibold mt-0.5";
+                }
+                if (divMeter) divMeter.className = "bg-emerald-50 rounded-2xl p-3 flex justify-between items-center text-xs text-emerald-800 border border-emerald-100";
+                return;
+            }
 
             if (currentDistance <= ABSENCE_RADIUS_METERS) {
                 if (statusText) {

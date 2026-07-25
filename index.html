@@ -1364,20 +1364,6 @@
             }
         }
 
-        // ================================================================
-        // FIX (permintaan pengguna terbaru): pada menu Beranda role Siswa,
-        // kartu "Lokasi Presensi" / "Jarak Anda ke Sekolah" sekarang secara
-        // otomatis menampilkan status "Bebas Presensi Di Mana Saja" (hijau)
-        // apabila siswa memiliki pengajuan Izin Dispen ATAU Izin Pulang
-        // Cepat yang berstatus "Disetujui" untuk hari ini — jarak aktual ke
-        // sekolah tetap dihitung & tersedia (tidak disembunyikan), namun
-        // status/koloring tidak lagi menampilkan "di luar jangkauan" karena
-        // lokasi presensi memang sudah bebas (tidak wajib di area sekolah).
-        // Logika inti pelonggaran radius saat proses presensi
-        // (triggerPresensi, getAllowedPulangMinutesForToday, dsb) TIDAK
-        // diubah — perubahan ini hanya menyelaraskan tampilan status di
-        // kartu lokasi dengan logika presensi yang sudah berjalan.
-        // ================================================================
         function calculateDistance() {
             if (!currentLatitude || !currentLongitude || !currentSiswa || currentSiswa.role === 'walikelas') return;
 
@@ -1564,9 +1550,6 @@
                     document.getElementById('profil-foto').src = currentSiswa.foto;
                 }
                 updateLabelJadwalUI();
-                // Tampilkan segera status presensi hari ini dari data lokal yang tersimpan
-                // agar waktu presensi masuk/pulang tidak "hilang" saat aplikasi dibuka kembali,
-                // tanpa perlu menunggu proses sinkronisasi server selesai terlebih dahulu.
                 updateHomePresensiUI();
                 switchView('home');
             }
@@ -1619,10 +1602,6 @@
 
             fetchDatabaseState();
 
-            // Auto-refresh berkala khusus untuk siswa, agar status izin
-            // yang baru disetujui/ditolak wali kelas (dan unlock presensi
-            // pulang terkait izin pulang cepat) ikut ter-update tanpa
-            // harus logout/login ulang.
             if (!isWali) {
                 if (window._sigesitPollInterval) clearInterval(window._sigesitPollInterval);
                 window._sigesitPollInterval = setInterval(() => {
@@ -1670,9 +1649,6 @@
                 } else {
                     document.getElementById('view-izin').classList.remove('hidden');
                     renderRiwayatIzin();
-                    // Tarik status izin terbaru dari server setiap kali siswa
-                    // membuka tab Layanan Izin, agar status "Menunggu" yang
-                    // sudah diproses wali kelas segera terlihat di sini.
                     fetchDatabaseState();
                 }
                 document.getElementById('nav-izin').className = "flex flex-col items-center gap-1 text-emerald-600";
@@ -1768,16 +1744,13 @@
 
             if (btnPulang) {
                 if (statusAbsen.pulang) {
-                    // Sudah presensi pulang - status "DONE", tombol tetap terkunci.
                     btnPulang.disabled = true;
                 } else if (currentMinutes >= allowedPulangMinutes) {
-                    // Sudah melewati batas/waktu buka pulang - lonceng terbuka (bisa absen).
                     btnPulang.disabled = false;
                     if (textPulangEl && textPulangEl.innerText.startsWith('Terkunci hingga')) {
                         textPulangEl.innerText = "Belum Presensi";
                     }
                 } else {
-                    // Masih sebelum waktu pulang dibuka - lonceng pulang terkunci.
                     btnPulang.disabled = true;
                     if (textPulangEl) {
                         textPulangEl.innerText = `Terkunci hingga ${formatMenitKeJam(allowedPulangMinutes)} WIB`;
@@ -1785,14 +1758,11 @@
                 }
             }
 
-            // Buka/tutup tombol presensi masuk berdasarkan jadwal per jenjang kelas
             const btnMasuk = document.getElementById('btn-presensi-masuk');
             const textMasukEl = document.getElementById('time-presensi-masuk');
             const masukBukaMenit = getMasukBukaMenit(currentSiswa.kelas);
             if (btnMasuk) {
                 if (statusAbsen.masuk) {
-                    // Sudah presensi masuk hari ini - status "DONE", tombol tetap terkunci
-                    // secara permanen (tidak boleh aktif lagi walau di-refresh/logout-login).
                     btnMasuk.disabled = true;
                 } else if (masukBukaMenit !== null && currentMinutes < masukBukaMenit) {
                     btnMasuk.disabled = true;
@@ -1827,9 +1797,6 @@
             );
         }
 
-        // Cek apakah siswa punya izin pulang cepat yang sudah disetujui hari ini.
-        // Digunakan untuk melonggarkan aturan radius geofencing KHUSUS saat siswa
-        // melakukan presensi PULANG (tidak berlaku untuk presensi masuk).
         function hasApprovedIzinPulangCepatToday() {
             if (!currentSiswa || currentSiswa.role === 'walikelas') return false;
             const todayStr = getLocalDateStr();
@@ -1841,28 +1808,12 @@
             );
         }
 
-        // ====================================================================
-        // FIX: helper terpusat untuk menentukan menit-mulai presensi pulang
-        // boleh dilakukan hari ini. Sebelumnya logika ini diduplikasi di
-        // updateClockColorAndButtons() dan triggerPresensi(), dan untuk
-        // "Izin Pulang Cepat" tombol pulang baru terbuka pada JAM yang
-        // diajukan siswa (mis. jam 13:00), padahal begitu wali kelas
-        // MENYETUJUI izin tersebut, siswa seharusnya bisa langsung
-        // presensi pulang saat itu juga — sama seperti perlakuan untuk
-        // Izin Dispen yang sudah langsung membuka presensi pulang begitu
-        // disetujui. Sekarang kedua jenis izin (Dispen & Izin Pulang
-        // Cepat) sama-sama langsung membuka presensi pulang begitu
-        // berstatus "Disetujui" oleh wali kelas.
-        // ====================================================================
         function getAllowedPulangMinutesForToday(todayStr) {
             if (!currentSiswa || currentSiswa.role === 'walikelas') {
                 return getPulangBukaMenit(null, 15 * 60);
             }
-            // Dispen disetujui -> presensi pulang langsung terbuka (bebas jam & lokasi).
             if (hasApprovedDispenToday()) return 0;
 
-            // Izin Pulang Cepat disetujui -> presensi pulang langsung terbuka
-            // SEJAK SAAT DISETUJUI, tidak perlu menunggu jam yang diajukan.
             const izinPulangCepat = localDb.izin.find(i =>
                 i.nis === currentSiswa.nis &&
                 i.jenis === 'Izin Pulang Cepat' &&
@@ -1892,8 +1843,6 @@
                 return;
             }
             const isDispenApproved = hasApprovedDispenToday();
-            // Radius dilonggarkan jika: dispen aktif, ATAU siswa melakukan presensi
-            // PULANG dan izin pulang cepatnya sudah disetujui wali kelas hari ini.
             const isPulangCepatApproved = type === 'pulang' && hasApprovedIzinPulangCepatToday();
             if (!isDispenApproved && !isPulangCepatApproved && currentDistance > ABSENCE_RADIUS_METERS) {
                 showToast(`Anda di luar jangkauan SMAN 1 Parung (> ${ABSENCE_RADIUS_METERS}m)!`);
@@ -2635,25 +2584,6 @@
             if (!container || !currentSiswa) return;
             const targetKelas = currentSiswa.kelas;
 
-            // FIX: sebelumnya daftar ini merender tombol Setujui/Tolak dengan
-            // menempelkan INDEX posisi item di array localDb.izin (mis.
-            // onclick="approveOrRejectWaliIzin(7, ...)"). Index tersebut bisa
-            // menjadi USANG (stale) apabila localDb.izin sempat disusun ulang
-            // oleh fetchDatabaseState() (mis. urutan server + data lokal yang
-            // berbeda) sebelum tombol benar-benar diklik. Akibatnya klik
-            // "Setujui" pada Izin Pulang Cepat / Izin Dispen bisa mengenai
-            // baris yang salah, atau baris yang sudah tidak berstatus
-            // "Menunggu" lagi — sehingga TERLIHAT seolah tidak bisa
-            // di-approve. Sekarang setiap tombol menyimpan penanda unik
-            // (id, atau kombinasi nis+created_at sebagai fallback untuk data
-            // lama) lewat atribut data-*, dan record yang tepat dicari ulang
-            // dari localDb.izin saat tombol benar-benar diklik — bukan lewat
-            // index array yang sudah usang.
-            //
-            // CATATAN: sejak Izin Pulang Cepat & Izin Dispen kini di-AUTO-APPROVE
-            // saat pengajuan (lihat submitIzinKondisional & submitIzinTidakHadir),
-            // kedua jenis izin tersebut tidak akan pernah berstatus "Menunggu"
-            // lagi, sehingga otomatis tidak akan muncul di daftar persetujuan ini.
             const waitingIzin = localDb.izin.filter(item => {
                 const murid = localDb.siswa.find(s => s.nis === item.nis);
                 return murid && murid.kelas === targetKelas && item.status === 'Menunggu';
@@ -2692,10 +2622,6 @@
             }).join('');
         }
 
-        // FIX: mencari record izin berdasarkan id unik (atau fallback
-        // nis+created_at untuk data lama yang belum punya id), BUKAN
-        // berdasarkan posisi/index di array — supaya tidak salah sasaran
-        // saat array localDb.izin berubah urutan akibat sinkronisasi data.
         function findIzinRecord(dataId, dataNis, dataCreated) {
             if (dataId) {
                 const byId = localDb.izin.find(i => i.id && String(i.id) === String(dataId));
@@ -2730,10 +2656,6 @@
                     .then(res => res.json())
                     .then(data => {
                         if (!data.success) {
-                            // Sync ke server gagal (mis. id tidak ditemukan / data
-                            // lama sebelum migrasi kolom id) -> beri tahu wali
-                            // kelas secara jujur, JANGAN biarkan status lokal
-                            // "kelihatan berhasil" padahal sheet tidak berubah.
                             showToast("Peringatan: status TIDAK tersimpan di server (" + (data.message || 'gagal sinkron') + "). Coba lagi atau cek koneksi.");
                             match.status = previousStatus;
                             localStorage.setItem('local_offline_db', JSON.stringify(localDb));
@@ -2898,7 +2820,6 @@
                 contentR.classList.remove('hidden');
                 contentP.classList.add('hidden');
                 renderRiwayatIzin();
-                // Tarik status terbaru juga saat pindah ke tab riwayat.
                 fetchDatabaseState();
             }
         }
@@ -2946,10 +2867,6 @@
             const fileInput = document.getElementById('th-file');
             const rangeTanggal = tglMulai === tglSelesai ? tglMulai : `${tglMulai} s/d ${tglSelesai}`;
 
-            // AUTO-APPROVE: khusus jenis "Dispen", pengajuan langsung berstatus
-            // "Disetujui" tanpa perlu persetujuan wali kelas, sehingga siswa
-            // bisa langsung melakukan presensi masuk & pulang dari mana saja
-            // (tidak terikat radius sekolah) begitu pengajuan terkirim.
             const statusAwal = (jenis === 'Dispen') ? 'Disetujui' : 'Menunggu';
 
             const record = {
@@ -2982,9 +2899,6 @@
                     if (data.success) {
                         if (data.id) record.id = data.id;
                         saveIzinToState(record);
-                        // Pastikan status "Disetujui" untuk Dispen juga tersinkron
-                        // ke server, karena endpoint addIzin pada Apps Script lama
-                        // kemungkinan menyimpan status default "Menunggu".
                         if (jenis === 'Dispen') {
                             fetch(`${scriptUrl}?action=updateStatusIzin`, {
                                 method: 'POST',
@@ -3024,9 +2938,6 @@
             const ket = document.getElementById('kd-keterangan').value.trim();
             const fileInput = document.getElementById('kd-file');
 
-            // AUTO-APPROVE: khusus jenis "Izin Pulang Cepat", pengajuan langsung
-            // berstatus "Disetujui" tanpa perlu persetujuan wali kelas, sehingga
-            // lonceng presensi pulang siswa otomatis terbuka hari itu juga.
             const statusAwal = (jenis === 'Izin Pulang Cepat') ? 'Disetujui' : 'Menunggu';
 
             const record = {
@@ -3059,9 +2970,6 @@
                     if (data.success) {
                         if (data.id) record.id = data.id;
                         saveIzinToState(record);
-                        // Pastikan status "Disetujui" untuk Izin Pulang Cepat juga
-                        // tersinkron ke server, karena endpoint addIzin pada Apps
-                        // Script lama kemungkinan menyimpan status default "Menunggu".
                         if (jenis === 'Izin Pulang Cepat') {
                             fetch(`${scriptUrl}?action=updateStatusIzin`, {
                                 method: 'POST',
@@ -3096,9 +3004,6 @@
         function saveIzinToState(record) {
             localDb.izin.push(record);
             localStorage.setItem('local_offline_db', JSON.stringify(localDb));
-            // Pesan konfirmasi disesuaikan: untuk Dispen & Izin Pulang Cepat yang
-            // otomatis disetujui, beri tahu siswa bahwa izin sudah aktif tanpa
-            // menunggu persetujuan wali kelas.
             if (record.status === 'Disetujui') {
                 if (record.jenis === 'Dispen') {
                     showToast("Izin Dispen otomatis disetujui! Presensi masuk & pulang bisa dilakukan di mana saja hari ini.");
@@ -3114,8 +3019,6 @@
             document.getElementById('form-izin-kondisional').reset();
             document.getElementById('th-file-label').innerText = "Pilih berkas PDF, JPG, atau PNG";
             document.getElementById('kd-file-label').innerText = "Pilih berkas PDF, JPG, atau PNG";
-            // Refresh UI terkait supaya lonceng presensi & radius langsung
-            // ter-update begitu izin auto-approve tersimpan.
             updateHomePresensiUI();
             calculateDistance();
             switchIzinTab('riwayat');
@@ -3157,9 +3060,6 @@
                 const endDate = new Date(endStr);
                 if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) return false;
 
-                // Telusuri setiap hari dalam rentang tanggal pengajuan (mendukung
-                // izin/dispen/sakit yang berupa rentang "s/d"), lalu cocokkan
-                // dengan filter Tahun/Bulan/Tanggal yang sedang aktif.
                 const cursor = new Date(startDate);
                 while (cursor <= endDate) {
                     const y = cursor.getFullYear().toString();
@@ -3275,13 +3175,6 @@
             document.getElementById('rekap-telat-count').innerText = `Terjadi ${kaliTerlambat} kali`;
             document.getElementById('rekap-alpha-count').innerHTML = `${countAlpha} <span class="text-xs font-semibold text-slate-500">kali</span>`;
 
-            // ============================================================
-            // REKAP KEHADIRAN & PERIZINAN (KATEGORI) - berdasarkan filter
-            // tahun/bulan/tanggal yang sedang aktif di atas.
-            // ============================================================
-
-            // --- Hadir: dihitung 1 kali jika pada tanggal yang sama siswa
-            // sudah melakukan presensi MASUK dan PULANG ---
             let countHadirPeriode = 0;
             const groupedUntukHadir = {};
             filtered.forEach(p => {
@@ -3297,8 +3190,6 @@
                 }
             });
 
-            // --- Helper hitung jumlah pengajuan izin (per jenis) yang sudah
-            // Disetujui wali kelas, dalam periode filter tahun/bulan/tanggal ---
             function hitungIzinPeriode(jenisTarget) {
                 return localDb.izin.filter(i => {
                     if (i.nis !== currentSiswa.nis) return false;
@@ -3515,16 +3406,6 @@
                         );
                         localDb.presensi = [...serverPresensi, ...localOnlyPresensi];
 
-                        // --- MERGE data izin: SERVER SELALU JADI KEBENARAN.
-                        // Sebelumnya ada logika yang menimpa balik status server
-                        // dengan status lokal ("li.status !== 'Menunggu'"), yang
-                        // menyembunyikan kegagalan sinkron approve/reject (status
-                        // kelihatan "Disetujui" di device wali kelas padahal sheet
-                        // masih "Menunggu"). Sekarang kita percaya penuh pada
-                        // server untuk baris yang sudah ada di server (dicocokkan
-                        // via id unik), dan hanya menyimpan baris yang BENAR-BENAR
-                        // belum pernah sampai ke server (belum punya pasangan id
-                        // di server sama sekali) sebagai data lokal sementara.
                         const serverIzin = data.izin || [];
                         const localOnlyIzin = localDb.izin.filter(li =>
                             !serverIzin.some(si => si.id && li.id && si.id === li.id)
@@ -3549,9 +3430,6 @@
                             updateWaliRekapKehadiranCounters();
                             renderWaliRekapIzinList();
                         } else if (currentSiswa) {
-                            // Refresh daftar riwayat izin siswa agar status
-                            // Disetujui/Ditolak dari wali kelas langsung terlihat
-                            // tanpa perlu logout/login ulang.
                             renderRiwayatIzin();
                         }
                         

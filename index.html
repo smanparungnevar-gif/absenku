@@ -1145,6 +1145,28 @@
             'XI':  { masukBuka: 10 * 60, masukBatas: 12 * 60 + 30, pulangBuka: 17 * 60 }
         };
 
+        // ================================================================
+        // FIX: helper tanggal LOKAL perangkat (bukan UTC). Method
+        // Date.toISOString() SELALU mengembalikan tanggal dalam UTC, bukan
+        // zona waktu lokal. Karena WIB = UTC+7, sebelum pukul 07:00 WIB
+        // toISOString() masih menganggap "hari ini" adalah HARI SEBELUMNYA.
+        // Ini menyebabkan pengecekan izin Dispen / Izin Pulang Cepat yang
+        // sudah "Disetujui" untuk hari ini GAGAL cocok saat siswa presensi
+        // pagi hari (jam buka presensi masuk kelas X ada di rentang
+        // 05.00-06.30 WIB, tepat sebelum titik potong UTC) — akibatnya
+        // pelonggaran radius 150m tidak pernah aktif dan siswa tetap
+        // terkunci "di luar jangkauan area sekolah". Semua pengecekan
+        // "tanggal hari ini" di bawah ini sekarang memakai tanggal LOKAL,
+        // bukan UTC.
+        // ================================================================
+        function getLocalDateStr(dateObj) {
+            const d = dateObj || new Date();
+            const y = d.getFullYear();
+            const m = (d.getMonth() + 1).toString().padStart(2, '0');
+            const day = d.getDate().toString().padStart(2, '0');
+            return `${y}-${m}-${day}`;
+        }
+
         function getJenjangKelas(kelasStr) {
             if (!kelasStr) return 'XII';
             const k = kelasStr.toString().trim().toUpperCase();
@@ -1718,7 +1740,7 @@
 
         function updateClockColorAndButtons(now, hh, mm) {
             if (!currentSiswa || currentSiswa.role === 'walikelas') return;
-            const todayStr = now.toISOString().slice(0, 10);
+            const todayStr = getLocalDateStr(now);
             const currentMinutes = parseInt(hh) * 60 + parseInt(mm);
             const limitMasukMinutes = getBatasMasukMenit(currentSiswa.kelas, 6 * 60 + 30);
             const hasIzinTerlambat = localDb.izin.some(i => 
@@ -1796,7 +1818,7 @@
 
         function hasApprovedDispenToday() {
             if (!currentSiswa || currentSiswa.role === 'walikelas') return false;
-            const todayStr = new Date().toISOString().slice(0, 10);
+            const todayStr = getLocalDateStr();
             return localDb.izin.some(i => 
                 i.nis === currentSiswa.nis && 
                 i.jenis === 'Dispen' && 
@@ -1810,7 +1832,7 @@
         // melakukan presensi PULANG (tidak berlaku untuk presensi masuk).
         function hasApprovedIzinPulangCepatToday() {
             if (!currentSiswa || currentSiswa.role === 'walikelas') return false;
-            const todayStr = new Date().toISOString().slice(0, 10);
+            const todayStr = getLocalDateStr();
             return localDb.izin.some(i => 
                 i.nis === currentSiswa.nis && 
                 i.jenis === 'Izin Pulang Cepat' && 
@@ -1889,14 +1911,14 @@
             if (type === 'pulang') {
                 const now = new Date();
                 const currentMenitSekarang = now.getHours() * 60 + now.getMinutes();
-                const todayStr = now.toISOString().slice(0, 10);
+                const todayStr = getLocalDateStr(now);
                 const allowedPulangMinutes = getAllowedPulangMinutesForToday(todayStr);
                 if (currentMenitSekarang < allowedPulangMinutes) {
                     showToast(`Presensi pulang masih terkunci. Dibuka pukul ${formatMenitKeJam(allowedPulangMinutes)} WIB.`);
                     return;
                 }
             }
-            const hariIni = new Date().toISOString().slice(0, 10);
+            const hariIni = getLocalDateStr();
             const statusAbsen = checkHariIniAbsenStatus(hariIni);
             if (type === 'masuk' && statusAbsen.masuk) {
                 showToast("Anda sudah absen masuk hari ini.");
@@ -1944,7 +1966,7 @@
         }
 
         function prosesAbsensiSelesai(type, jam) {
-            const hariIni = new Date().toISOString().slice(0, 10);
+            const hariIni = getLocalDateStr();
             const record = {
                 nis: currentSiswa.nis,
                 nama: currentSiswa.nama,
@@ -2027,7 +2049,7 @@
 
         function updateHomePresensiUI() {
             if (!currentSiswa || currentSiswa.role === 'walikelas') return;
-            const hariIni = new Date().toISOString().slice(0, 10);
+            const hariIni = getLocalDateStr();
             const status = checkHariIniAbsenStatus(hariIni);
             const btnMasuk = document.getElementById('btn-presensi-masuk');
             const iconMasuk = document.getElementById('icon-masuk');
@@ -2098,7 +2120,7 @@
             const container = document.getElementById('live-presensi-kelas-container');
             if (!container || !currentSiswa) return;
             const targetKelas = currentSiswa.kelas;
-            const hariIniStr = new Date().toISOString().slice(0, 10);
+            const hariIniStr = getLocalDateStr();
             const rekanSiswa = localDb.siswa.filter(s => s.kelas === targetKelas);
             const batasMasukKelasIni = getBatasMasukMenit(targetKelas, 6 * 60 + 30);
 
@@ -2161,7 +2183,7 @@
             const listEl = document.getElementById('wali-siswa-presensi-list');
             if (!listEl || !currentSiswa) return;
             const targetKelas = currentSiswa.kelas;
-            const todayStr = new Date().toISOString().slice(0, 10);
+            const todayStr = getLocalDateStr();
             const todayDateText = document.getElementById('wali-today-date');
             if (todayDateText) {
                 todayDateText.innerText = new Date().toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'short' });
@@ -2570,7 +2592,7 @@
                 tipe: tipe,
                 deskripsi: desc,
                 poin: poinVal,
-                tanggal: new Date().toISOString().slice(0, 10)
+                tanggal: getLocalDateStr()
             };
 
             localDb.poin.push(record);
@@ -2796,7 +2818,7 @@
         function updateWaliRekapKehadiranCounters() {
             if (!currentSiswa) return;
             const targetKelas = currentSiswa.kelas;
-            const todayStr = new Date().toISOString().slice(0, 10);
+            const todayStr = getLocalDateStr();
 
             const muridKelas = localDb.siswa.filter(s => s.kelas === targetKelas);
             const muridNisList = muridKelas.map(s => s.nis);
@@ -2897,7 +2919,7 @@
                 btnTH.className = "py-3 px-3 bg-slate-50 text-slate-655 rounded-2xl text-xs font-bold border border-slate-100 transition-all flex items-center justify-center gap-1.5";
                 formKD.classList.remove('hidden');
                 formTH.classList.add('hidden');
-                document.getElementById('kd-tanggal').value = new Date().toISOString().slice(0, 10);
+                document.getElementById('kd-tanggal').value = getLocalDateStr();
             }
         }
 

@@ -970,6 +970,126 @@
             </button>
         </div>
 
+        <!-- 7. VIEW ADMIN: BERANDA -->
+        <div id="view-admin-home" class="hidden flex-1 overflow-y-auto p-4 space-y-4 pb-24">
+            <div class="bg-gradient-to-br from-slate-700 to-slate-900 rounded-3xl p-5 text-white shadow-xl relative overflow-hidden">
+                <div class="absolute right-0 bottom-0 opacity-10 translate-x-4 translate-y-4">
+                    <i class="fa-solid fa-user-gear text-9xl"></i>
+                </div>
+                <div class="flex items-center gap-4 relative z-10">
+                    <div class="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center border border-white/40 text-2xl shadow-inner">
+                        <i class="fa-solid fa-shield-halved"></i>
+                    </div>
+                    <div>
+                        <h3 id="admin-nama" class="font-bold text-lg leading-tight">Administrator</h3>
+                        <p id="admin-nip" class="text-xs text-slate-200 font-semibold">NIP: -</p>
+                        <p class="text-[11px] bg-white/20 px-2.5 py-0.5 rounded-full inline-block mt-1.5 font-bold">Panel Admin SMAN 1 Parung</p>
+                    </div>
+                </div>
+                <div class="mt-4 pt-4 border-t border-white/20 relative z-10 flex items-center justify-between">
+                    <span id="admin-today-str" class="text-xs text-slate-200 font-semibold">Hari ini...</span>
+                    <button onclick="fetchDatabaseState(true)" class="text-[10px] bg-white/20 hover:bg-white/30 px-3 py-1.5 rounded-xl font-bold flex items-center gap-1.5">
+                        <i class="fa-solid fa-rotate sync-icon-spin"></i> Sinkron
+                    </button>
+                </div>
+            </div>
+
+            <div class="bg-white p-4 rounded-3xl border border-slate-100 shadow-sm space-y-3">
+                <h4 class="text-xs font-extrabold text-slate-550 uppercase tracking-wider flex items-center gap-1.5 border-b border-slate-100 pb-2.5">
+                    <i class="fa-solid fa-chart-simple text-slate-600"></i> Persentase Kehadiran per Jenjang
+                </h4>
+                <div id="admin-persentase-jenjang" class="space-y-3">
+                    <div class="text-center py-4 text-slate-400 text-xs">Memuat data...</div>
+                </div>
+            </div>
+
+            <div class="bg-white p-4 rounded-3xl border border-slate-100 shadow-sm space-y-3">
+                <h4 class="text-xs font-extrabold text-slate-550 uppercase tracking-wider flex items-center gap-1.5 border-b border-slate-100 pb-2.5">
+                    <i class="fa-solid fa-people-group text-slate-600"></i> Persentase Kehadiran per Kelas
+                </h4>
+                <div id="admin-persentase-kelas" class="space-y-2.5 max-h-96 overflow-y-auto pr-1">
+                    <div class="text-center py-4 text-slate-400 text-xs">Memuat data...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 8. VIEW ADMIN: SISWA -->
+        <div id="view-admin-siswa" class="hidden flex-1 overflow-y-auto p-4 space-y-4 pb-24">
+            <form id="form-admin-tambah-siswa" onsubmit="submitTambahSiswaAdmin(event)" class="bg-white p-4 rounded-3xl border border-slate-100 shadow-sm space-y-3">
+                <h4 class="text-xs font-extrabold text-slate-550 uppercase tracking-wider border-b border-slate-100 pb-2.5 flex items-center gap-1.5">
+                    <i class="fa-solid fa-user-plus text-emerald-600"></i> Tambah Data Siswa
+                </h4>
+                <div class="grid grid-cols-2 gap-2">
+                    <input type="text" id="adm-siswa-nis" required placeholder="NIS" class="px-3 py-2.5 border border-slate-200 rounded-2xl text-xs outline-none focus:ring-2 focus:ring-emerald-500">
+                    <input type="text" id="adm-siswa-nisn" required placeholder="NISN (Password)" class="px-3 py-2.5 border border-slate-200 rounded-2xl text-xs outline-none focus:ring-2 focus:ring-emerald-500">
+                </div>
+                <input type="text" id="adm-siswa-nama" required placeholder="Nama Lengkap Siswa" class="w-full px-3 py-2.5 border border-slate-200 rounded-2xl text-xs outline-none focus:ring-2 focus:ring-emerald-500">
+                <div class="grid grid-cols-2 gap-2">
+                    <select id="adm-siswa-jenjang" class="px-3 py-2.5 border border-slate-200 rounded-2xl text-xs outline-none bg-white font-semibold">
+                        <option value="X">Kelas X</option>
+                        <option value="XI">Kelas XI</option>
+                        <option value="XII">Kelas XII</option>
+                    </select>
+                    <input type="text" id="adm-siswa-kelas" required placeholder="Kelas (mis. X MIPA 1)" class="px-3 py-2.5 border border-slate-200 rounded-2xl text-xs outline-none focus:ring-2 focus:ring-emerald-500">
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <input type="text" id="adm-siswa-walikelas" placeholder="Nama Wali Kelas" class="px-3 py-2.5 border border-slate-200 rounded-2xl text-xs outline-none focus:ring-2 focus:ring-emerald-500">
+                    <input type="text" id="adm-siswa-guruwali" placeholder="Guru Wali/Pembimbing" class="px-3 py-2.5 border border-slate-200 rounded-2xl text-xs outline-none focus:ring-2 focus:ring-emerald-500">
+                </div>
+                <input type="text" id="adm-siswa-noortu" placeholder="No. WhatsApp Orang Tua (opsional)" class="w-full px-3 py-2.5 border border-slate-200 rounded-2xl text-xs outline-none focus:ring-2 focus:ring-emerald-500">
+                <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-2xl transition-all text-xs">
+                    Simpan Data Siswa
+                </button>
+            </form>
+
+            <div class="bg-white p-4 rounded-3xl border border-slate-100 shadow-sm space-y-3">
+                <h4 class="text-xs font-extrabold text-slate-550 uppercase tracking-wider border-b border-slate-100 pb-2.5">Daftar Siswa Terdaftar</h4>
+                <div id="admin-siswa-list" class="space-y-2.5 max-h-96 overflow-y-auto pr-1 divide-y divide-slate-100">
+                    <div class="text-center py-4 text-slate-400 text-xs">Memuat daftar siswa...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 9. VIEW ADMIN: GURU / WALI KELAS -->
+        <div id="view-admin-guru" class="hidden flex-1 overflow-y-auto p-4 space-y-4 pb-24">
+            <form id="form-admin-tambah-guru" onsubmit="submitTambahGuruAdmin(event)" class="bg-white p-4 rounded-3xl border border-slate-100 shadow-sm space-y-3">
+                <h4 class="text-xs font-extrabold text-slate-550 uppercase tracking-wider border-b border-slate-100 pb-2.5 flex items-center gap-1.5">
+                    <i class="fa-solid fa-chalkboard-user text-indigo-600"></i> Tambah Wali Kelas
+                </h4>
+                <div class="grid grid-cols-2 gap-2">
+                    <input type="text" id="adm-guru-nip" required placeholder="NIP" class="px-3 py-2.5 border border-slate-200 rounded-2xl text-xs outline-none focus:ring-2 focus:ring-indigo-500">
+                    <input type="text" id="adm-guru-username" required placeholder="Username" class="px-3 py-2.5 border border-slate-200 rounded-2xl text-xs outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+                <input type="text" id="adm-guru-nama" required placeholder="Nama Lengkap Guru" class="w-full px-3 py-2.5 border border-slate-200 rounded-2xl text-xs outline-none focus:ring-2 focus:ring-indigo-500">
+                <div class="grid grid-cols-2 gap-2">
+                    <input type="text" id="adm-guru-kelas" required placeholder="Wali Kelas (mis. XII MIPA 1)" class="px-3 py-2.5 border border-slate-200 rounded-2xl text-xs outline-none focus:ring-2 focus:ring-indigo-500">
+                    <input type="password" id="adm-guru-password" required placeholder="Password" class="px-3 py-2.5 border border-slate-200 rounded-2xl text-xs outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+                <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-2xl transition-all text-xs">
+                    Simpan Data Guru
+                </button>
+            </form>
+
+            <div class="bg-white p-4 rounded-3xl border border-slate-100 shadow-sm space-y-3">
+                <h4 class="text-xs font-extrabold text-slate-550 uppercase tracking-wider border-b border-slate-100 pb-2.5">Daftar Wali Kelas</h4>
+                <div id="admin-guru-list" class="space-y-2.5 max-h-96 overflow-y-auto pr-1 divide-y divide-slate-100">
+                    <div class="text-center py-4 text-slate-400 text-xs">Memuat daftar guru...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 10. VIEW ADMIN: PENGATURAN JAM -->
+        <div id="view-admin-pengaturan" class="hidden flex-1 overflow-y-auto p-4 space-y-4 pb-24">
+            <div class="bg-white p-4 rounded-3xl border border-slate-100 shadow-sm space-y-2">
+                <h4 class="text-xs font-extrabold text-slate-550 uppercase tracking-wider flex items-center gap-1.5">
+                    <i class="fa-solid fa-gear text-slate-600"></i> Pengaturan Jam Masuk & Pulang
+                </h4>
+                <p class="text-[11px] text-slate-400 leading-relaxed">Atur batas jam masuk (siswa dianggap terlambat jika presensi setelah jam ini) dan jam mulai dibukanya presensi pulang, untuk masing-masing jenjang kelas.</p>
+            </div>
+
+            <div id="admin-pengaturan-jenjang-container" class="space-y-4"></div>
+        </div>
+
         <!-- BOTTOM NAVIGATION BAR -->
         <nav id="bottom-nav" class="hidden absolute bottom-0 left-0 right-0 bg-white border-t border-slate-100 py-3 px-2 grid z-40 transition-all">
             <button onclick="switchView('home')" id="nav-home" class="flex flex-col items-center gap-1 text-emerald-600">
@@ -995,6 +1115,30 @@
             <button onclick="switchView('profil')" id="nav-profil" class="flex flex-col items-center gap-1 text-slate-400">
                 <i class="fa-solid fa-circle-user text-lg"></i>
                 <span class="text-[9px] font-bold">Profil</span>
+            </button>
+        </nav>
+
+        <!-- BOTTOM NAVIGATION BAR (ADMIN) -->
+        <nav id="bottom-nav-admin" class="hidden absolute bottom-0 left-0 right-0 bg-white border-t border-slate-100 py-3 px-2 grid grid-cols-5 gap-1 z-40 transition-all">
+            <button onclick="switchView('admin-home')" id="nav-admin-home" class="flex flex-col items-center gap-1 text-slate-700">
+                <i class="fa-solid fa-house text-lg"></i>
+                <span class="text-[9px] font-bold">Beranda</span>
+            </button>
+            <button onclick="switchView('admin-siswa')" id="nav-admin-siswa" class="flex flex-col items-center gap-1 text-slate-400">
+                <i class="fa-solid fa-user-graduate text-lg"></i>
+                <span class="text-[9px] font-bold">Siswa</span>
+            </button>
+            <button onclick="switchView('admin-guru')" id="nav-admin-guru" class="flex flex-col items-center gap-1 text-slate-400">
+                <i class="fa-solid fa-chalkboard-user text-lg"></i>
+                <span class="text-[9px] font-bold">Guru</span>
+            </button>
+            <button onclick="switchView('admin-pengaturan')" id="nav-admin-pengaturan" class="flex flex-col items-center gap-1 text-slate-400">
+                <i class="fa-solid fa-gear text-lg"></i>
+                <span class="text-[9px] font-bold">Pengaturan</span>
+            </button>
+            <button onclick="handleLogout()" id="nav-admin-logout" class="flex flex-col items-center gap-1 text-slate-400">
+                <i class="fa-solid fa-right-from-bracket text-lg"></i>
+                <span class="text-[9px] font-bold">Keluar</span>
             </button>
         </nav>
     </main>
@@ -1122,6 +1266,31 @@
         </div>
     </div>
 
+    <!-- MODAL LOGIN ADMIN -->
+    <div id="modal-admin-login" class="hidden fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl p-5 w-full max-w-sm space-y-4 shadow-2xl transition transform scale-100">
+            <div class="flex justify-between items-center border-b border-slate-100 pb-2">
+                <h3 class="font-bold text-sm text-slate-800 flex items-center gap-1.5">
+                    <i class="fa-solid fa-user-gear text-slate-600"></i> Login Administrator
+                </h3>
+                <button type="button" onclick="closeAdminLoginModal()" class="text-slate-400 text-lg hover:text-slate-600"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="space-y-3">
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 mb-1.5 ml-1">NIP Admin</label>
+                    <input type="text" id="admin-login-nip" placeholder="Masukkan NIP" class="w-full px-3.5 py-3 bg-white border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-slate-500 text-sm">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 mb-1.5 ml-1">Password</label>
+                    <input type="password" id="admin-login-password" placeholder="Masukkan Password" class="w-full px-3.5 py-3 bg-white border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-slate-500 text-sm">
+                </div>
+            </div>
+            <button type="button" onclick="handleAdminLogin()" class="w-full bg-slate-700 hover:bg-slate-800 text-white font-bold py-3.5 rounded-2xl transition-all text-xs">
+                Masuk Sebagai Admin
+            </button>
+        </div>
+    </div>
+
     <!-- TOAST NOTIFICATION -->
     <div id="toast" class="hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-slate-900 text-white px-5 py-3 rounded-full text-xs shadow-xl flex items-center gap-2 max-w-xs text-center transition-all duration-300">
         <span id="toast-message">Notifikasi</span>
@@ -1138,12 +1307,37 @@
 
         // ================================================================
         // KONFIGURASI JADWAL PRESENSI PER JENJANG KELAS (X, XI, XII)
-        // Kelas XII TIDAK diubah - tetap memakai nilai/aturan asli aplikasi.
+        // Nilai default (dipakai jika admin belum pernah mengubah lewat
+        // menu Pengaturan). Setelah admin menyimpan pengaturan baru, nilai
+        // aktif akan disimpan terpisah di variabel PENGATURAN_JADWAL dan
+        // localStorage supaya persisten antar sesi.
         // ================================================================
-        const JADWAL_PRESENSI = {
+        const JADWAL_PRESENSI_DEFAULT = {
             'X':   { masukBuka: 5 * 60,  masukBatas: 6 * 60 + 30,  pulangBuka: 11 * 60 + 45 },
-            'XI':  { masukBuka: 10 * 60, masukBatas: 12 * 60 + 30, pulangBuka: 17 * 60 }
+            'XI':  { masukBuka: 10 * 60, masukBatas: 12 * 60 + 30, pulangBuka: 17 * 60 },
+            'XII': { masukBuka: null,    masukBatas: 6 * 60 + 30,  pulangBuka: 15 * 60 }
         };
+
+        // Salinan yang bisa diubah oleh Admin lewat menu Pengaturan. Dimuat
+        // dari localStorage saat aplikasi dibuka (lihat window.onload), dan
+        // fallback ke JADWAL_PRESENSI_DEFAULT jika belum pernah diatur.
+        let PENGATURAN_JADWAL = JSON.parse(JSON.stringify(JADWAL_PRESENSI_DEFAULT));
+
+        function loadPengaturanJadwal() {
+            try {
+                const saved = localStorage.getItem('sigesit_pengaturan_jadwal');
+                if (saved) {
+                    const parsed = JSON.parse(saved);
+                    Object.keys(JADWAL_PRESENSI_DEFAULT).forEach(function(j) {
+                        if (parsed[j]) {
+                            PENGATURAN_JADWAL[j] = Object.assign({}, JADWAL_PRESENSI_DEFAULT[j], parsed[j]);
+                        }
+                    });
+                }
+            } catch (err) {
+                PENGATURAN_JADWAL = JSON.parse(JSON.stringify(JADWAL_PRESENSI_DEFAULT));
+            }
+        }
 
         // ================================================================
         // FIX: helper tanggal LOKAL perangkat (bukan UTC). Method
@@ -1176,25 +1370,30 @@
             return 'XII';
         }
 
-        // Jam buka presensi masuk. Kelas XII tidak dibatasi (sesuai aturan lama / tidak diubah).
+        // Jam buka presensi masuk (tidak diatur lewat menu Admin, hanya
+        // batas masuk & buka pulang yang bisa diubah admin).
         function getMasukBukaMenit(kelasStr) {
             const jenjang = getJenjangKelas(kelasStr);
-            if (jenjang === 'XII') return null;
-            return JADWAL_PRESENSI[jenjang].masukBuka;
+            const cfg = PENGATURAN_JADWAL[jenjang] || JADWAL_PRESENSI_DEFAULT[jenjang];
+            return cfg.masukBuka;
         }
 
-        // Batas jam masuk (lewat dari ini dianggap terlambat). Kelas XII memakai nilai default lama.
+        // Batas jam masuk (lewat dari ini dianggap terlambat). Bisa diubah
+        // Admin lewat menu Pengaturan per jenjang.
         function getBatasMasukMenit(kelasStr, defaultXII) {
             const jenjang = getJenjangKelas(kelasStr);
-            if (jenjang === 'XII') return defaultXII;
-            return JADWAL_PRESENSI[jenjang].masukBatas;
+            const cfg = PENGATURAN_JADWAL[jenjang] || JADWAL_PRESENSI_DEFAULT[jenjang];
+            if (cfg && cfg.masukBatas !== undefined && cfg.masukBatas !== null) return cfg.masukBatas;
+            return defaultXII;
         }
 
-        // Jam mulai dibukanya presensi pulang. Kelas XII memakai nilai default lama.
+        // Jam mulai dibukanya presensi pulang. Bisa diubah Admin lewat menu
+        // Pengaturan per jenjang.
         function getPulangBukaMenit(kelasStr, defaultXII) {
             const jenjang = getJenjangKelas(kelasStr);
-            if (jenjang === 'XII') return defaultXII;
-            return JADWAL_PRESENSI[jenjang].pulangBuka;
+            const cfg = PENGATURAN_JADWAL[jenjang] || JADWAL_PRESENSI_DEFAULT[jenjang];
+            if (cfg && cfg.pulangBuka !== undefined && cfg.pulangBuka !== null) return cfg.pulangBuka;
+            return defaultXII;
         }
 
         function formatMenitKeJam(menit) {
@@ -1232,6 +1431,7 @@
         let localDb = {
             siswa: [],
             walikelas: [],
+            admin: [],
             presensi: [],
             izin: [],
             poin: [],
@@ -1265,8 +1465,10 @@
                 initializeLocalDatabaseWithDemoData();
             } else {
                 localDb = JSON.parse(storedLocal);
+                if (!localDb.admin) localDb.admin = [{ nip: "00001", password: "admin123", nama: "Administrator Sistem" }];
             }
 
+            loadPengaturanJadwal();
             startClock();
             initLocationTracking();
             populateTanggalOptions();
@@ -1287,6 +1489,9 @@
                 ],
                 walikelas: [
                     { nip: "98765", username: "98765", password: "password123", nama: "Irwan Hermawan, S.Pd", kelas: "XII MIPA 1" }
+                ],
+                admin: [
+                    { nip: "00001", username: "00001", password: "admin123", nama: "Administrator Sistem" }
                 ],
                 presensi: [],
                 izin: [],
@@ -1338,6 +1543,8 @@
                 const homeJamEl = document.getElementById('home-jam');
                 if (homeTanggalEl) homeTanggalEl.innerText = `${hari[now.getDay()]} , ${d} ${bulan[now.getMonth()]} ${now.getFullYear()}`;
                 if (homeJamEl) homeJamEl.innerText = `${hh}:${mm}:${ss}`;
+                const adminTodayEl = document.getElementById('admin-today-str');
+                if (adminTodayEl) adminTodayEl.innerText = `${hari[now.getDay()]}, ${d} ${bulan[now.getMonth()]} ${now.getFullYear()}`;
                 updateClockColorAndButtons(now, hh, mm);
             }, 1000);
         }
@@ -1364,8 +1571,22 @@
             }
         }
 
+        // ================================================================
+        // FIX (permintaan pengguna terbaru): pada menu Beranda role Siswa,
+        // kartu "Lokasi Presensi" / "Jarak Anda ke Sekolah" sekarang secara
+        // otomatis menampilkan status "Bebas Presensi Di Mana Saja" (hijau)
+        // apabila siswa memiliki pengajuan Izin Dispen ATAU Izin Pulang
+        // Cepat yang berstatus "Disetujui" untuk hari ini — jarak aktual ke
+        // sekolah tetap dihitung & tersedia (tidak disembunyikan), namun
+        // status/koloring tidak lagi menampilkan "di luar jangkauan" karena
+        // lokasi presensi memang sudah bebas (tidak wajib di area sekolah).
+        // Logika inti pelonggaran radius saat proses presensi
+        // (triggerPresensi, getAllowedPulangMinutesForToday, dsb) TIDAK
+        // diubah — perubahan ini hanya menyelaraskan tampilan status di
+        // kartu lokasi dengan logika presensi yang sudah berjalan.
+        // ================================================================
         function calculateDistance() {
-            if (!currentLatitude || !currentLongitude || !currentSiswa || currentSiswa.role === 'walikelas') return;
+            if (!currentLatitude || !currentLongitude || !currentSiswa || currentSiswa.role === 'walikelas' || currentSiswa.role === 'admin') return;
 
             const statusText = document.getElementById('geo-status');
             const distanceMeter = document.getElementById('current-distance');
@@ -1508,13 +1729,89 @@
                 });
         }
 
+        // ================================================================
+        // LOGIN ADMIN — dipicu lewat tombol titik tersembunyi di pojok atas
+        // layar login. Menggunakan NIP + Password, dicocokkan ke sheet/array
+        // 'admin' (terpisah dari wali kelas & siswa).
+        // ================================================================
+        function openAdminLoginModal() {
+            const modal = document.getElementById('modal-admin-login');
+            document.getElementById('admin-login-nip').value = "";
+            document.getElementById('admin-login-password').value = "";
+            if (modal) modal.classList.remove('hidden');
+        }
+
+        function closeAdminLoginModal() {
+            const modal = document.getElementById('modal-admin-login');
+            if (modal) modal.classList.add('hidden');
+        }
+
+        function handleAdminLogin() {
+            const nipInput = document.getElementById('admin-login-nip').value.trim();
+            const passInput = document.getElementById('admin-login-password').value.trim();
+
+            if (!nipInput || !passInput) {
+                showToast("NIP dan Password Admin wajib diisi!");
+                return;
+            }
+
+            if (isMockUrl()) {
+                const adminData = (localDb.admin || []).find(a => (a.nip === nipInput || a.username === nipInput) && a.password === passInput);
+                if (adminData) {
+                    currentSiswa = { ...adminData, role: 'admin' };
+                    localStorage.setItem('sigesit_active_user', JSON.stringify(currentSiswa));
+                    closeAdminLoginModal();
+                    doPostLoginActions();
+                    showToast("Masuk sebagai Administrator!");
+                } else {
+                    showToast("NIP atau Password Admin salah!");
+                }
+                return;
+            }
+
+            showToast("Memvalidasi akun admin...");
+            fetch(`${scriptUrl}?action=loginAdmin&identifier=${encodeURIComponent(nipInput)}&password=${encodeURIComponent(passInput)}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data && data.success) {
+                        currentSiswa = data.user;
+                        currentSiswa.role = 'admin';
+                        localStorage.setItem('sigesit_active_user', JSON.stringify(currentSiswa));
+                        closeAdminLoginModal();
+                        doPostLoginActions();
+                        showToast("Masuk sebagai Administrator!");
+                    } else {
+                        showToast(data.message || "Login admin gagal!");
+                    }
+                })
+                .catch(() => {
+                    showToast("Gagal terhubung ke server untuk login admin.");
+                });
+        }
+
         function doPostLoginActions() {
             document.getElementById('view-login').classList.add('hidden');
             document.getElementById('app-header').classList.remove('hidden');
             const bottomNav = document.getElementById('bottom-nav');
-            bottomNav.classList.remove('hidden');
+            const bottomNavAdmin = document.getElementById('bottom-nav-admin');
 
             const isWali = currentSiswa.role === 'walikelas';
+            const isAdmin = currentSiswa.role === 'admin';
+
+            if (isAdmin) {
+                bottomNav.classList.add('hidden');
+                bottomNavAdmin.classList.remove('hidden');
+                document.getElementById('admin-nama').innerText = currentSiswa.nama || "Administrator";
+                document.getElementById('admin-nip').innerText = `NIP: ${currentSiswa.nip || currentSiswa.username || '-'}`;
+                switchView('admin-home');
+                fetchDatabaseState();
+                if (window._sigesitPollInterval) { clearInterval(window._sigesitPollInterval); window._sigesitPollInterval = null; }
+                return;
+            }
+
+            bottomNavAdmin.classList.add('hidden');
+            bottomNav.classList.remove('hidden');
+
             const navLaporanBtn = document.getElementById('nav-laporan');
             const navMiddleText = document.getElementById('nav-text-middle');
             const navMiddleIcon = document.getElementById('nav-middle-icon');
@@ -1550,6 +1847,9 @@
                     document.getElementById('profil-foto').src = currentSiswa.foto;
                 }
                 updateLabelJadwalUI();
+                // Tampilkan segera status presensi hari ini dari data lokal yang tersimpan
+                // agar waktu presensi masuk/pulang tidak "hilang" saat aplikasi dibuka kembali,
+                // tanpa perlu menunggu proses sinkronisasi server selesai terlebih dahulu.
                 updateHomePresensiUI();
                 switchView('home');
             }
@@ -1602,10 +1902,14 @@
 
             fetchDatabaseState();
 
+            // Auto-refresh berkala khusus untuk siswa, agar status izin
+            // yang baru disetujui/ditolak wali kelas (dan unlock presensi
+            // pulang terkait izin pulang cepat) ikut ter-update tanpa
+            // harus logout/login ulang.
             if (!isWali) {
                 if (window._sigesitPollInterval) clearInterval(window._sigesitPollInterval);
                 window._sigesitPollInterval = setInterval(() => {
-                    if (currentSiswa && currentSiswa.role !== 'walikelas') {
+                    if (currentSiswa && currentSiswa.role !== 'walikelas' && currentSiswa.role !== 'admin') {
                         fetchDatabaseState();
                     }
                 }, 30000);
@@ -1617,7 +1921,8 @@
 
         function switchView(target) {
             const isWali = currentSiswa && currentSiswa.role === 'walikelas';
-            const views = ['home', 'wali-home', 'izin', 'wali-izin', 'wali-guru', 'riwayat', 'laporan', 'profil', 'nilai', 'wali-nilai'];
+            const isAdmin = currentSiswa && currentSiswa.role === 'admin';
+            const views = ['home', 'wali-home', 'izin', 'wali-izin', 'wali-guru', 'riwayat', 'laporan', 'profil', 'nilai', 'wali-nilai', 'admin-home', 'admin-siswa', 'admin-guru', 'admin-pengaturan'];
             
             views.forEach(v => {
                 const el = document.getElementById(`view-${v}`);
@@ -1629,6 +1934,32 @@
                 const el = document.getElementById(`nav-${n}`);
                 if (el) el.className = "flex flex-col items-center gap-1 text-slate-400";
             });
+            const adminNavs = ['admin-home', 'admin-siswa', 'admin-guru', 'admin-pengaturan', 'admin-logout'];
+            adminNavs.forEach(n => {
+                const el = document.getElementById(`nav-${n}`);
+                if (el) el.className = "flex flex-col items-center gap-1 text-slate-400";
+            });
+
+            if (isAdmin) {
+                if (target === 'admin-home') {
+                    document.getElementById('view-admin-home').classList.remove('hidden');
+                    renderAdminBeranda();
+                    document.getElementById('nav-admin-home').className = "flex flex-col items-center gap-1 text-slate-700";
+                } else if (target === 'admin-siswa') {
+                    document.getElementById('view-admin-siswa').classList.remove('hidden');
+                    renderAdminSiswaList();
+                    document.getElementById('nav-admin-siswa').className = "flex flex-col items-center gap-1 text-slate-700";
+                } else if (target === 'admin-guru') {
+                    document.getElementById('view-admin-guru').classList.remove('hidden');
+                    renderAdminGuruList();
+                    document.getElementById('nav-admin-guru').className = "flex flex-col items-center gap-1 text-slate-700";
+                } else if (target === 'admin-pengaturan') {
+                    document.getElementById('view-admin-pengaturan').classList.remove('hidden');
+                    renderAdminPengaturan();
+                    document.getElementById('nav-admin-pengaturan').className = "flex flex-col items-center gap-1 text-slate-700";
+                }
+                return;
+            }
 
             if (target === 'home') {
                 if (isWali) {
@@ -1649,6 +1980,9 @@
                 } else {
                     document.getElementById('view-izin').classList.remove('hidden');
                     renderRiwayatIzin();
+                    // Tarik status izin terbaru dari server setiap kali siswa
+                    // membuka tab Layanan Izin, agar status "Menunggu" yang
+                    // sudah diproses wali kelas segera terlihat di sini.
                     fetchDatabaseState();
                 }
                 document.getElementById('nav-izin').className = "flex flex-col items-center gap-1 text-emerald-600";
@@ -1702,20 +2036,21 @@
                 clearInterval(window._sigesitPollInterval);
                 window._sigesitPollInterval = null;
             }
-            const views = ['home', 'wali-home', 'izin', 'wali-izin', 'wali-guru', 'riwayat', 'laporan', 'profil', 'nilai', 'wali-nilai'];
+            const views = ['home', 'wali-home', 'izin', 'wali-izin', 'wali-guru', 'riwayat', 'laporan', 'profil', 'nilai', 'wali-nilai', 'admin-home', 'admin-siswa', 'admin-guru', 'admin-pengaturan'];
             views.forEach(v => {
                 const el = document.getElementById(`view-${v}`);
                 if (el) el.classList.add('hidden');
             });
             document.getElementById('app-header').classList.add('hidden');
             document.getElementById('bottom-nav').classList.add('hidden');
+            document.getElementById('bottom-nav-admin').classList.add('hidden');
             document.getElementById('view-login').classList.remove('hidden');
             showToast("Sesi berhasil keluar.");
             switchRole('siswa');
         }
 
         function updateClockColorAndButtons(now, hh, mm) {
-            if (!currentSiswa || currentSiswa.role === 'walikelas') return;
+            if (!currentSiswa || currentSiswa.role === 'walikelas' || currentSiswa.role === 'admin') return;
             const todayStr = getLocalDateStr(now);
             const currentMinutes = parseInt(hh) * 60 + parseInt(mm);
             const limitMasukMinutes = getBatasMasukMenit(currentSiswa.kelas, 6 * 60 + 30);
@@ -1744,13 +2079,16 @@
 
             if (btnPulang) {
                 if (statusAbsen.pulang) {
+                    // Sudah presensi pulang - status "DONE", tombol tetap terkunci.
                     btnPulang.disabled = true;
                 } else if (currentMinutes >= allowedPulangMinutes) {
+                    // Sudah melewati batas/waktu buka pulang - lonceng terbuka (bisa absen).
                     btnPulang.disabled = false;
                     if (textPulangEl && textPulangEl.innerText.startsWith('Terkunci hingga')) {
                         textPulangEl.innerText = "Belum Presensi";
                     }
                 } else {
+                    // Masih sebelum waktu pulang dibuka - lonceng pulang terkunci.
                     btnPulang.disabled = true;
                     if (textPulangEl) {
                         textPulangEl.innerText = `Terkunci hingga ${formatMenitKeJam(allowedPulangMinutes)} WIB`;
@@ -1758,11 +2096,14 @@
                 }
             }
 
+            // Buka/tutup tombol presensi masuk berdasarkan jadwal per jenjang kelas
             const btnMasuk = document.getElementById('btn-presensi-masuk');
             const textMasukEl = document.getElementById('time-presensi-masuk');
             const masukBukaMenit = getMasukBukaMenit(currentSiswa.kelas);
             if (btnMasuk) {
                 if (statusAbsen.masuk) {
+                    // Sudah presensi masuk hari ini - status "DONE", tombol tetap terkunci
+                    // secara permanen (tidak boleh aktif lagi walau di-refresh/logout-login).
                     btnMasuk.disabled = true;
                 } else if (masukBukaMenit !== null && currentMinutes < masukBukaMenit) {
                     btnMasuk.disabled = true;
@@ -1787,7 +2128,7 @@
         }
 
         function hasApprovedDispenToday() {
-            if (!currentSiswa || currentSiswa.role === 'walikelas') return false;
+            if (!currentSiswa || currentSiswa.role === 'walikelas' || currentSiswa.role === 'admin') return false;
             const todayStr = getLocalDateStr();
             return localDb.izin.some(i => 
                 i.nis === currentSiswa.nis && 
@@ -1797,8 +2138,11 @@
             );
         }
 
+        // Cek apakah siswa punya izin pulang cepat yang sudah disetujui hari ini.
+        // Digunakan untuk melonggarkan aturan radius geofencing KHUSUS saat siswa
+        // melakukan presensi PULANG (tidak berlaku untuk presensi masuk).
         function hasApprovedIzinPulangCepatToday() {
-            if (!currentSiswa || currentSiswa.role === 'walikelas') return false;
+            if (!currentSiswa || currentSiswa.role === 'walikelas' || currentSiswa.role === 'admin') return false;
             const todayStr = getLocalDateStr();
             return localDb.izin.some(i => 
                 i.nis === currentSiswa.nis && 
@@ -1808,12 +2152,28 @@
             );
         }
 
+        // ====================================================================
+        // FIX: helper terpusat untuk menentukan menit-mulai presensi pulang
+        // boleh dilakukan hari ini. Sebelumnya logika ini diduplikasi di
+        // updateClockColorAndButtons() dan triggerPresensi(), dan untuk
+        // "Izin Pulang Cepat" tombol pulang baru terbuka pada JAM yang
+        // diajukan siswa (mis. jam 13:00), padahal begitu wali kelas
+        // MENYETUJUI izin tersebut, siswa seharusnya bisa langsung
+        // presensi pulang saat itu juga — sama seperti perlakuan untuk
+        // Izin Dispen yang sudah langsung membuka presensi pulang begitu
+        // disetujui. Sekarang kedua jenis izin (Dispen & Izin Pulang
+        // Cepat) sama-sama langsung membuka presensi pulang begitu
+        // berstatus "Disetujui" oleh wali kelas.
+        // ====================================================================
         function getAllowedPulangMinutesForToday(todayStr) {
-            if (!currentSiswa || currentSiswa.role === 'walikelas') {
+            if (!currentSiswa || currentSiswa.role === 'walikelas' || currentSiswa.role === 'admin') {
                 return getPulangBukaMenit(null, 15 * 60);
             }
+            // Dispen disetujui -> presensi pulang langsung terbuka (bebas jam & lokasi).
             if (hasApprovedDispenToday()) return 0;
 
+            // Izin Pulang Cepat disetujui -> presensi pulang langsung terbuka
+            // SEJAK SAAT DISETUJUI, tidak perlu menunggu jam yang diajukan.
             const izinPulangCepat = localDb.izin.find(i =>
                 i.nis === currentSiswa.nis &&
                 i.jenis === 'Izin Pulang Cepat' &&
@@ -1843,6 +2203,8 @@
                 return;
             }
             const isDispenApproved = hasApprovedDispenToday();
+            // Radius dilonggarkan jika: dispen aktif, ATAU siswa melakukan presensi
+            // PULANG dan izin pulang cepatnya sudah disetujui wali kelas hari ini.
             const isPulangCepatApproved = type === 'pulang' && hasApprovedIzinPulangCepatToday();
             if (!isDispenApproved && !isPulangCepatApproved && currentDistance > ABSENCE_RADIUS_METERS) {
                 showToast(`Anda di luar jangkauan SMAN 1 Parung (> ${ABSENCE_RADIUS_METERS}m)!`);
@@ -1997,7 +2359,7 @@
         }
 
         function updateHomePresensiUI() {
-            if (!currentSiswa || currentSiswa.role === 'walikelas') return;
+            if (!currentSiswa || currentSiswa.role === 'walikelas' || currentSiswa.role === 'admin') return;
             const hariIni = getLocalDateStr();
             const status = checkHariIniAbsenStatus(hariIni);
             const btnMasuk = document.getElementById('btn-presensi-masuk');
@@ -2584,6 +2946,25 @@
             if (!container || !currentSiswa) return;
             const targetKelas = currentSiswa.kelas;
 
+            // FIX: sebelumnya daftar ini merender tombol Setujui/Tolak dengan
+            // menempelkan INDEX posisi item di array localDb.izin (mis.
+            // onclick="approveOrRejectWaliIzin(7, ...)"). Index tersebut bisa
+            // menjadi USANG (stale) apabila localDb.izin sempat disusun ulang
+            // oleh fetchDatabaseState() (mis. urutan server + data lokal yang
+            // berbeda) sebelum tombol benar-benar diklik. Akibatnya klik
+            // "Setujui" pada Izin Pulang Cepat / Izin Dispen bisa mengenai
+            // baris yang salah, atau baris yang sudah tidak berstatus
+            // "Menunggu" lagi — sehingga TERLIHAT seolah tidak bisa
+            // di-approve. Sekarang setiap tombol menyimpan penanda unik
+            // (id, atau kombinasi nis+created_at sebagai fallback untuk data
+            // lama) lewat atribut data-*, dan record yang tepat dicari ulang
+            // dari localDb.izin saat tombol benar-benar diklik — bukan lewat
+            // index array yang sudah usang.
+            //
+            // CATATAN: sejak Izin Pulang Cepat & Izin Dispen kini di-AUTO-APPROVE
+            // saat pengajuan (lihat submitIzinKondisional & submitIzinTidakHadir),
+            // kedua jenis izin tersebut tidak akan pernah berstatus "Menunggu"
+            // lagi, sehingga otomatis tidak akan muncul di daftar persetujuan ini.
             const waitingIzin = localDb.izin.filter(item => {
                 const murid = localDb.siswa.find(s => s.nis === item.nis);
                 return murid && murid.kelas === targetKelas && item.status === 'Menunggu';
@@ -2622,6 +3003,10 @@
             }).join('');
         }
 
+        // FIX: mencari record izin berdasarkan id unik (atau fallback
+        // nis+created_at untuk data lama yang belum punya id), BUKAN
+        // berdasarkan posisi/index di array — supaya tidak salah sasaran
+        // saat array localDb.izin berubah urutan akibat sinkronisasi data.
         function findIzinRecord(dataId, dataNis, dataCreated) {
             if (dataId) {
                 const byId = localDb.izin.find(i => i.id && String(i.id) === String(dataId));
@@ -2656,6 +3041,10 @@
                     .then(res => res.json())
                     .then(data => {
                         if (!data.success) {
+                            // Sync ke server gagal (mis. id tidak ditemukan / data
+                            // lama sebelum migrasi kolom id) -> beri tahu wali
+                            // kelas secara jujur, JANGAN biarkan status lokal
+                            // "kelihatan berhasil" padahal sheet tidak berubah.
                             showToast("Peringatan: status TIDAK tersimpan di server (" + (data.message || 'gagal sinkron') + "). Coba lagi atau cek koneksi.");
                             match.status = previousStatus;
                             localStorage.setItem('local_offline_db', JSON.stringify(localDb));
@@ -2820,6 +3209,7 @@
                 contentR.classList.remove('hidden');
                 contentP.classList.add('hidden');
                 renderRiwayatIzin();
+                // Tarik status terbaru juga saat pindah ke tab riwayat.
                 fetchDatabaseState();
             }
         }
@@ -2867,6 +3257,10 @@
             const fileInput = document.getElementById('th-file');
             const rangeTanggal = tglMulai === tglSelesai ? tglMulai : `${tglMulai} s/d ${tglSelesai}`;
 
+            // AUTO-APPROVE: khusus jenis "Dispen", pengajuan langsung berstatus
+            // "Disetujui" tanpa perlu persetujuan wali kelas, sehingga siswa
+            // bisa langsung melakukan presensi masuk & pulang dari mana saja
+            // (tidak terikat radius sekolah) begitu pengajuan terkirim.
             const statusAwal = (jenis === 'Dispen') ? 'Disetujui' : 'Menunggu';
 
             const record = {
@@ -2899,6 +3293,9 @@
                     if (data.success) {
                         if (data.id) record.id = data.id;
                         saveIzinToState(record);
+                        // Pastikan status "Disetujui" untuk Dispen juga tersinkron
+                        // ke server, karena endpoint addIzin pada Apps Script lama
+                        // kemungkinan menyimpan status default "Menunggu".
                         if (jenis === 'Dispen') {
                             fetch(`${scriptUrl}?action=updateStatusIzin`, {
                                 method: 'POST',
@@ -2938,6 +3335,9 @@
             const ket = document.getElementById('kd-keterangan').value.trim();
             const fileInput = document.getElementById('kd-file');
 
+            // AUTO-APPROVE: khusus jenis "Izin Pulang Cepat", pengajuan langsung
+            // berstatus "Disetujui" tanpa perlu persetujuan wali kelas, sehingga
+            // lonceng presensi pulang siswa otomatis terbuka hari itu juga.
             const statusAwal = (jenis === 'Izin Pulang Cepat') ? 'Disetujui' : 'Menunggu';
 
             const record = {
@@ -2970,6 +3370,9 @@
                     if (data.success) {
                         if (data.id) record.id = data.id;
                         saveIzinToState(record);
+                        // Pastikan status "Disetujui" untuk Izin Pulang Cepat juga
+                        // tersinkron ke server, karena endpoint addIzin pada Apps
+                        // Script lama kemungkinan menyimpan status default "Menunggu".
                         if (jenis === 'Izin Pulang Cepat') {
                             fetch(`${scriptUrl}?action=updateStatusIzin`, {
                                 method: 'POST',
@@ -3004,6 +3407,9 @@
         function saveIzinToState(record) {
             localDb.izin.push(record);
             localStorage.setItem('local_offline_db', JSON.stringify(localDb));
+            // Pesan konfirmasi disesuaikan: untuk Dispen & Izin Pulang Cepat yang
+            // otomatis disetujui, beri tahu siswa bahwa izin sudah aktif tanpa
+            // menunggu persetujuan wali kelas.
             if (record.status === 'Disetujui') {
                 if (record.jenis === 'Dispen') {
                     showToast("Izin Dispen otomatis disetujui! Presensi masuk & pulang bisa dilakukan di mana saja hari ini.");
@@ -3019,6 +3425,8 @@
             document.getElementById('form-izin-kondisional').reset();
             document.getElementById('th-file-label').innerText = "Pilih berkas PDF, JPG, atau PNG";
             document.getElementById('kd-file-label').innerText = "Pilih berkas PDF, JPG, atau PNG";
+            // Refresh UI terkait supaya lonceng presensi & radius langsung
+            // ter-update begitu izin auto-approve tersimpan.
             updateHomePresensiUI();
             calculateDistance();
             switchIzinTab('riwayat');
@@ -3060,6 +3468,9 @@
                 const endDate = new Date(endStr);
                 if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) return false;
 
+                // Telusuri setiap hari dalam rentang tanggal pengajuan (mendukung
+                // izin/dispen/sakit yang berupa rentang "s/d"), lalu cocokkan
+                // dengan filter Tahun/Bulan/Tanggal yang sedang aktif.
                 const cursor = new Date(startDate);
                 while (cursor <= endDate) {
                     const y = cursor.getFullYear().toString();
@@ -3175,6 +3586,13 @@
             document.getElementById('rekap-telat-count').innerText = `Terjadi ${kaliTerlambat} kali`;
             document.getElementById('rekap-alpha-count').innerHTML = `${countAlpha} <span class="text-xs font-semibold text-slate-500">kali</span>`;
 
+            // ============================================================
+            // REKAP KEHADIRAN & PERIZINAN (KATEGORI) - berdasarkan filter
+            // tahun/bulan/tanggal yang sedang aktif di atas.
+            // ============================================================
+
+            // --- Hadir: dihitung 1 kali jika pada tanggal yang sama siswa
+            // sudah melakukan presensi MASUK dan PULANG ---
             let countHadirPeriode = 0;
             const groupedUntukHadir = {};
             filtered.forEach(p => {
@@ -3190,6 +3608,8 @@
                 }
             });
 
+            // --- Helper hitung jumlah pengajuan izin (per jenis) yang sudah
+            // Disetujui wali kelas, dalam periode filter tahun/bulan/tanggal ---
             function hitungIzinPeriode(jenisTarget) {
                 return localDb.izin.filter(i => {
                     if (i.nis !== currentSiswa.nis) return false;
@@ -3359,6 +3779,257 @@
             }).join('');
         }
 
+        // ================================================================
+        // MODUL ADMIN: Beranda (persentase kehadiran per jenjang & kelas)
+        // ================================================================
+        function hitungPersentaseKehadiran(daftarSiswa, tanggalStr) {
+            if (!daftarSiswa || daftarSiswa.length === 0) return { hadir: 0, total: 0, persen: 0 };
+            let hadir = 0;
+            daftarSiswa.forEach(s => {
+                const sudahMasuk = localDb.presensi.some(p => p.nis === s.nis && p.tanggal === tanggalStr && p.tipe === 'masuk');
+                const izinDisetujui = localDb.izin.some(i => i.nis === s.nis && i.status === 'Disetujui' && isTodayInRange(i.tanggal, tanggalStr));
+                if (sudahMasuk || izinDisetujui) hadir++;
+            });
+            const persen = Math.round((hadir / daftarSiswa.length) * 100);
+            return { hadir: hadir, total: daftarSiswa.length, persen: persen };
+        }
+
+        function renderAdminBeranda() {
+            const todayStr = getLocalDateStr();
+            const semuaSiswa = localDb.siswa || [];
+
+            const jenjangContainer = document.getElementById('admin-persentase-jenjang');
+            const kelasContainer = document.getElementById('admin-persentase-kelas');
+            if (!jenjangContainer || !kelasContainer) return;
+
+            if (semuaSiswa.length === 0) {
+                jenjangContainer.innerHTML = `<div class="text-center py-4 text-slate-400 text-xs">Belum ada data siswa.</div>`;
+                kelasContainer.innerHTML = `<div class="text-center py-4 text-slate-400 text-xs">Belum ada data siswa.</div>`;
+                return;
+            }
+
+            const jenjangList = ['X', 'XI', 'XII'];
+            jenjangContainer.innerHTML = jenjangList.map(j => {
+                const siswaJenjang = semuaSiswa.filter(s => getJenjangKelas(s.kelas) === j);
+                const stat = hitungPersentaseKehadiran(siswaJenjang, todayStr);
+                const barColor = stat.persen >= 85 ? 'bg-emerald-500' : (stat.persen >= 60 ? 'bg-amber-500' : 'bg-rose-500');
+                return `
+                    <div class="space-y-1.5">
+                        <div class="flex justify-between items-center text-xs">
+                            <span class="font-bold text-slate-700">Kelas ${j}</span>
+                            <span class="font-extrabold text-slate-800">${stat.persen}% <span class="text-[10px] text-slate-400 font-semibold">(${stat.hadir}/${stat.total} siswa)</span></span>
+                        </div>
+                        <div class="w-full h-2.5 bg-slate-100 rounded-full overflow-hidden">
+                            <div class="h-full ${barColor} rounded-full transition-all" style="width:${stat.total > 0 ? stat.persen : 0}%"></div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            const uniqueKelas = [...new Set(semuaSiswa.map(s => s.kelas))].sort();
+            kelasContainer.innerHTML = uniqueKelas.map(k => {
+                const siswaKelas = semuaSiswa.filter(s => s.kelas === k);
+                const stat = hitungPersentaseKehadiran(siswaKelas, todayStr);
+                const barColor = stat.persen >= 85 ? 'bg-emerald-500' : (stat.persen >= 60 ? 'bg-amber-500' : 'bg-rose-500');
+                return `
+                    <div class="bg-slate-50 p-3 rounded-2xl border border-slate-100 space-y-1.5">
+                        <div class="flex justify-between items-center text-xs">
+                            <span class="font-bold text-slate-700">${k}</span>
+                            <span class="font-extrabold text-slate-800">${stat.persen}% <span class="text-[10px] text-slate-400 font-semibold">(${stat.hadir}/${stat.total})</span></span>
+                        </div>
+                        <div class="w-full h-2 bg-slate-200 rounded-full overflow-hidden">
+                            <div class="h-full ${barColor} rounded-full transition-all" style="width:${stat.total > 0 ? stat.persen : 0}%"></div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // ================================================================
+        // MODUL ADMIN: Manajemen Siswa
+        // ================================================================
+        function renderAdminSiswaList() {
+            const container = document.getElementById('admin-siswa-list');
+            if (!container) return;
+            const semuaSiswa = localDb.siswa || [];
+            if (semuaSiswa.length === 0) {
+                container.innerHTML = `<div class="text-center py-4 text-slate-400 text-xs">Belum ada siswa terdaftar.</div>`;
+                return;
+            }
+            container.innerHTML = semuaSiswa.map(s => `
+                <div class="flex items-center justify-between py-2.5 first:pt-0">
+                    <div>
+                        <p class="text-xs font-bold text-slate-800">${s.nama}</p>
+                        <p class="text-[9px] text-slate-400">NIS: ${s.nis} • NISN: ${s.nisn} • ${s.kelas}</p>
+                    </div>
+                    <span class="text-[9px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full font-bold">${getJenjangKelas(s.kelas)}</span>
+                </div>
+            `).join('');
+        }
+
+        function submitTambahSiswaAdmin(e) {
+            e.preventDefault();
+            const nis = document.getElementById('adm-siswa-nis').value.trim();
+            const nisn = document.getElementById('adm-siswa-nisn').value.trim();
+            const nama = document.getElementById('adm-siswa-nama').value.trim();
+            const kelas = document.getElementById('adm-siswa-kelas').value.trim();
+            const waliKelas = document.getElementById('adm-siswa-walikelas').value.trim();
+            const guruWali = document.getElementById('adm-siswa-guruwali').value.trim();
+            const noOrtu = document.getElementById('adm-siswa-noortu').value.trim();
+
+            if (!nis || !nisn || !nama || !kelas) {
+                showToast("NIS, NISN, Nama, dan Kelas wajib diisi!");
+                return;
+            }
+            if (localDb.siswa.some(s => s.nis === nis)) {
+                showToast("NIS sudah terdaftar!");
+                return;
+            }
+
+            const record = {
+                nis: nis, nisn: nisn, nama: nama, kelas: kelas,
+                wali_kelas: waliKelas, guru_wali: guruWali, foto: "",
+                alamat_koordinat: "", alamat_teks: "", no_ortu: noOrtu, tautan_link: ""
+            };
+            localDb.siswa.push(record);
+            localStorage.setItem('local_offline_db', JSON.stringify(localDb));
+            showToast(`Siswa "${nama}" berhasil ditambahkan!`);
+            document.getElementById('form-admin-tambah-siswa').reset();
+            renderAdminSiswaList();
+
+            if (!isMockUrl()) {
+                fetch(`${scriptUrl}?action=addSiswa`, {
+                    method: 'POST',
+                    body: JSON.stringify(record)
+                }).catch(() => console.log("Gagal sync siswa baru ke server."));
+            }
+        }
+
+        // ================================================================
+        // MODUL ADMIN: Manajemen Guru / Wali Kelas
+        // ================================================================
+        function renderAdminGuruList() {
+            const container = document.getElementById('admin-guru-list');
+            if (!container) return;
+            const semuaGuru = localDb.walikelas || [];
+            if (semuaGuru.length === 0) {
+                container.innerHTML = `<div class="text-center py-4 text-slate-400 text-xs">Belum ada wali kelas terdaftar.</div>`;
+                return;
+            }
+            container.innerHTML = semuaGuru.map(g => `
+                <div class="flex items-center justify-between py-2.5 first:pt-0">
+                    <div>
+                        <p class="text-xs font-bold text-slate-800">${g.nama}</p>
+                        <p class="text-[9px] text-slate-400">NIP: ${g.nip || '-'} • Username: ${g.username || '-'}</p>
+                    </div>
+                    <span class="text-[9px] bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded-full font-bold">${g.kelas}</span>
+                </div>
+            `).join('');
+        }
+
+        function submitTambahGuruAdmin(e) {
+            e.preventDefault();
+            const nip = document.getElementById('adm-guru-nip').value.trim();
+            const username = document.getElementById('adm-guru-username').value.trim();
+            const nama = document.getElementById('adm-guru-nama').value.trim();
+            const kelas = document.getElementById('adm-guru-kelas').value.trim();
+            const password = document.getElementById('adm-guru-password').value.trim();
+
+            if (!nip || !username || !nama || !kelas || !password) {
+                showToast("Semua kolom wajib diisi!");
+                return;
+            }
+            if (localDb.walikelas.some(g => g.nip === nip || g.username === username)) {
+                showToast("NIP/Username sudah terdaftar!");
+                return;
+            }
+
+            const record = { nip: nip, username: username, password: password, nama: nama, kelas: kelas };
+            localDb.walikelas.push(record);
+            localStorage.setItem('local_offline_db', JSON.stringify(localDb));
+            showToast(`Wali kelas "${nama}" berhasil ditambahkan!`);
+            document.getElementById('form-admin-tambah-guru').reset();
+            renderAdminGuruList();
+
+            if (!isMockUrl()) {
+                fetch(`${scriptUrl}?action=addGuru`, {
+                    method: 'POST',
+                    body: JSON.stringify(record)
+                }).catch(() => console.log("Gagal sync guru baru ke server."));
+            }
+        }
+
+        // ================================================================
+        // MODUL ADMIN: Pengaturan Jam Masuk & Pulang per Jenjang
+        // ================================================================
+        function menitKeInputTime(menit) {
+            if (menit === null || menit === undefined) return "";
+            const h = Math.floor(menit / 60).toString().padStart(2, '0');
+            const m = (menit % 60).toString().padStart(2, '0');
+            return `${h}:${m}`;
+        }
+
+        function inputTimeKeMenit(str) {
+            if (!str) return null;
+            const parts = str.split(':').map(Number);
+            if (parts.length !== 2 || isNaN(parts[0]) || isNaN(parts[1])) return null;
+            return parts[0] * 60 + parts[1];
+        }
+
+        function renderAdminPengaturan() {
+            const container = document.getElementById('admin-pengaturan-jenjang-container');
+            if (!container) return;
+            const jenjangList = ['X', 'XI', 'XII'];
+            container.innerHTML = jenjangList.map(j => {
+                const cfg = PENGATURAN_JADWAL[j] || JADWAL_PRESENSI_DEFAULT[j];
+                return `
+                    <div class="bg-white p-4 rounded-3xl border border-slate-100 shadow-sm space-y-3">
+                        <h5 class="text-xs font-extrabold text-slate-700 uppercase tracking-wider border-b border-slate-100 pb-2">Kelas ${j}</h5>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-[10px] font-bold text-slate-500 mb-1">Jam Masuk (Batas)</label>
+                                <input type="time" id="adm-jadwal-${j}-masuk" value="${menitKeInputTime(cfg.masukBatas)}" class="w-full px-3 py-2.5 border border-slate-200 rounded-2xl text-sm outline-none focus:ring-2 focus:ring-slate-500">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-bold text-slate-500 mb-1">Jam Pulang (Buka)</label>
+                                <input type="time" id="adm-jadwal-${j}-pulang" value="${menitKeInputTime(cfg.pulangBuka)}" class="w-full px-3 py-2.5 border border-slate-200 rounded-2xl text-sm outline-none focus:ring-2 focus:ring-slate-500">
+                            </div>
+                        </div>
+                        <button onclick="saveAdminPengaturanJenjang('${j}')" class="w-full bg-slate-700 hover:bg-slate-800 text-white font-bold py-2.5 rounded-2xl transition-all text-xs">
+                            Simpan Jadwal Kelas ${j}
+                        </button>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function saveAdminPengaturanJenjang(jenjang) {
+            const masukInput = document.getElementById(`adm-jadwal-${jenjang}-masuk`).value;
+            const pulangInput = document.getElementById(`adm-jadwal-${jenjang}-pulang`).value;
+            const masukMenit = inputTimeKeMenit(masukInput);
+            const pulangMenit = inputTimeKeMenit(pulangInput);
+
+            if (masukMenit === null || pulangMenit === null) {
+                showToast("Jam masuk dan jam pulang wajib diisi dengan benar!");
+                return;
+            }
+
+            if (!PENGATURAN_JADWAL[jenjang]) {
+                PENGATURAN_JADWAL[jenjang] = JSON.parse(JSON.stringify(JADWAL_PRESENSI_DEFAULT[jenjang]));
+            }
+            PENGATURAN_JADWAL[jenjang].masukBatas = masukMenit;
+            PENGATURAN_JADWAL[jenjang].pulangBuka = pulangMenit;
+            localStorage.setItem('sigesit_pengaturan_jadwal', JSON.stringify(PENGATURAN_JADWAL));
+            showToast(`Jadwal kelas ${jenjang} berhasil disimpan!`);
+
+            if (!isMockUrl()) {
+                fetch(`${scriptUrl}?action=updatePengaturanJadwal`, {
+                    method: 'POST',
+                    body: JSON.stringify({ jenjang: jenjang, masukBatas: masukMenit, pulangBuka: pulangMenit })
+                }).catch(() => console.log("Gagal sync pengaturan jadwal ke server."));
+            }
+        }
+
         function fetchDatabaseState(showFeedback = false) {
             if (!currentSiswa) return;
             
@@ -3384,6 +4055,10 @@
                     if (currentSiswa && currentSiswa.role === 'walikelas') {
                         updateWaliRekapKehadiranCounters();
                         renderWaliRekapIzinList();
+                    } else if (currentSiswa && currentSiswa.role === 'admin') {
+                        renderAdminBeranda();
+                        renderAdminSiswaList();
+                        renderAdminGuruList();
                     } else if (currentSiswa) {
                         renderRiwayatIzin();
                     }
@@ -3406,6 +4081,16 @@
                         );
                         localDb.presensi = [...serverPresensi, ...localOnlyPresensi];
 
+                        // --- MERGE data izin: SERVER SELALU JADI KEBENARAN.
+                        // Sebelumnya ada logika yang menimpa balik status server
+                        // dengan status lokal ("li.status !== 'Menunggu'"), yang
+                        // menyembunyikan kegagalan sinkron approve/reject (status
+                        // kelihatan "Disetujui" di device wali kelas padahal sheet
+                        // masih "Menunggu"). Sekarang kita percaya penuh pada
+                        // server untuk baris yang sudah ada di server (dicocokkan
+                        // via id unik), dan hanya menyimpan baris yang BENAR-BENAR
+                        // belum pernah sampai ke server (belum punya pasangan id
+                        // di server sama sekali) sebagai data lokal sementara.
                         const serverIzin = data.izin || [];
                         const localOnlyIzin = localDb.izin.filter(li =>
                             !serverIzin.some(si => si.id && li.id && si.id === li.id)
@@ -3429,7 +4114,14 @@
                         if (currentSiswa && currentSiswa.role === 'walikelas') {
                             updateWaliRekapKehadiranCounters();
                             renderWaliRekapIzinList();
+                        } else if (currentSiswa && currentSiswa.role === 'admin') {
+                            renderAdminBeranda();
+                            renderAdminSiswaList();
+                            renderAdminGuruList();
                         } else if (currentSiswa) {
+                            // Refresh daftar riwayat izin siswa agar status
+                            // Disetujui/Ditolak dari wali kelas langsung terlihat
+                            // tanpa perlu logout/login ulang.
                             renderRiwayatIzin();
                         }
                         
@@ -3458,6 +4150,10 @@
                         if (currentSiswa && currentSiswa.role === 'walikelas') {
                             updateWaliRekapKehadiranCounters();
                             renderWaliRekapIzinList();
+                        } else if (currentSiswa && currentSiswa.role === 'admin') {
+                            renderAdminBeranda();
+                            renderAdminSiswaList();
+                            renderAdminGuruList();
                         } else if (currentSiswa) {
                             renderRiwayatIzin();
                         }

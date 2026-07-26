@@ -1090,7 +1090,7 @@
                 <h4 class="text-xs font-extrabold text-slate-550 uppercase tracking-wider flex items-center gap-1.5">
                     <i class="fa-solid fa-gear text-slate-600"></i> Pengaturan Jam Masuk & Pulang
                 </h4>
-                <p class="text-[11px] text-slate-400 leading-relaxed">Atur batas jam masuk (siswa dianggap terlambat jika presensi setelah jam ini) dan jam mulai dibukanya presensi pulang, untuk masing-masing jenjang kelas.</p>
+                <p class="text-[11px] text-slate-400 leading-relaxed">Atur batas jam masuk (siswa dianggap terlambat jika presensi setelah jam ini) dan jam mulai dibukanya presensi pulang, untuk masing-masing hari (Senin-Jumat) di setiap jenjang kelas.</p>
             </div>
 
             <div id="admin-pengaturan-jenjang-container" class="space-y-4"></div>
@@ -1312,16 +1312,27 @@
         const ABSENCE_RADIUS_METERS = 150;
 
         // ================================================================
-        // KONFIGURASI JADWAL PRESENSI PER JENJANG KELAS (X, XI, XII)
+        // KONFIGURASI JADWAL PRESENSI PER JENJANG KELAS (X, XI, XII), DAN
+        // KINI JUGA PER HARI (SENIN-JUMAT).
         // Nilai default (dipakai jika admin belum pernah mengubah lewat
         // menu Pengaturan). Setelah admin menyimpan pengaturan baru, nilai
         // aktif akan disimpan terpisah di variabel PENGATURAN_JADWAL dan
         // localStorage supaya persisten antar sesi.
         // ================================================================
+        const HARI_KERJA = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat'];
+
+        function buildDefaultHarian(masukBatas, pulangBuka) {
+            const obj = {};
+            HARI_KERJA.forEach(function(h) {
+                obj[h] = { masukBatas: masukBatas, pulangBuka: pulangBuka };
+            });
+            return obj;
+        }
+
         const JADWAL_PRESENSI_DEFAULT = {
-            'X':   { masukBuka: 5 * 60,  masukBatas: 6 * 60 + 30,  pulangBuka: 11 * 60 + 45 },
-            'XI':  { masukBuka: 10 * 60, masukBatas: 12 * 60 + 30, pulangBuka: 17 * 60 },
-            'XII': { masukBuka: null,    masukBatas: 6 * 60 + 30,  pulangBuka: 15 * 60 }
+            'X':   { masukBuka: 5 * 60,  masukBatas: 6 * 60 + 30,  pulangBuka: 11 * 60 + 45, harian: buildDefaultHarian(6 * 60 + 30, 11 * 60 + 45) },
+            'XI':  { masukBuka: 10 * 60, masukBatas: 12 * 60 + 30, pulangBuka: 17 * 60,      harian: buildDefaultHarian(12 * 60 + 30, 17 * 60) },
+            'XII': { masukBuka: null,    masukBatas: 6 * 60 + 30,  pulangBuka: 15 * 60,      harian: buildDefaultHarian(6 * 60 + 30, 15 * 60) }
         };
 
         // Salinan yang bisa diubah oleh Admin lewat menu Pengaturan. Dimuat
@@ -1337,6 +1348,14 @@
                     Object.keys(JADWAL_PRESENSI_DEFAULT).forEach(function(j) {
                         if (parsed[j]) {
                             PENGATURAN_JADWAL[j] = Object.assign({}, JADWAL_PRESENSI_DEFAULT[j], parsed[j]);
+                            // Merge per-hari: hari yang belum pernah diatur admin tetap
+                            // memakai nilai default, bukan hilang/undefined.
+                            const defaultHarian = JADWAL_PRESENSI_DEFAULT[j].harian;
+                            const savedHarian = parsed[j].harian || {};
+                            PENGATURAN_JADWAL[j].harian = {};
+                            HARI_KERJA.forEach(function(h) {
+                                PENGATURAN_JADWAL[j].harian[h] = Object.assign({}, defaultHarian[h], savedHarian[h]);
+                            });
                         }
                     });
                 }
@@ -1376,6 +1395,24 @@
             return 'XII';
         }
 
+        // Menentukan nama hari kerja (Senin-Minggu) dari sebuah tanggal, agar
+        // jadwal masuk/pulang per hari (yang diatur Admin) bisa dicocokkan
+        // dengan tanggal yang relevan (hari ini, atau tanggal presensi lama
+        // saat menghitung rekap keterlambatan historis).
+        function getHariKerjaNama(dateInput) {
+            const namaHari = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+            let d;
+            if (dateInput instanceof Date) {
+                d = dateInput;
+            } else if (typeof dateInput === 'string' && dateInput) {
+                d = new Date(dateInput + 'T00:00:00');
+            } else {
+                d = new Date();
+            }
+            if (isNaN(d.getTime())) d = new Date();
+            return namaHari[d.getDay()];
+        }
+
         // Jam buka presensi masuk (tidak diatur lewat menu Admin, hanya
         // batas masuk & buka pulang yang bisa diubah admin).
         function getMasukBukaMenit(kelasStr) {
@@ -1385,19 +1422,29 @@
         }
 
         // Batas jam masuk (lewat dari ini dianggap terlambat). Bisa diubah
-        // Admin lewat menu Pengaturan per jenjang.
-        function getBatasMasukMenit(kelasStr, defaultXII) {
+        // Admin lewat menu Pengaturan per jenjang, DAN per hari (Senin-Jumat).
+        // Parameter dateForHari (opsional) menentukan tanggal/hari mana yang
+        // ingin dicocokkan; jika tidak diisi, dianggap "hari ini".
+        function getBatasMasukMenit(kelasStr, defaultXII, dateForHari) {
             const jenjang = getJenjangKelas(kelasStr);
             const cfg = PENGATURAN_JADWAL[jenjang] || JADWAL_PRESENSI_DEFAULT[jenjang];
+            const hari = getHariKerjaNama(dateForHari);
+            if (cfg && cfg.harian && cfg.harian[hari] && cfg.harian[hari].masukBatas !== undefined && cfg.harian[hari].masukBatas !== null) {
+                return cfg.harian[hari].masukBatas;
+            }
             if (cfg && cfg.masukBatas !== undefined && cfg.masukBatas !== null) return cfg.masukBatas;
             return defaultXII;
         }
 
         // Jam mulai dibukanya presensi pulang. Bisa diubah Admin lewat menu
-        // Pengaturan per jenjang.
-        function getPulangBukaMenit(kelasStr, defaultXII) {
+        // Pengaturan per jenjang, DAN per hari (Senin-Jumat).
+        function getPulangBukaMenit(kelasStr, defaultXII, dateForHari) {
             const jenjang = getJenjangKelas(kelasStr);
             const cfg = PENGATURAN_JADWAL[jenjang] || JADWAL_PRESENSI_DEFAULT[jenjang];
+            const hari = getHariKerjaNama(dateForHari);
+            if (cfg && cfg.harian && cfg.harian[hari] && cfg.harian[hari].pulangBuka !== undefined && cfg.harian[hari].pulangBuka !== null) {
+                return cfg.harian[hari].pulangBuka;
+            }
             if (cfg && cfg.pulangBuka !== undefined && cfg.pulangBuka !== null) return cfg.pulangBuka;
             return defaultXII;
         }
@@ -2059,7 +2106,7 @@
             if (!currentSiswa || currentSiswa.role === 'walikelas' || currentSiswa.role === 'admin') return;
             const todayStr = getLocalDateStr(now);
             const currentMinutes = parseInt(hh) * 60 + parseInt(mm);
-            const limitMasukMinutes = getBatasMasukMenit(currentSiswa.kelas, 6 * 60 + 30);
+            const limitMasukMinutes = getBatasMasukMenit(currentSiswa.kelas, 6 * 60 + 30, now);
             const hasIzinTerlambat = localDb.izin.some(i => 
                 i.nis === currentSiswa.nis && 
                 i.jenis === 'Izin Terlambat Masuk' && 
@@ -2173,7 +2220,7 @@
         // ====================================================================
         function getAllowedPulangMinutesForToday(todayStr) {
             if (!currentSiswa || currentSiswa.role === 'walikelas' || currentSiswa.role === 'admin') {
-                return getPulangBukaMenit(null, 15 * 60);
+                return getPulangBukaMenit(null, 15 * 60, todayStr);
             }
             // Dispen disetujui -> presensi pulang langsung terbuka (bebas jam & lokasi).
             if (hasApprovedDispenToday()) return 0;
@@ -2188,7 +2235,7 @@
             );
             if (izinPulangCepat) return 0;
 
-            return getPulangBukaMenit(currentSiswa.kelas, 15 * 60);
+            return getPulangBukaMenit(currentSiswa.kelas, 15 * 60, todayStr);
         }
 
         function checkHariIniAbsenStatus(tanggalStr) {
@@ -2373,7 +2420,7 @@
             const textMasuk = document.getElementById('time-presensi-masuk');
             const bageTerlambatMasuk = document.getElementById('status-terlambat-masuk-badge');
             const badgeDoneMasuk = document.getElementById('badge-done-masuk');
-            const batasMasukMenitSaatIni = getBatasMasukMenit(currentSiswa ? currentSiswa.kelas : null, 6 * 60 + 30);
+            const batasMasukMenitSaatIni = getBatasMasukMenit(currentSiswa ? currentSiswa.kelas : null, 6 * 60 + 30, hariIni);
             
             if (btnMasuk && iconMasuk && textMasuk) {
                 if (status.masuk) {
@@ -2439,7 +2486,7 @@
             const targetKelas = currentSiswa.kelas;
             const hariIniStr = getLocalDateStr();
             const rekanSiswa = localDb.siswa.filter(s => s.kelas === targetKelas);
-            const batasMasukKelasIni = getBatasMasukMenit(targetKelas, 6 * 60 + 30);
+            const batasMasukKelasIni = getBatasMasukMenit(targetKelas, 6 * 60 + 30, hariIniStr);
 
             if (rekanSiswa.length === 0) {
                 container.innerHTML = `<div class="text-center py-4 text-slate-400 text-xs">Belum ada rekan sekelas terdaftar.</div>`;
@@ -2506,7 +2553,7 @@
                 todayDateText.innerText = new Date().toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'short' });
             }
             const muridKelas = localDb.siswa.filter(s => s.kelas === targetKelas);
-            const batasMasukKelasIni = getBatasMasukMenit(targetKelas, 6 * 60 + 30);
+            const batasMasukKelasIni = getBatasMasukMenit(targetKelas, 6 * 60 + 30, todayStr);
 
             if (muridKelas.length === 0) {
                 listEl.innerHTML = `<div class="p-6 text-center text-xs text-slate-400">Belum ada siswa terdaftar di kelas bimbingan Anda.</div>`;
@@ -3530,7 +3577,6 @@
             const bln = document.getElementById('rekap-bulan').value;
             const tgl = document.getElementById('rekap-tanggal').value;
             const userAbsens = localDb.presensi.filter(p => p.nis === currentSiswa.nis);
-            const batasMasukSiswaIni = getBatasMasukMenit(currentSiswa.kelas, 6 * 60 + 30);
 
             const filtered = userAbsens.filter(p => {
                 const parts = p.tanggal.split('-');
@@ -3579,7 +3625,11 @@
             filtered.forEach(p => {
                 if (p.tipe === 'masuk') {
                     const [h, m] = p.jam.split(':').map(Number);
-                    const limitMinutes = batasMasukSiswaIni; 
+                    // FIX: batas jam masuk sekarang bisa berbeda per HARI
+                    // (Senin-Jumat) sesuai pengaturan Admin, sehingga dihitung
+                    // ulang untuk TANGGAL presensi record ini (p.tanggal),
+                    // bukan memakai satu nilai batas yang sama untuk semua hari.
+                    const limitMinutes = getBatasMasukMenit(currentSiswa.kelas, 6 * 60 + 30, p.tanggal);
                     const absenMinutes = h * 60 + m;
                     if (absenMinutes > limitMinutes) {
                         totalTerlambatMenit += (absenMinutes - limitMinutes);
@@ -3673,10 +3723,14 @@
                 const row = groupedLog[tanggal];
                 const dateObj = new Date(tanggal);
                 const formatTglLokal = !isNaN(dateObj) ? dateObj.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' }) : tanggal;
+                // FIX: batas jam masuk dihitung ulang per TANGGAL baris log ini
+                // (bukan satu nilai batas global), agar konsisten dengan jadwal
+                // per hari yang bisa diatur Admin.
+                const limitMinutesForDay = getBatasMasukMenit(currentSiswa.kelas, 6 * 60 + 30, tanggal);
                 let masukClass = "bg-slate-100 text-slate-400";
                 if (row.masuk !== '--:--') {
                     const [h, m] = row.masuk.split(':').map(Number);
-                    if (h * 60 + m > batasMasukSiswaIni) {
+                    if (h * 60 + m > limitMinutesForDay) {
                         masukClass = "bg-rose-50 text-rose-700 border border-rose-150 font-bold";
                     } else {
                         masukClass = "bg-emerald-50 text-emerald-700 border border-emerald-100";
@@ -3966,7 +4020,10 @@
         }
 
         // ================================================================
-        // MODUL ADMIN: Pengaturan Jam Masuk & Pulang per Jenjang
+        // MODUL ADMIN: Pengaturan Jam Masuk & Pulang per Jenjang, PER HARI
+        // (Senin s/d Jumat). Setiap jenjang kelas (X, XI, XII) kini punya
+        // input jam masuk (batas) dan jam pulang (buka) TERPISAH untuk
+        // masing-masing dari 5 hari kerja tersebut.
         // ================================================================
         function menitKeInputTime(menit) {
             if (menit === null || menit === undefined) return "";
@@ -3988,20 +4045,27 @@
             const jenjangList = ['X', 'XI', 'XII'];
             container.innerHTML = jenjangList.map(j => {
                 const cfg = PENGATURAN_JADWAL[j] || JADWAL_PRESENSI_DEFAULT[j];
+                const harian = cfg.harian || JADWAL_PRESENSI_DEFAULT[j].harian;
+
+                const rowsHTML = HARI_KERJA.map(hari => {
+                    const hCfg = harian[hari] || { masukBatas: cfg.masukBatas, pulangBuka: cfg.pulangBuka };
+                    return `
+                        <div class="grid grid-cols-3 gap-2 items-center">
+                            <span class="text-[11px] font-bold text-slate-600">${hari}</span>
+                            <input type="time" id="adm-jadwal-${j}-${hari}-masuk" value="${menitKeInputTime(hCfg.masukBatas)}" class="w-full px-2 py-2 border border-slate-200 rounded-xl text-xs outline-none focus:ring-2 focus:ring-slate-500">
+                            <input type="time" id="adm-jadwal-${j}-${hari}-pulang" value="${menitKeInputTime(hCfg.pulangBuka)}" class="w-full px-2 py-2 border border-slate-200 rounded-xl text-xs outline-none focus:ring-2 focus:ring-slate-500">
+                        </div>
+                    `;
+                }).join('');
+
                 return `
                     <div class="bg-white p-4 rounded-3xl border border-slate-100 shadow-sm space-y-3">
                         <h5 class="text-xs font-extrabold text-slate-700 uppercase tracking-wider border-b border-slate-100 pb-2">Kelas ${j}</h5>
-                        <div class="grid grid-cols-2 gap-3">
-                            <div>
-                                <label class="block text-[10px] font-bold text-slate-500 mb-1">Jam Masuk (Batas)</label>
-                                <input type="time" id="adm-jadwal-${j}-masuk" value="${menitKeInputTime(cfg.masukBatas)}" class="w-full px-3 py-2.5 border border-slate-200 rounded-2xl text-sm outline-none focus:ring-2 focus:ring-slate-500">
-                            </div>
-                            <div>
-                                <label class="block text-[10px] font-bold text-slate-500 mb-1">Jam Pulang (Buka)</label>
-                                <input type="time" id="adm-jadwal-${j}-pulang" value="${menitKeInputTime(cfg.pulangBuka)}" class="w-full px-3 py-2.5 border border-slate-200 rounded-2xl text-sm outline-none focus:ring-2 focus:ring-slate-500">
-                            </div>
+                        <div class="grid grid-cols-3 gap-2 text-[9px] font-bold text-slate-400 uppercase tracking-wider px-0.5">
+                            <span>Hari</span><span>Jam Masuk (Batas)</span><span>Jam Pulang (Buka)</span>
                         </div>
-                        <button onclick="saveAdminPengaturanJenjang('${j}')" class="w-full bg-slate-700 hover:bg-slate-800 text-white font-bold py-2.5 rounded-2xl transition-all text-xs">
+                        <div class="space-y-2">${rowsHTML}</div>
+                        <button onclick="saveAdminPengaturanJenjang('${j}')" class="w-full bg-slate-700 hover:bg-slate-800 text-white font-bold py-2.5 rounded-2xl transition-all text-xs mt-1">
                             Simpan Jadwal Kelas ${j}
                         </button>
                     </div>
@@ -4010,30 +4074,52 @@
         }
 
         function saveAdminPengaturanJenjang(jenjang) {
-            const masukInput = document.getElementById(`adm-jadwal-${jenjang}-masuk`).value;
-            const pulangInput = document.getElementById(`adm-jadwal-${jenjang}-pulang`).value;
-            const masukMenit = inputTimeKeMenit(masukInput);
-            const pulangMenit = inputTimeKeMenit(pulangInput);
-
-            if (masukMenit === null || pulangMenit === null) {
-                showToast("Jam masuk dan jam pulang wajib diisi dengan benar!");
-                return;
-            }
-
             if (!PENGATURAN_JADWAL[jenjang]) {
                 PENGATURAN_JADWAL[jenjang] = JSON.parse(JSON.stringify(JADWAL_PRESENSI_DEFAULT[jenjang]));
             }
-            PENGATURAN_JADWAL[jenjang].masukBatas = masukMenit;
-            PENGATURAN_JADWAL[jenjang].pulangBuka = pulangMenit;
+            if (!PENGATURAN_JADWAL[jenjang].harian) {
+                PENGATURAN_JADWAL[jenjang].harian = JSON.parse(JSON.stringify(JADWAL_PRESENSI_DEFAULT[jenjang].harian));
+            }
+
+            const harianBaru = {};
+            let adaError = false;
+
+            HARI_KERJA.forEach(function(hari) {
+                const masukInput = document.getElementById(`adm-jadwal-${jenjang}-${hari}-masuk`).value;
+                const pulangInput = document.getElementById(`adm-jadwal-${jenjang}-${hari}-pulang`).value;
+                const masukMenit = inputTimeKeMenit(masukInput);
+                const pulangMenit = inputTimeKeMenit(pulangInput);
+                if (masukMenit === null || pulangMenit === null) {
+                    adaError = true;
+                }
+                harianBaru[hari] = { masukBatas: masukMenit, pulangBuka: pulangMenit };
+            });
+
+            if (adaError) {
+                showToast("Jam masuk dan jam pulang wajib diisi dengan benar untuk semua hari (Senin-Jumat)!");
+                return;
+            }
+
+            PENGATURAN_JADWAL[jenjang].harian = harianBaru;
+            // Nilai umum (masukBatas/pulangBuka) tetap disimpan sebagai fallback
+            // untuk hari di luar Senin-Jumat, memakai acuan hari Senin.
+            PENGATURAN_JADWAL[jenjang].masukBatas = harianBaru['Senin'].masukBatas;
+            PENGATURAN_JADWAL[jenjang].pulangBuka = harianBaru['Senin'].pulangBuka;
+
             localStorage.setItem('sigesit_pengaturan_jadwal', JSON.stringify(PENGATURAN_JADWAL));
-            showToast(`Jadwal kelas ${jenjang} berhasil disimpan!`);
+            showToast(`Jadwal kelas ${jenjang} (Senin-Jumat) berhasil disimpan!`);
 
             if (!isMockUrl()) {
                 fetch(`${scriptUrl}?action=updatePengaturanJadwal`, {
                     method: 'POST',
-                    body: JSON.stringify({ jenjang: jenjang, masukBatas: masukMenit, pulangBuka: pulangMenit })
+                    body: JSON.stringify({ jenjang: jenjang, harian: harianBaru })
                 }).catch(() => console.log("Gagal sync pengaturan jadwal ke server."));
             }
+
+            // Refresh label & tombol presensi bila ada siswa jenjang ini yang
+            // sedang aktif memakai perangkat/sesi yang sama.
+            updateLabelJadwalUI();
+            updateHomePresensiUI();
         }
 
         function fetchDatabaseState(showFeedback = false) {

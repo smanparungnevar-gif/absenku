@@ -1094,6 +1094,32 @@
             </div>
 
             <div id="admin-pengaturan-jenjang-container" class="space-y-4"></div>
+
+            <!-- BARU: Panel Pengaturan Lokasi & Radius Presensi (Admin) -->
+            <div class="bg-white p-4 rounded-3xl border border-slate-100 shadow-sm space-y-3">
+                <h4 class="text-xs font-extrabold text-slate-550 uppercase tracking-wider flex items-center gap-1.5">
+                    <i class="fa-solid fa-map-location-dot text-slate-600"></i> Pengaturan Lokasi & Radius Presensi
+                </h4>
+                <p class="text-[11px] text-slate-400 leading-relaxed">Atur titik pusat lokasi sekolah dan radius (meter) yang menentukan apakah siswa dianggap berada di area sekolah saat presensi.</p>
+                <div id="admin-lokasi-map" class="h-48 w-full rounded-2xl overflow-hidden border border-slate-200"></div>
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Latitude</label>
+                        <input type="text" id="adm-lokasi-lat" class="w-full px-3 py-2.5 border border-slate-200 rounded-2xl text-xs outline-none focus:ring-2 focus:ring-slate-500">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Longitude</label>
+                        <input type="text" id="adm-lokasi-lng" class="w-full px-3 py-2.5 border border-slate-200 rounded-2xl text-xs outline-none focus:ring-2 focus:ring-slate-500">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Radius Presensi (meter)</label>
+                    <input type="number" id="adm-lokasi-radius" min="10" class="w-full px-3 py-2.5 border border-slate-200 rounded-2xl text-xs outline-none focus:ring-2 focus:ring-slate-500">
+                </div>
+                <button onclick="saveAdminPengaturanLokasi()" class="w-full bg-slate-700 hover:bg-slate-800 text-white font-bold py-2.5 rounded-2xl transition-all text-xs">
+                    Simpan Lokasi & Radius Presensi
+                </button>
+            </div>
         </div>
 
         <!-- BOTTOM NAVIGATION BAR -->
@@ -1317,7 +1343,10 @@
         // Nilai default (dipakai jika admin belum pernah mengubah lewat
         // menu Pengaturan). Setelah admin menyimpan pengaturan baru, nilai
         // aktif akan disimpan terpisah di variabel PENGATURAN_JADWAL dan
-        // localStorage supaya persisten antar sesi.
+        // localStorage supaya persisten antar sesi, DAN (BARU) juga
+        // disinkronkan ke/​dari Spreadsheet lewat action=updatePengaturanJadwal
+        // & data.pengaturan_jadwal dari action=getUserData, supaya konsisten
+        // di semua perangkat — bukan hanya device Admin yang mengubahnya.
         // ================================================================
         const HARI_KERJA = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat'];
 
@@ -1362,6 +1391,55 @@
             } catch (err) {
                 PENGATURAN_JADWAL = JSON.parse(JSON.stringify(JADWAL_PRESENSI_DEFAULT));
             }
+        }
+
+        // ================================================================
+        // BARU: menyerap hasil "pengaturan_jadwal" & "pengaturan_lokasi"
+        // dari action=getUserData (backend code.gs) ke variabel state lokal
+        // (PENGATURAN_JADWAL / SCHOOL_LAT / SCHOOL_LNG / ABSENCE_RADIUS_METERS),
+        // lalu menyimpannya ke localStorage supaya tetap konsisten walau
+        // aplikasi dibuka offline setelahnya. Ini melengkapi perbaikan di
+        // code.gs yang sekarang benar-benar menyimpan & mengembalikan kedua
+        // data ini dari Spreadsheet (sebelumnya keduanya hanya tersimpan di
+        // localStorage per-device dan tidak pernah tersinkron antar device).
+        // ================================================================
+        function applyServerPengaturanJadwal(rows) {
+            if (!rows || rows.length === 0) return;
+            rows.forEach(function(row) {
+                const jenjang = (row.jenjang || '').toString().trim();
+                const hari = (row.hari || '').toString().trim();
+                if (!jenjang || !hari || !PENGATURAN_JADWAL[jenjang]) return;
+
+                const rawMasuk = (row.masukbatas !== undefined) ? row.masukbatas : row.masukBatas;
+                const rawPulang = (row.pulangbuka !== undefined) ? row.pulangbuka : row.pulangBuka;
+                const masuk = (rawMasuk !== undefined && rawMasuk !== null && rawMasuk !== '') ? parseInt(rawMasuk) : null;
+                const pulang = (rawPulang !== undefined && rawPulang !== null && rawPulang !== '') ? parseInt(rawPulang) : null;
+
+                if (!PENGATURAN_JADWAL[jenjang].harian) {
+                    PENGATURAN_JADWAL[jenjang].harian = JSON.parse(JSON.stringify(JADWAL_PRESENSI_DEFAULT[jenjang].harian));
+                }
+                PENGATURAN_JADWAL[jenjang].harian[hari] = { masukBatas: masuk, pulangBuka: pulang };
+
+                // Nilai umum (fallback) memakai acuan hari Senin, sama seperti
+                // logika saveAdminPengaturanJenjang().
+                if (hari === 'Senin') {
+                    PENGATURAN_JADWAL[jenjang].masukBatas = masuk;
+                    PENGATURAN_JADWAL[jenjang].pulangBuka = pulang;
+                }
+            });
+            localStorage.setItem('sigesit_pengaturan_jadwal', JSON.stringify(PENGATURAN_JADWAL));
+        }
+
+        function applyServerPengaturanLokasi(rows) {
+            if (!rows || rows.length === 0) return;
+            const row = rows[0];
+            const lat = parseFloat(row.lat);
+            const lng = parseFloat(row.lng);
+            const radius = parseInt(row.radius);
+            if (!isNaN(lat)) SCHOOL_LAT = lat;
+            if (!isNaN(lng)) SCHOOL_LNG = lng;
+            if (!isNaN(radius)) ABSENCE_RADIUS_METERS = radius;
+            localStorage.setItem('sigesit_pengaturan_lokasi', JSON.stringify({ lat: SCHOOL_LAT, lng: SCHOOL_LNG, radius: ABSENCE_RADIUS_METERS }));
         }
 
         // ================================================================
@@ -4345,6 +4423,16 @@
                         localDb.poin = data.poin || [];
                         localDb.nilai = data.nilai || []; 
                         localStorage.setItem('local_offline_db', JSON.stringify(localDb));
+
+                        // BARU: serap pengaturan jadwal (per hari) & lokasi/radius
+                        // presensi dari server, supaya perubahan yang disimpan
+                        // Admin di satu perangkat langsung berlaku juga di
+                        // perangkat siswa/wali kelas lain, bukan cuma tersimpan
+                        // di localStorage device Admin itu sendiri.
+                        applyServerPengaturanJadwal(data.pengaturan_jadwal || []);
+                        applyServerPengaturanLokasi(data.pengaturan_lokasi || []);
+                        updateLabelJadwalUI();
+                        calculateDistance();
                         
                         updateHomePresensiUI();
                         renderWaliMonitoringPresensi();
@@ -4363,6 +4451,13 @@
                             renderAdminBeranda();
                             renderAdminSiswaList();
                             renderAdminGuruList();
+                            // Jika Admin sedang membuka halaman Pengaturan saat
+                            // sinkronisasi ini terjadi, segarkan juga input/peta
+                            // jadwal & lokasi supaya menampilkan nilai terbaru.
+                            const viewPengaturan = document.getElementById('view-admin-pengaturan');
+                            if (viewPengaturan && !viewPengaturan.classList.contains('hidden')) {
+                                renderAdminPengaturan();
+                            }
                         } else if (currentSiswa) {
                             // Refresh daftar riwayat izin siswa agar status
                             // Disetujui/Ditolak dari wali kelas langsung terlihat

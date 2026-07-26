@@ -1307,9 +1307,9 @@
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwwDIlTY8NoSpHD_zHXdKQ4qw4S1ZNHb1tSLcJAHYGXT-iW991mtHSbDuwMp7nYoiPP/exec";
         
         // Konfigurasi Geofencing SMAN 1 Parung
-        const SCHOOL_LAT = -6.436954848531352; 
-        const SCHOOL_LNG = 106.71104025519386;
-        const ABSENCE_RADIUS_METERS = 150;
+        let SCHOOL_LAT = -6.436954848531352; 
+        let SCHOOL_LNG = 106.71104025519386;
+        let ABSENCE_RADIUS_METERS = 150;
 
         // ================================================================
         // KONFIGURASI JADWAL PRESENSI PER JENJANG KELAS (X, XI, XII), DAN
@@ -1361,6 +1361,32 @@
                 }
             } catch (err) {
                 PENGATURAN_JADWAL = JSON.parse(JSON.stringify(JADWAL_PRESENSI_DEFAULT));
+            }
+        }
+
+        // ================================================================
+        // KONFIGURASI LOKASI & RADIUS PRESENSI YANG BISA DIATUR ADMIN.
+        // Dimuat dari localStorage saat aplikasi dibuka (lihat window.onload),
+        // dan fallback ke nilai default SCHOOL_LAT/SCHOOL_LNG/ABSENCE_RADIUS_METERS
+        // di atas jika admin belum pernah mengubahnya lewat menu Pengaturan.
+        // ================================================================
+        function loadPengaturanLokasi() {
+            try {
+                const saved = localStorage.getItem('sigesit_pengaturan_lokasi');
+                if (saved) {
+                    const parsed = JSON.parse(saved);
+                    if (parsed.lat !== undefined && parsed.lat !== null && !isNaN(parseFloat(parsed.lat))) {
+                        SCHOOL_LAT = parseFloat(parsed.lat);
+                    }
+                    if (parsed.lng !== undefined && parsed.lng !== null && !isNaN(parseFloat(parsed.lng))) {
+                        SCHOOL_LNG = parseFloat(parsed.lng);
+                    }
+                    if (parsed.radius !== undefined && parsed.radius !== null && !isNaN(parseInt(parsed.radius))) {
+                        ABSENCE_RADIUS_METERS = parseInt(parsed.radius);
+                    }
+                }
+            } catch (err) {
+                // Biarkan nilai default jika parsing gagal.
             }
         }
 
@@ -1480,6 +1506,11 @@
         let dispenMap = null;
         let dispenMarker = null;
         let dispenCoords = "";
+
+        // State khusus untuk peta pengaturan lokasi presensi di Panel Admin
+        let adminLokasiMap = null;
+        let adminLokasiMarker = null;
+        let adminLokasiCircle = null;
         
         let localDb = {
             siswa: [],
@@ -1522,6 +1553,7 @@
             }
 
             loadPengaturanJadwal();
+            loadPengaturanLokasi();
             startClock();
             initLocationTracking();
             populateTanggalOptions();
@@ -4020,6 +4052,122 @@
         }
 
         // ================================================================
+        // MODUL ADMIN: Pengaturan Lokasi & Radius Presensi
+        // ================================================================
+        function renderAdminLokasiSettingsInputs() {
+            const latInput = document.getElementById('adm-lokasi-lat');
+            const lngInput = document.getElementById('adm-lokasi-lng');
+            const radiusInput = document.getElementById('adm-lokasi-radius');
+            if (latInput) latInput.value = SCHOOL_LAT;
+            if (lngInput) lngInput.value = SCHOOL_LNG;
+            if (radiusInput) radiusInput.value = ABSENCE_RADIUS_METERS;
+        }
+
+        function initOrUpdateAdminLokasiMap() {
+            const mapDiv = document.getElementById('admin-lokasi-map');
+            if (!mapDiv || typeof L === 'undefined') return;
+
+            if (adminLokasiMap) {
+                adminLokasiMap.setView([SCHOOL_LAT, SCHOOL_LNG], 15);
+                if (adminLokasiMarker) adminLokasiMarker.setLatLng([SCHOOL_LAT, SCHOOL_LNG]);
+                if (adminLokasiCircle) {
+                    adminLokasiCircle.setLatLng([SCHOOL_LAT, SCHOOL_LNG]);
+                    adminLokasiCircle.setRadius(ABSENCE_RADIUS_METERS);
+                }
+                adminLokasiMap.invalidateSize();
+                return;
+            }
+
+            adminLokasiMap = L.map('admin-lokasi-map').setView([SCHOOL_LAT, SCHOOL_LNG], 15);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 19,
+                attribution: '© OpenStreetMap'
+            }).addTo(adminLokasiMap);
+
+            adminLokasiCircle = L.circle([SCHOOL_LAT, SCHOOL_LNG], {
+                color: '#e11d48',
+                fillColor: '#e11d48',
+                fillOpacity: 0.12,
+                radius: ABSENCE_RADIUS_METERS
+            }).addTo(adminLokasiMap);
+
+            adminLokasiMarker = L.marker([SCHOOL_LAT, SCHOOL_LNG], { draggable: true }).addTo(adminLokasiMap)
+                .bindPopup('<b>Titik Pusat Lokasi Presensi</b><br>Geser untuk mengatur ulang.');
+
+            adminLokasiMarker.on('dragend', function() {
+                const pos = adminLokasiMarker.getLatLng();
+                const latInput = document.getElementById('adm-lokasi-lat');
+                const lngInput = document.getElementById('adm-lokasi-lng');
+                if (latInput) latInput.value = pos.lat.toFixed(6);
+                if (lngInput) lngInput.value = pos.lng.toFixed(6);
+                if (adminLokasiCircle) adminLokasiCircle.setLatLng(pos);
+            });
+
+            const radiusInput = document.getElementById('adm-lokasi-radius');
+            if (radiusInput) {
+                radiusInput.addEventListener('input', function() {
+                    const val = parseInt(radiusInput.value) || 0;
+                    if (adminLokasiCircle) adminLokasiCircle.setRadius(val);
+                });
+            }
+
+            // Sinkronkan posisi marker & peta setiap kali admin mengubah
+            // input Latitude/Longitude secara manual (tanpa geser peta).
+            const latInputEl = document.getElementById('adm-lokasi-lat');
+            const lngInputEl = document.getElementById('adm-lokasi-lng');
+            function syncMarkerFromInputs() {
+                const lat = parseFloat(latInputEl.value);
+                const lng = parseFloat(lngInputEl.value);
+                if (!isNaN(lat) && !isNaN(lng) && adminLokasiMarker) {
+                    adminLokasiMarker.setLatLng([lat, lng]);
+                    if (adminLokasiCircle) adminLokasiCircle.setLatLng([lat, lng]);
+                    adminLokasiMap.panTo([lat, lng]);
+                }
+            }
+            if (latInputEl) latInputEl.addEventListener('change', syncMarkerFromInputs);
+            if (lngInputEl) lngInputEl.addEventListener('change', syncMarkerFromInputs);
+        }
+
+        function saveAdminPengaturanLokasi() {
+            const latVal = parseFloat(document.getElementById('adm-lokasi-lat').value);
+            const lngVal = parseFloat(document.getElementById('adm-lokasi-lng').value);
+            const radiusVal = parseInt(document.getElementById('adm-lokasi-radius').value);
+
+            if (isNaN(latVal) || isNaN(lngVal)) {
+                showToast("Latitude dan Longitude wajib diisi dengan angka yang valid!");
+                return;
+            }
+            if (isNaN(radiusVal) || radiusVal < 10) {
+                showToast("Radius presensi minimal 10 meter!");
+                return;
+            }
+
+            SCHOOL_LAT = latVal;
+            SCHOOL_LNG = lngVal;
+            ABSENCE_RADIUS_METERS = radiusVal;
+
+            localStorage.setItem('sigesit_pengaturan_lokasi', JSON.stringify({ lat: latVal, lng: lngVal, radius: radiusVal }));
+            showToast("Lokasi & radius presensi berhasil disimpan!");
+
+            if (adminLokasiMarker) adminLokasiMarker.setLatLng([latVal, lngVal]);
+            if (adminLokasiCircle) {
+                adminLokasiCircle.setLatLng([latVal, lngVal]);
+                adminLokasiCircle.setRadius(radiusVal);
+            }
+            if (adminLokasiMap) adminLokasiMap.setView([latVal, lngVal], 15);
+
+            if (!isMockUrl()) {
+                fetch(`${scriptUrl}?action=updatePengaturanLokasi`, {
+                    method: 'POST',
+                    body: JSON.stringify({ lat: latVal, lng: lngVal, radius: radiusVal })
+                }).catch(() => console.log("Gagal sync pengaturan lokasi ke server."));
+            }
+
+            // Refresh perhitungan jarak siswa yang mungkin sedang aktif di sesi ini.
+            calculateDistance();
+        }
+
+        // ================================================================
         // MODUL ADMIN: Pengaturan Jam Masuk & Pulang per Jenjang, PER HARI
         // (Senin s/d Jumat). Setiap jenjang kelas (X, XI, XII) kini punya
         // input jam masuk (batas) dan jam pulang (buka) TERPISAH untuk
@@ -4071,6 +4219,11 @@
                     </div>
                 `;
             }).join('');
+
+            // Segarkan input & peta pengaturan lokasi presensi setiap kali
+            // halaman Pengaturan (Admin) dibuka.
+            renderAdminLokasiSettingsInputs();
+            setTimeout(() => { initOrUpdateAdminLokasiMap(); }, 200);
         }
 
         function saveAdminPengaturanJenjang(jenjang) {

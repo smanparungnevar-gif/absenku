@@ -1019,6 +1019,117 @@
             </div>
         </div>
 
+        <!-- 7B. VIEW ADMIN: REKAP -->
+        <div id="view-admin-rekap" class="hidden flex-1 overflow-y-auto p-4 space-y-4 pb-24">
+            <div class="bg-white p-4 rounded-3xl border border-slate-100 shadow-sm space-y-3">
+                <h4 class="text-xs font-extrabold text-slate-550 uppercase tracking-wider flex items-center gap-1.5 border-b border-slate-100 pb-2.5">
+                    <i class="fa-solid fa-chart-column text-slate-600"></i> Rekap Kehadiran & Perizinan Sekolah
+                </h4>
+                <div class="grid grid-cols-3 gap-2">
+                    <div>
+                        <label class="text-[9px] font-bold text-slate-500">Pilih Tahun</label>
+                        <select id="admin-rekap-tahun" onchange="renderAdminRekap()" class="w-full p-2 border border-slate-200 rounded-2xl text-[11px] outline-none bg-white font-semibold">
+                            <option value="2026">2026</option>
+                            <option value="2025">2025</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="text-[9px] font-bold text-slate-500">Pilih Bulan</label>
+                        <select id="admin-rekap-bulan" onchange="renderAdminRekap()" class="w-full p-2 border border-slate-200 rounded-2xl text-[11px] outline-none bg-white font-semibold">
+                            <option value="Semua">Semua Bulan</option>
+                            <option value="01">Januari</option>
+                            <option value="02">Februari</option>
+                            <option value="03">Maret</option>
+                            <option value="04">April</option>
+                            <option value="05">Mei</option>
+                            <option value="06">Juni</option>
+                            <option value="07">Juli</option>
+                            <option value="08">Agustus</option>
+                            <option value="09">September</option>
+                            <option value="10">Oktober</option>
+                            <option value="11">November</option>
+                            <option value="12">Desember</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="text-[9px] font-bold text-slate-500">Pilih Tanggal</label>
+                        <select id="admin-rekap-tanggal" onchange="renderAdminRekap()" class="w-full p-2 border border-slate-200 rounded-2xl text-[11px] outline-none bg-white font-semibold">
+                            <option value="Semua">Semua</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white p-4 rounded-3xl border border-slate-100 shadow-sm space-y-3">
+                <h4 class="text-xs font-extrabold text-slate-550 uppercase tracking-wider border-b border-slate-100 pb-2.5">Ringkasan Periode (Seluruh Sekolah)</h4>
+                <div class="grid grid-cols-2 gap-2 text-xs">
+                    <!-- Hadir -->
+                    <div class="bg-emerald-50/50 p-2.5 rounded-2xl border border-emerald-100 flex items-center justify-between">
+                        <div>
+                            <span class="text-[10px] text-emerald-800 font-extrabold block uppercase tracking-wider">Hadir</span>
+                            <span id="admin-rekap-count-hadir" class="text-sm font-black text-slate-800">0 kali</span>
+                        </div>
+                        <i class="fa-solid fa-user-check text-emerald-600 text-lg opacity-80"></i>
+                    </div>
+                    <!-- Sakit -->
+                    <div class="bg-amber-50/50 p-2.5 rounded-2xl border border-amber-100 flex items-center justify-between">
+                        <div>
+                            <span class="text-[10px] text-amber-800 font-extrabold block uppercase tracking-wider">Sakit</span>
+                            <span id="admin-rekap-count-sakit" class="text-sm font-black text-slate-800">0 kali</span>
+                        </div>
+                        <i class="fa-solid fa-house-medical text-amber-600 text-lg opacity-80"></i>
+                    </div>
+                    <!-- Izin Tidak Masuk -->
+                    <div class="bg-indigo-50/50 p-2.5 rounded-2xl border border-indigo-100 flex items-center justify-between">
+                        <div>
+                            <span class="text-[10px] text-indigo-800 font-extrabold block uppercase tracking-wider">Izin Tidak Masuk</span>
+                            <span id="admin-rekap-count-izin" class="text-sm font-black text-slate-800">0 kali</span>
+                        </div>
+                        <i class="fa-solid fa-envelope text-indigo-600 text-lg opacity-80"></i>
+                    </div>
+                    <!-- Izin Dispen -->
+                    <div class="bg-teal-50/50 p-2.5 rounded-2xl border border-teal-100 flex items-center justify-between">
+                        <div>
+                            <span class="text-[10px] text-teal-800 font-extrabold block uppercase tracking-wider">Izin Dispen</span>
+                            <span id="admin-rekap-count-dispen" class="text-sm font-black text-slate-800">0 kali</span>
+                        </div>
+                        <i class="fa-solid fa-briefcase text-teal-600 text-lg opacity-80"></i>
+                    </div>
+                    <!-- Izin Terlambat -->
+                    <div class="bg-sky-50/50 p-2.5 rounded-2xl border border-sky-100 flex items-center justify-between">
+                        <div>
+                            <span class="text-[10px] text-sky-800 font-extrabold block uppercase tracking-wider">Izin Terlambat</span>
+                            <span id="admin-rekap-count-terlambat" class="text-sm font-black text-slate-800">0 kali</span>
+                        </div>
+                        <i class="fa-solid fa-clock-rotate-left text-sky-600 text-lg opacity-80"></i>
+                    </div>
+                    <!-- Izin Pulang Cepat -->
+                    <div class="bg-rose-50/40 p-2.5 rounded-2xl border border-rose-100 flex items-center justify-between">
+                        <div>
+                            <span class="text-[10px] text-rose-800 font-extrabold block uppercase tracking-wider">Izin Pulang Cepat</span>
+                            <span id="admin-rekap-count-pulangcepat" class="text-sm font-black text-slate-800">0 kali</span>
+                        </div>
+                        <i class="fa-solid fa-person-walking-arrow-right text-rose-600 text-lg opacity-80"></i>
+                    </div>
+                    <!-- Alpha -->
+                    <div class="bg-slate-100 p-2.5 rounded-2xl border border-slate-200 flex items-center justify-between col-span-2">
+                        <div>
+                            <span class="text-[10px] text-slate-600 font-extrabold block uppercase tracking-wider">Alpha (Tanpa Keterangan)</span>
+                            <span id="admin-rekap-count-alpha" class="text-sm font-black text-slate-800">0 kali</span>
+                        </div>
+                        <i class="fa-solid fa-user-xmark text-slate-500 text-lg opacity-80"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white p-4 rounded-3xl border border-slate-100 shadow-sm space-y-3">
+                <h4 class="text-xs font-extrabold text-slate-550 uppercase tracking-wider border-b border-slate-100 pb-2.5">Rekap Per Kelas</h4>
+                <div id="admin-rekap-per-kelas" class="space-y-2.5 max-h-96 overflow-y-auto pr-1">
+                    <div class="text-center py-4 text-slate-400 text-xs">Memuat data...</div>
+                </div>
+            </div>
+        </div>
+
         <!-- 8. VIEW ADMIN: SISWA -->
         <div id="view-admin-siswa" class="hidden flex-1 overflow-y-auto p-4 space-y-4 pb-24">
             <form id="form-admin-tambah-siswa" onsubmit="submitTambahSiswaAdmin(event)" class="bg-white p-4 rounded-3xl border border-slate-100 shadow-sm space-y-3">
@@ -1151,10 +1262,14 @@
         </nav>
 
         <!-- BOTTOM NAVIGATION BAR (ADMIN) -->
-        <nav id="bottom-nav-admin" class="hidden absolute bottom-0 left-0 right-0 bg-white border-t border-slate-100 py-3 px-2 grid grid-cols-5 gap-1 z-40 transition-all">
+        <nav id="bottom-nav-admin" class="hidden absolute bottom-0 left-0 right-0 bg-white border-t border-slate-100 py-3 px-2 grid grid-cols-6 gap-1 z-40 transition-all">
             <button onclick="switchView('admin-home')" id="nav-admin-home" class="flex flex-col items-center gap-1 text-slate-700">
                 <i class="fa-solid fa-house text-lg"></i>
                 <span class="text-[9px] font-bold">Beranda</span>
+            </button>
+            <button onclick="switchView('admin-rekap')" id="nav-admin-rekap" class="flex flex-col items-center gap-1 text-slate-400">
+                <i class="fa-solid fa-chart-column text-lg"></i>
+                <span class="text-[9px] font-bold">Rekap</span>
             </button>
             <button onclick="switchView('admin-siswa')" id="nav-admin-siswa" class="flex flex-col items-center gap-1 text-slate-400">
                 <i class="fa-solid fa-user-graduate text-lg"></i>
@@ -1677,7 +1792,7 @@
         }
 
         function populateTanggalOptions() {
-            const els = ['rekap-tanggal', 'rekap-poin-tanggal', 'filter-izin-tanggal'];
+            const els = ['rekap-tanggal', 'rekap-poin-tanggal', 'filter-izin-tanggal', 'admin-rekap-tanggal'];
             els.forEach(id => {
                 const el = document.getElementById(id);
                 if (el) {
@@ -2085,7 +2200,7 @@
         function switchView(target) {
             const isWali = currentSiswa && currentSiswa.role === 'walikelas';
             const isAdmin = currentSiswa && currentSiswa.role === 'admin';
-            const views = ['home', 'wali-home', 'izin', 'wali-izin', 'wali-guru', 'riwayat', 'laporan', 'profil', 'nilai', 'wali-nilai', 'admin-home', 'admin-siswa', 'admin-guru', 'admin-pengaturan'];
+            const views = ['home', 'wali-home', 'izin', 'wali-izin', 'wali-guru', 'riwayat', 'laporan', 'profil', 'nilai', 'wali-nilai', 'admin-home', 'admin-rekap', 'admin-siswa', 'admin-guru', 'admin-pengaturan'];
             
             views.forEach(v => {
                 const el = document.getElementById(`view-${v}`);
@@ -2097,7 +2212,7 @@
                 const el = document.getElementById(`nav-${n}`);
                 if (el) el.className = "flex flex-col items-center gap-1 text-slate-400";
             });
-            const adminNavs = ['admin-home', 'admin-siswa', 'admin-guru', 'admin-pengaturan', 'admin-logout'];
+            const adminNavs = ['admin-home', 'admin-rekap', 'admin-siswa', 'admin-guru', 'admin-pengaturan', 'admin-logout'];
             adminNavs.forEach(n => {
                 const el = document.getElementById(`nav-${n}`);
                 if (el) el.className = "flex flex-col items-center gap-1 text-slate-400";
@@ -2108,6 +2223,10 @@
                     document.getElementById('view-admin-home').classList.remove('hidden');
                     renderAdminBeranda();
                     document.getElementById('nav-admin-home').className = "flex flex-col items-center gap-1 text-slate-700";
+                } else if (target === 'admin-rekap') {
+                    document.getElementById('view-admin-rekap').classList.remove('hidden');
+                    renderAdminRekap();
+                    document.getElementById('nav-admin-rekap').className = "flex flex-col items-center gap-1 text-slate-700";
                 } else if (target === 'admin-siswa') {
                     document.getElementById('view-admin-siswa').classList.remove('hidden');
                     renderAdminSiswaList();
@@ -2199,7 +2318,7 @@
                 clearInterval(window._sigesitPollInterval);
                 window._sigesitPollInterval = null;
             }
-            const views = ['home', 'wali-home', 'izin', 'wali-izin', 'wali-guru', 'riwayat', 'laporan', 'profil', 'nilai', 'wali-nilai', 'admin-home', 'admin-siswa', 'admin-guru', 'admin-pengaturan'];
+            const views = ['home', 'wali-home', 'izin', 'wali-izin', 'wali-guru', 'riwayat', 'laporan', 'profil', 'nilai', 'wali-nilai', 'admin-home', 'admin-rekap', 'admin-siswa', 'admin-guru', 'admin-pengaturan'];
             views.forEach(v => {
                 const el = document.getElementById(`view-${v}`);
                 if (el) el.classList.add('hidden');
@@ -4016,6 +4135,136 @@
         }
 
         // ================================================================
+        // MODUL ADMIN: Rekap Kehadiran & Perizinan Seluruh Sekolah
+        // Menu ini diletakkan setelah menu "Beranda" pada navigasi bawah
+        // Admin. Menyediakan ringkasan periode (Hadir/Sakit/Izin/Dispen/
+        // Terlambat/Pulang Cepat/Alpha) yang bisa difilter Tahun/Bulan/
+        // Tanggal, serta rekap ringkas per kelas.
+        // ================================================================
+        function renderAdminRekap() {
+            const thnEl = document.getElementById('admin-rekap-tahun');
+            const blnEl = document.getElementById('admin-rekap-bulan');
+            const tglEl = document.getElementById('admin-rekap-tanggal');
+            if (!thnEl || !blnEl) return;
+            const thn = thnEl.value;
+            const bln = blnEl.value;
+            const tgl = tglEl ? tglEl.value : 'Semua';
+
+            const semuaSiswa = localDb.siswa || [];
+
+            // Cocokkan tanggal presensi tunggal (format YYYY-MM-DD) dengan filter aktif.
+            function matchTanggalTunggal(tanggalStr) {
+                const parts = (tanggalStr || '').split('-');
+                if (parts.length !== 3) return false;
+                return parts[0] === thn && (bln === 'Semua' || parts[1] === bln) && (tgl === 'Semua' || parts[2] === tgl);
+            }
+
+            // Cocokkan tanggal izin (bisa berupa rentang "s/d") dengan filter aktif —
+            // mengikuti hari mana saja dalam rentang yang jatuh pada periode filter.
+            function matchPeriodeIzin(tanggalStr) {
+                if (!tanggalStr) return false;
+                const isRange = tanggalStr.includes(" s/d ");
+                const startStr = isRange ? tanggalStr.split(" s/d ")[0].trim() : tanggalStr.trim();
+                const endStr = isRange ? tanggalStr.split(" s/d ")[1].trim() : startStr;
+                const startDate = new Date(startStr);
+                const endDate = new Date(endStr);
+                if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) return false;
+                const cursor = new Date(startDate);
+                while (cursor <= endDate) {
+                    const y = cursor.getFullYear().toString();
+                    const m = (cursor.getMonth() + 1).toString().padStart(2, '0');
+                    const d = cursor.getDate().toString().padStart(2, '0');
+                    if (y === thn && (bln === 'Semua' || m === bln) && (tgl === 'Semua' || d === tgl)) return true;
+                    cursor.setDate(cursor.getDate() + 1);
+                }
+                return false;
+            }
+
+            function hitungIzinJenis(jenis, nisFilter) {
+                return localDb.izin.filter(i => {
+                    if (i.status !== 'Disetujui' || i.jenis !== jenis) return false;
+                    if (nisFilter && !nisFilter.includes(i.nis)) return false;
+                    return matchPeriodeIzin(i.tanggal);
+                }).length;
+            }
+
+            const countHadir = localDb.presensi.filter(p => p.tipe === 'masuk' && matchTanggalTunggal(p.tanggal)).length;
+            const countSakit = hitungIzinJenis('Sakit');
+            const countIzin = hitungIzinJenis('Izin');
+            const countDispen = hitungIzinJenis('Dispen');
+            const countTerlambat = hitungIzinJenis('Izin Terlambat Masuk');
+            const countPulangCepat = hitungIzinJenis('Izin Pulang Cepat');
+
+            // Alpha: ditelusuri per hari kerja dalam rentang filter (dibatasi hingga
+            // hari ini dan maksimal satu bulan penuh jika bulan "Semua" dipilih,
+            // supaya perhitungan tetap ringan).
+            let countAlpha = 0;
+            if (semuaSiswa.length > 0) {
+                let daysToCheck = [];
+                const now = new Date();
+                if (tgl !== 'Semua' && bln !== 'Semua') {
+                    daysToCheck.push(`${thn}-${bln}-${tgl}`);
+                } else if (bln !== 'Semua') {
+                    const lastDay = new Date(parseInt(thn), parseInt(bln), 0).getDate();
+                    for (let d = 1; d <= lastDay; d++) {
+                        daysToCheck.push(`${thn}-${bln}-${d.toString().padStart(2, '0')}`);
+                    }
+                } else {
+                    const curBln = (now.getFullYear().toString() === thn) ? (now.getMonth() + 1).toString().padStart(2, '0') : '12';
+                    const lastDay = new Date(parseInt(thn), parseInt(curBln), 0).getDate();
+                    for (let d = 1; d <= lastDay; d++) {
+                        daysToCheck.push(`${thn}-${curBln}-${d.toString().padStart(2, '0')}`);
+                    }
+                }
+                daysToCheck.forEach(dateStr => {
+                    const dObj = new Date(dateStr);
+                    if (isNaN(dObj.getTime()) || dObj > now) return;
+                    const dow = dObj.getDay();
+                    if (dow === 0 || dow === 6) return;
+                    semuaSiswa.forEach(s => {
+                        const hasMasuk = localDb.presensi.some(p => p.nis === s.nis && p.tanggal === dateStr && p.tipe === 'masuk');
+                        if (!hasMasuk) {
+                            const hasIzin = localDb.izin.some(i => i.nis === s.nis && i.status === 'Disetujui' && isTodayInRange(i.tanggal, dateStr));
+                            if (!hasIzin) countAlpha++;
+                        }
+                    });
+                });
+            }
+
+            const setText = (id, txt) => { const el = document.getElementById(id); if (el) el.innerText = txt; };
+            setText('admin-rekap-count-hadir', `${countHadir} kali`);
+            setText('admin-rekap-count-sakit', `${countSakit} kali`);
+            setText('admin-rekap-count-izin', `${countIzin} kali`);
+            setText('admin-rekap-count-dispen', `${countDispen} kali`);
+            setText('admin-rekap-count-terlambat', `${countTerlambat} kali`);
+            setText('admin-rekap-count-pulangcepat', `${countPulangCepat} kali`);
+            setText('admin-rekap-count-alpha', `${countAlpha} kali`);
+
+            const kelasContainer = document.getElementById('admin-rekap-per-kelas');
+            if (kelasContainer) {
+                if (semuaSiswa.length === 0) {
+                    kelasContainer.innerHTML = `<div class="text-center py-4 text-slate-400 text-xs">Belum ada data siswa.</div>`;
+                } else {
+                    const uniqueKelas = [...new Set(semuaSiswa.map(s => s.kelas))].sort();
+                    kelasContainer.innerHTML = uniqueKelas.map(k => {
+                        const nisKelas = semuaSiswa.filter(s => s.kelas === k).map(s => s.nis);
+                        const hadirKelas = localDb.presensi.filter(p => p.tipe === 'masuk' && nisKelas.includes(p.nis) && matchTanggalTunggal(p.tanggal)).length;
+                        const izinKelas = localDb.izin.filter(i => nisKelas.includes(i.nis) && i.status === 'Disetujui' && matchPeriodeIzin(i.tanggal)).length;
+                        return `
+                            <div class="bg-slate-50 p-3 rounded-2xl border border-slate-100 flex justify-between items-center text-xs">
+                                <span class="font-bold text-slate-700">${k}</span>
+                                <div class="flex gap-2 text-[10px]">
+                                    <span class="bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded font-bold">Hadir: ${hadirKelas}</span>
+                                    <span class="bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded font-bold">Izin: ${izinKelas}</span>
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
+                }
+            }
+        }
+
+        // ================================================================
         // MODUL ADMIN: Manajemen Siswa
         // ================================================================
         function renderAdminSiswaList() {
@@ -4382,6 +4631,10 @@
                         renderAdminBeranda();
                         renderAdminSiswaList();
                         renderAdminGuruList();
+                        const viewRekapAdmin = document.getElementById('view-admin-rekap');
+                        if (viewRekapAdmin && !viewRekapAdmin.classList.contains('hidden')) {
+                            renderAdminRekap();
+                        }
                     } else if (currentSiswa) {
                         renderRiwayatIzin();
                     }
@@ -4451,9 +4704,13 @@
                             renderAdminBeranda();
                             renderAdminSiswaList();
                             renderAdminGuruList();
-                            // Jika Admin sedang membuka halaman Pengaturan saat
-                            // sinkronisasi ini terjadi, segarkan juga input/peta
-                            // jadwal & lokasi supaya menampilkan nilai terbaru.
+                            // Jika Admin sedang membuka halaman Rekap atau Pengaturan
+                            // saat sinkronisasi ini terjadi, segarkan juga tampilan
+                            // supaya menampilkan nilai terbaru.
+                            const viewRekapAdmin = document.getElementById('view-admin-rekap');
+                            if (viewRekapAdmin && !viewRekapAdmin.classList.contains('hidden')) {
+                                renderAdminRekap();
+                            }
                             const viewPengaturan = document.getElementById('view-admin-pengaturan');
                             if (viewPengaturan && !viewPengaturan.classList.contains('hidden')) {
                                 renderAdminPengaturan();

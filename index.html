@@ -1809,23 +1809,37 @@
         }
 
         function startClock() {
-            setInterval(() => {
-                const now = new Date();
-                const d = now.getDate().toString().padStart(2, '0');
-                const hh = now.getHours().toString().padStart(2, '0');
-                const mm = now.getMinutes().toString().padStart(2, '0');
-                const ss = now.getSeconds().toString().padStart(2, '0');
-                const hari = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
-                const bulan = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
-                const homeTanggalEl = document.getElementById('home-tanggal');
-                const homeJamEl = document.getElementById('home-jam');
-                if (homeTanggalEl) homeTanggalEl.innerText = `${hari[now.getDay()]} , ${d} ${bulan[now.getMonth()]} ${now.getFullYear()}`;
-                if (homeJamEl) homeJamEl.innerText = `${hh}:${mm}:${ss}`;
-                const adminTodayEl = document.getElementById('admin-today-str');
-                if (adminTodayEl) adminTodayEl.innerText = `${hari[now.getDay()]}, ${d} ${bulan[now.getMonth()]} ${now.getFullYear()}`;
-                updateClockColorAndButtons(now, hh, mm);
-            }, 1000);
+    let liveTickCounter = 0; // BARU: penghitung untuk refresh berkala Live Kehadiran Kelas
+    setInterval(() => {
+        const now = new Date();
+        const d = now.getDate().toString().padStart(2, '0');
+        const hh = now.getHours().toString().padStart(2, '0');
+        const mm = now.getMinutes().toString().padStart(2, '0');
+        const ss = now.getSeconds().toString().padStart(2, '0');
+        const hari = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+        const bulan = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+        const homeTanggalEl = document.getElementById('home-tanggal');
+        const homeJamEl = document.getElementById('home-jam');
+        if (homeTanggalEl) homeTanggalEl.innerText = `${hari[now.getDay()]} , ${d} ${bulan[now.getMonth()]} ${now.getFullYear()}`;
+        if (homeJamEl) homeJamEl.innerText = `${hh}:${mm}:${ss}`;
+        const adminTodayEl = document.getElementById('admin-today-str');
+        if (adminTodayEl) adminTodayEl.innerText = `${hari[now.getDay()]}, ${d} ${bulan[now.getMonth()]} ${now.getFullYear()}`;
+        updateClockColorAndButtons(now, hh, mm);
+
+        // BARU: refresh badge IN/OUT/Alpha di "Live Kehadiran Kelas" setiap 5 detik
+        // tanpa perlu menunggu poll 30 detik atau pindah halaman, supaya status
+        // rekan sekelas yang baru presensi langsung terlihat "realtime".
+        liveTickCounter++;
+        if (liveTickCounter >= 5) {
+            liveTickCounter = 0;
+            const viewHomeEl = document.getElementById('view-home');
+            if (currentSiswa && currentSiswa.role !== 'walikelas' && currentSiswa.role !== 'admin'
+                && viewHomeEl && !viewHomeEl.classList.contains('hidden')) {
+                renderLivePresensiKelas();
+            }
         }
+    }, 1000);
+}
 
         function initLocationTracking() {
             if (navigator.geolocation) {

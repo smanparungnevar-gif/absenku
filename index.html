@@ -3850,6 +3850,10 @@ function saveJadwalToStorage() {
             const fileInput = document.getElementById('th-file');
             const rangeTanggal = tglMulai === tglSelesai ? tglMulai : `${tglMulai} s/d ${tglSelesai}`;
 
+            // Sakit & Izin Tidak Masuk tidak memerlukan approval wali kelas —
+            // langsung berstatus "Disetujui". Hanya "Dispen" yang tetap "Menunggu".
+            const statusAwal = (jenis === 'Sakit' || jenis === 'Izin') ? "Disetujui" : "Menunggu";
+
             const record = {
                 nis: currentSiswa.nis,
                 nama: currentSiswa.nama,
@@ -3859,7 +3863,7 @@ function saveJadwalToStorage() {
                 waktu: "-",
                 keterangan: ket,
                 file: "", 
-                status: "Menunggu",
+                status: statusAwal,
                 created_at: new Date().toISOString(),
                 dispen_alamat: jenis === 'Dispen' ? document.getElementById('dispen-alamat-text').value.trim() : "",
                 dispen_koordinat: jenis === 'Dispen' ? dispenCoords : ""
@@ -3959,7 +3963,11 @@ function saveJadwalToStorage() {
         function saveIzinToState(record) {
             localDb.izin.push(record);
             localStorage.setItem('local_offline_db', JSON.stringify(localDb));
-            showToast("Pengajuan izin berhasil terkirim!");
+            if (record.status === 'Disetujui') {
+                showToast("Pengajuan izin berhasil terkirim dan otomatis disetujui!");
+            } else {
+                showToast("Pengajuan izin berhasil terkirim, menunggu persetujuan wali kelas!");
+            }
             document.getElementById('form-izin-tidak-hadir').reset();
             document.getElementById('form-izin-kondisional').reset();
             document.getElementById('th-file-label').innerText = "Pilih berkas PDF, JPG, atau PNG";

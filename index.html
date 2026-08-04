@@ -1220,32 +1220,6 @@
 
             <div class="bg-white p-4 rounded-3xl border border-slate-100 shadow-sm space-y-3">
                 <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
-                    <i class="fa-solid fa-link text-indigo-600"></i> Tautan Link untuk Siswa
-                </h4>
-                <p class="text-[11px] text-slate-500">Tautan ini akan tampil di menu Profil setiap siswa. Aktifkan untuk menampilkannya, nonaktifkan agar tautan hilang dari tampilan siswa.</p>
-                <div class="space-y-2">
-                    <div>
-                        <label class="block text-[10px] font-bold text-slate-400 uppercase ml-1 mb-1">Judul Tautan</label>
-                        <input type="text" id="admin-setting-link-judul" placeholder="Contoh: Formulir Pendaftaran Ekstrakurikuler" class="w-full p-3 border border-slate-200 rounded-2xl text-sm outline-none focus:ring-2 focus:ring-indigo-500 font-semibold">
-                    </div>
-                    <div>
-                        <label class="block text-[10px] font-bold text-slate-400 uppercase ml-1 mb-1">URL Tautan</label>
-                        <input type="url" id="admin-setting-link-url" placeholder="https://contoh-tautan-anda.com" class="w-full p-3 border border-slate-200 rounded-2xl text-sm outline-none focus:ring-2 focus:ring-indigo-500">
-                    </div>
-                </div>
-                <div class="flex justify-between items-center bg-slate-50 rounded-2xl px-3.5 py-3 border border-slate-100">
-                    <span class="text-xs font-bold text-slate-600">Status Tautan untuk Siswa</span>
-                    <button type="button" id="admin-setting-link-toggle" onclick="toggleAdminLinkAktif()" class="text-[10px] font-extrabold px-3 py-1.5 rounded-full transition-all bg-slate-200 text-slate-500">
-                        Nonaktif
-                    </button>
-                </div>
-                <button onclick="saveAdminLinkSetting()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-2xl transition-all text-xs flex items-center justify-center gap-2">
-                    <i class="fa-solid fa-floppy-disk"></i> Simpan Tautan Link
-                </button>
-            </div>
-
-            <div class="bg-white p-4 rounded-3xl border border-slate-100 shadow-sm space-y-3">
-                <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
                     <i class="fa-solid fa-key text-indigo-600"></i> Ubah Password Administrator
                 </h4>
                 <div class="space-y-2">
@@ -1254,6 +1228,46 @@
                 </div>
                 <button onclick="saveAdminPasswordSetting()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-2xl transition-all text-xs flex items-center justify-center gap-2">
                     <i class="fa-solid fa-shield-halved"></i> Simpan Password Baru
+                </button>
+            </div>
+
+            <!-- Pengaturan Jadwal Masuk & Pulang -->
+            <div class="bg-white p-4 rounded-3xl border border-slate-100 shadow-sm space-y-3">
+                <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+                    <i class="fa-solid fa-clock text-indigo-600"></i> Pengaturan Jadwal Masuk & Pulang
+                </h4>
+                
+                <div class="space-y-4">
+                    <!-- Pilih Jenjang -->
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-500 uppercase ml-1 mb-2">Pilih Jenjang</label>
+                        <div class="flex gap-2">
+                            <button type="button" onclick="switchJadwalJenjang('X')" id="btn-jadwal-x" class="flex-1 py-2.5 px-3 bg-emerald-50 text-emerald-700 rounded-xl font-bold transition-all border border-emerald-200 text-xs">Kelas X</button>
+                            <button type="button" onclick="switchJadwalJenjang('XI')" id="btn-jadwal-xi" class="flex-1 py-2.5 px-3 bg-slate-50 text-slate-500 rounded-xl font-bold transition-all border border-slate-200 text-xs">Kelas XI</button>
+                            <button type="button" onclick="switchJadwalJenjang('XII')" id="btn-jadwal-xii" class="flex-1 py-2.5 px-3 bg-slate-50 text-slate-500 rounded-xl font-bold transition-all border border-slate-200 text-xs">Kelas XII</button>
+                        </div>
+                    </div>
+
+                    <!-- Tabel Jadwal Per Hari -->
+                    <div id="jadwal-table-container" class="overflow-x-auto rounded-2xl border border-slate-200">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="bg-slate-100 text-slate-600 text-[10px] font-bold uppercase tracking-wider border-b border-slate-200">
+                                    <th class="py-2.5 px-3">Hari</th>
+                                    <th class="py-2.5 px-3 text-center">Jam Buka Masuk</th>
+                                    <th class="py-2.5 px-3 text-center">Jam Batas Masuk</th>
+                                    <th class="py-2.5 px-3 text-center">Jam Buka Pulang</th>
+                                </tr>
+                            </thead>
+                            <tbody id="jadwal-table-body" class="text-xs divide-y divide-slate-100">
+                                <!-- Generated by JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <button onclick="saveJadwalPengaturan()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-2xl transition-all text-xs flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-floppy-disk"></i> Simpan Jadwal Presensi
                 </button>
             </div>
 
@@ -1462,44 +1476,88 @@
         let linkPengaturan = { judul: '', url: '', aktif: false };
 
         // ================================================================
-        // KONFIGURASI JADWAL PRESENSI PER JENJANG KELAS (X, XI, XII)
-        // Kelas XII TIDAK diubah - tetap memakai nilai/aturan asli aplikasi.
+        // KONFIGURASI JADWAL PRESENSI PER HARI PER JENJANG KELAS (X, XI, XII)
+        // Format: { jenjang: { hari: { masukBuka, masukBatas, pulangBuka } } }
         // ================================================================
-        const JADWAL_PRESENSI = {
-            'X':   { masukBuka: 5 * 60,  masukBatas: 6 * 60 + 30,  pulangBuka: 11 * 60 + 45 },
-            'XI':  { masukBuka: 10 * 60, masukBatas: 12 * 60 + 30, pulangBuka: 17 * 60 }
+        const HARI_KERJA = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat'];
+        let JADWAL_PRESENSI = {
+            'X': {
+                'Senin':   { masukBuka: 5 * 60,  masukBatas: 6 * 60 + 30,  pulangBuka: 11 * 60 + 45 },
+                'Selasa':  { masukBuka: 5 * 60,  masukBatas: 6 * 60 + 30,  pulangBuka: 11 * 60 + 45 },
+                'Rabu':    { masukBuka: 5 * 60,  masukBatas: 6 * 60 + 30,  pulangBuka: 11 * 60 + 45 },
+                'Kamis':   { masukBuka: 5 * 60,  masukBatas: 6 * 60 + 30,  pulangBuka: 11 * 60 + 45 },
+                'Jumat':   { masukBuka: 5 * 60,  masukBatas: 6 * 60 + 30,  pulangBuka: 11 * 60 + 45 }
+            },
+            'XI': {
+                'Senin':   { masukBuka: 10 * 60, masukBatas: 12 * 60 + 30, pulangBuka: 17 * 60 },
+                'Selasa':  { masukBuka: 10 * 60, masukBatas: 12 * 60 + 30, pulangBuka: 17 * 60 },
+                'Rabu':    { masukBuka: 10 * 60, masukBatas: 12 * 60 + 30, pulangBuka: 17 * 60 },
+                'Kamis':   { masukBuka: 10 * 60, masukBatas: 12 * 60 + 30, pulangBuka: 17 * 60 },
+                'Jumat':   { masukBuka: 10 * 60, masukBatas: 12 * 60 + 30, pulangBuka: 17 * 60 }
+            },
+            'XII': {
+                'Senin':   { masukBuka: 0,       masukBatas: 6 * 60 + 30,  pulangBuka: 15 * 60 },
+                'Selasa':  { masukBuka: 0,       masukBatas: 6 * 60 + 30,  pulangBuka: 15 * 60 },
+                'Rabu':    { masukBuka: 0,       masukBatas: 6 * 60 + 30,  pulangBuka: 15 * 60 },
+                'Kamis':   { masukBuka: 0,       masukBatas: 6 * 60 + 30,  pulangBuka: 15 * 60 },
+                'Jumat':   { masukBuka: 0,       masukBatas: 6 * 60 + 30,  pulangBuka: 15 * 60 }
+            }
         };
 
         function getJenjangKelas(kelasStr) {
-            if (!kelasStr) return 'XII';
-            const k = kelasStr.toString().trim().toUpperCase();
-            if (k.startsWith('XII')) return 'XII';
-            if (k.startsWith('XI')) return 'XI';
-            if (k.startsWith('X')) return 'X';
-            return 'XII';
-        }
+    if (!kelasStr) return 'XII';
+    const k = kelasStr.toString().trim().toUpperCase();
+    if (k.startsWith('XII')) return 'XII';
+    if (k.startsWith('XI')) return 'XI';
+    if (k.startsWith('X')) return 'X';
+    return 'XII';
+}
+ 
+ function getNamaHari(dateObj) {
+    const hariIdx = dateObj.getDay();
+    const namaHari = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+    return namaHari[hariIdx];
+}
+
+function getJadwalHariIni(kelasStr) {
+    const jenjang = getJenjangKelas(kelasStr);
+    const namaHari = getNamaHari(new Date());
+    const jadwalJenjang = JADWAL_PRESENSI[jenjang] || JADWAL_PRESENSI['XII'];
+    return jadwalJenjang[namaHari] || jadwalJenjang['Senin'];
+}
 
         // Jam buka presensi masuk. Kelas XII tidak dibatasi (sesuai aturan lama / tidak diubah).
         function getMasukBukaMenit(kelasStr) {
-            const jenjang = getJenjangKelas(kelasStr);
-            if (jenjang === 'XII') return null;
-            return JADWAL_PRESENSI[jenjang].masukBuka;
-        }
+    const jadwal = getJadwalHariIni(kelasStr);
+    return jadwal.masukBuka === 0 ? null : jadwal.masukBuka;
+}
 
         // Batas jam masuk (lewat dari ini dianggap terlambat). Kelas XII memakai nilai default lama.
         function getBatasMasukMenit(kelasStr, defaultXII) {
-            const jenjang = getJenjangKelas(kelasStr);
-            if (jenjang === 'XII') return defaultXII;
-            return JADWAL_PRESENSI[jenjang].masukBatas;
-        }
+    const jadwal = getJadwalHariIni(kelasStr);
+    return jadwal.masukBatas || defaultXII;
+}
 
         // Jam mulai dibukanya presensi pulang. Kelas XII memakai nilai default lama.
         function getPulangBukaMenit(kelasStr, defaultXII) {
-            const jenjang = getJenjangKelas(kelasStr);
-            if (jenjang === 'XII') return defaultXII;
-            return JADWAL_PRESENSI[jenjang].pulangBuka;
-        }
+    const jadwal = getJadwalHariIni(kelasStr);
+    return jadwal.pulangBuka || defaultXII;
+} 
 
+        function loadJadwalFromStorage() {
+    const stored = localStorage.getItem('sigesit_jadwal_presensi');
+    if (stored) {
+        try {
+            JADWAL_PRESENSI = JSON.parse(stored);
+        } catch (e) {
+            console.log("Gagal load jadwal, gunakan default.");
+        }
+    }
+}
+
+function saveJadwalToStorage() {
+    localStorage.setItem('sigesit_jadwal_presensi', JSON.stringify(JADWAL_PRESENSI));
+}
         function formatMenitKeJam(menit) {
             if (menit === null || menit === undefined) return "-";
             const h = Math.floor(menit / 60).toString().padStart(2, '0');
@@ -1513,6 +1571,99 @@
             const labelPulang = document.getElementById('label-batas-pulang-jam');
             if (labelMasuk) labelMasuk.innerText = `${formatMenitKeJam(getBatasMasukMenit(currentSiswa.kelas, 6 * 60 + 30))} WIB`;
             if (labelPulang) labelPulang.innerText = `${formatMenitKeJam(getPulangBukaMenit(currentSiswa.kelas, 15 * 60))} WIB`;
+        }
+
+        // ====== PENGATURAN JADWAL PRESENSI (Panel Admin) ======
+        let currentJadwalJenjang = 'X';
+
+        function switchJadwalJenjang(jenjang) {
+            currentJadwalJenjang = jenjang;
+
+            const buttons = ['X', 'XI', 'XII'];
+            buttons.forEach(j => {
+                const btn = document.getElementById(`btn-jadwal-${j.toLowerCase()}`);
+                if (btn) {
+                    if (j === jenjang) {
+                        btn.className = "flex-1 py-2.5 px-3 bg-emerald-50 text-emerald-700 rounded-xl font-bold transition-all border border-emerald-200 text-xs";
+                    } else {
+                        btn.className = "flex-1 py-2.5 px-3 bg-slate-50 text-slate-500 rounded-xl font-bold transition-all border border-slate-200 text-xs";
+                    }
+                }
+            });
+
+            renderJadwalTable();
+        }
+
+        function renderJadwalTable() {
+            const tbody = document.getElementById('jadwal-table-body');
+            if (!tbody) return;
+
+            const jadwalJenjang = JADWAL_PRESENSI[currentJadwalJenjang] || {};
+
+            tbody.innerHTML = HARI_KERJA.map(hari => {
+                const jadwalHari = jadwalJenjang[hari] || { masukBuka: 0, masukBatas: 360, pulangBuka: 900 };
+
+                return `
+                    <tr class="border-slate-50 hover:bg-slate-50/50">
+                        <td class="py-3 px-3 font-bold text-slate-700 text-sm">${hari}</td>
+                        <td class="py-3 px-3">
+                            <input type="time" class="jadwal-input w-full px-2 py-1.5 border border-slate-200 rounded-lg text-xs font-semibold outline-none focus:ring-2 focus:ring-emerald-500" data-hari="${hari}" data-tipe="masukBuka" value="${formatMenitToTime(jadwalHari.masukBuka)}">
+                        </td>
+                        <td class="py-3 px-3">
+                            <input type="time" class="jadwal-input w-full px-2 py-1.5 border border-slate-200 rounded-lg text-xs font-semibold outline-none focus:ring-2 focus:ring-emerald-500" data-hari="${hari}" data-tipe="masukBatas" value="${formatMenitToTime(jadwalHari.masukBatas)}">
+                        </td>
+                        <td class="py-3 px-3">
+                            <input type="time" class="jadwal-input w-full px-2 py-1.5 border border-slate-200 rounded-lg text-xs font-semibold outline-none focus:ring-2 focus:ring-emerald-500" data-hari="${hari}" data-tipe="pulangBuka" value="${formatMenitToTime(jadwalHari.pulangBuka)}">
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function formatMenitToTime(menit) {
+            if (!menit && menit !== 0) return "00:00";
+            const jam = Math.floor(menit / 60).toString().padStart(2, '0');
+            const menitVal = (menit % 60).toString().padStart(2, '0');
+            return `${jam}:${menitVal}`;
+        }
+
+        function timeToMenit(timeStr) {
+            if (!timeStr) return 0;
+            const parts = timeStr.split(':');
+            if (parts.length !== 2) return 0;
+            return parseInt(parts[0]) * 60 + parseInt(parts[1]);
+        }
+
+        function saveJadwalPengaturan() {
+            const inputs = document.querySelectorAll('.jadwal-input');
+            inputs.forEach(input => {
+                const hari = input.getAttribute('data-hari');
+                const tipe = input.getAttribute('data-tipe');
+                const timeValue = input.value;
+                const menitValue = timeToMenit(timeValue);
+
+                if (!JADWAL_PRESENSI[currentJadwalJenjang]) {
+                    JADWAL_PRESENSI[currentJadwalJenjang] = {};
+                }
+                if (!JADWAL_PRESENSI[currentJadwalJenjang][hari]) {
+                    JADWAL_PRESENSI[currentJadwalJenjang][hari] = { masukBuka: 0, masukBatas: 360, pulangBuka: 900 };
+                }
+
+                JADWAL_PRESENSI[currentJadwalJenjang][hari][tipe] = menitValue;
+            });
+
+            saveJadwalToStorage();
+            showToast("Jadwal presensi berhasil disimpan!");
+
+            if (!isMockUrl() && scriptUrl) {
+                fetch(`${scriptUrl}`, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        action: "updateJadwalPresensi",
+                        jadwal_presensi: JADWAL_PRESENSI
+                    })
+                }).catch(() => console.log("Gagal sync jadwal ke server."));
+            }
         }
 
         // STATE UTAMA
@@ -1568,6 +1719,8 @@
         }
 
         window.onload = function() {
+            loadJadwalFromStorage();
+
             // scriptUrl selalu memakai SCRIPT_URL yang sudah di-hardcode di atas.
             const storedLocal = localStorage.getItem('local_offline_db');
             if (!storedLocal) {
@@ -1978,6 +2131,8 @@
                 if (radiusInput) radiusInput.value = ABSENCE_RADIUS_METERS;
                 renderAdminLinkSettingUI();
                 updateIntegrationStatus();
+                renderJadwalTable();
+                switchJadwalJenjang(currentJadwalJenjang);
             }
         }
 

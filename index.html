@@ -986,18 +986,15 @@
                 </div>
             </div>
 
-            <div id="profil-card-tautan-link" class="bg-white p-4 rounded-3xl border border-slate-100 shadow-sm space-y-3">
-                <h5 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Tautan Link</h5>
-                <div class="space-y-2">
-                    <div class="relative">
-                        <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400">
-                            <i class="fa-solid fa-link"></i>
-                        </span>
-                        <input type="url" id="profil-tautan-link" placeholder="https://contoh-tautan-anda.com" class="w-full pl-11 pr-4 py-3.5 bg-white border border-slate-200 rounded-2xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition text-xs">
-                    </div>
-                    <button onclick="saveTautanLink()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-2xl transition-all text-xs flex items-center justify-center gap-2">
-                        <i class="fa-solid fa-floppy-disk"></i> Simpan Tautan
-                    </button>
+            <div id="profil-card-tautan-link" class="bg-white p-4 rounded-3xl border border-slate-100 shadow-sm space-y-3 hidden">
+                <h5 class="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+                    <i class="fa-solid fa-link"></i> Tautan Dari Administrator
+                </h5>
+                <div id="profil-tautan-link-display" class="space-y-2">
+                    <p id="profil-tautan-link-judul" class="text-sm font-extrabold text-slate-800">-</p>
+                    <a id="profil-tautan-link-btn" href="#" target="_blank" rel="noopener noreferrer" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-2xl transition-all text-xs flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-arrow-up-right-from-square"></i> Buka Tautan
+                    </a>
                 </div>
             </div>
 
@@ -1192,6 +1189,32 @@
                 </div>
                 <button onclick="saveAdminRadiusSetting()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-2xl transition-all text-xs flex items-center justify-center gap-2">
                     <i class="fa-solid fa-floppy-disk"></i> Simpan Radius
+                </button>
+            </div>
+
+            <div class="bg-white p-4 rounded-3xl border border-slate-100 shadow-sm space-y-3">
+                <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+                    <i class="fa-solid fa-link text-indigo-600"></i> Tautan Link untuk Siswa
+                </h4>
+                <p class="text-[11px] text-slate-500">Tautan ini akan tampil di menu Profil setiap siswa. Aktifkan untuk menampilkannya, nonaktifkan agar tautan hilang dari tampilan siswa.</p>
+                <div class="space-y-2">
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-400 uppercase ml-1 mb-1">Judul Tautan</label>
+                        <input type="text" id="admin-setting-link-judul" placeholder="Contoh: Formulir Pendaftaran Ekstrakurikuler" class="w-full p-3 border border-slate-200 rounded-2xl text-sm outline-none focus:ring-2 focus:ring-indigo-500 font-semibold">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-400 uppercase ml-1 mb-1">URL Tautan</label>
+                        <input type="url" id="admin-setting-link-url" placeholder="https://contoh-tautan-anda.com" class="w-full p-3 border border-slate-200 rounded-2xl text-sm outline-none focus:ring-2 focus:ring-indigo-500">
+                    </div>
+                </div>
+                <div class="flex justify-between items-center bg-slate-50 rounded-2xl px-3.5 py-3 border border-slate-100">
+                    <span class="text-xs font-bold text-slate-600">Status Tautan untuk Siswa</span>
+                    <button type="button" id="admin-setting-link-toggle" onclick="toggleAdminLinkAktif()" class="text-[10px] font-extrabold px-3 py-1.5 rounded-full transition-all bg-slate-200 text-slate-500">
+                        Nonaktif
+                    </button>
+                </div>
+                <button onclick="saveAdminLinkSetting()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-2xl transition-all text-xs flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-floppy-disk"></i> Simpan Tautan Link
                 </button>
             </div>
 
@@ -1405,6 +1428,14 @@
         let ABSENCE_RADIUS_METERS = 150;
 
         // ================================================================
+        // PENGATURAN TAUTAN LINK GLOBAL (dikontrol Administrator)
+        // Tautan ini dikirim oleh administrator dan hanya tampil di menu
+        // Profil siswa apabila status "aktif" bernilai true. Siswa tidak
+        // dapat mengubah nilai ini — hanya melihat/mengklik.
+        // ================================================================
+        let linkPengaturan = { judul: '', url: '', aktif: false };
+
+        // ================================================================
         // KONFIGURASI JADWAL PRESENSI PER JENJANG KELAS (X, XI, XII)
         // Kelas XII TIDAK diubah - tetap memakai nilai/aturan asli aplikasi.
         // ================================================================
@@ -1526,6 +1557,20 @@
             const storedRadius = localStorage.getItem('sigesit_radius_setting');
             if (storedRadius) {
                 ABSENCE_RADIUS_METERS = parseInt(storedRadius) || ABSENCE_RADIUS_METERS;
+            }
+
+            const storedLinkPengaturan = localStorage.getItem('sigesit_link_pengaturan');
+            if (storedLinkPengaturan) {
+                try {
+                    const parsedLink = JSON.parse(storedLinkPengaturan);
+                    linkPengaturan = {
+                        judul: parsedLink.judul || '',
+                        url: parsedLink.url || '',
+                        aktif: !!parsedLink.aktif
+                    };
+                } catch (e) {
+                    linkPengaturan = { judul: '', url: '', aktif: false };
+                }
             }
 
             startClock();
@@ -1905,8 +1950,77 @@
             } else if (target === 'pengaturan') {
                 const radiusInput = document.getElementById('admin-setting-radius');
                 if (radiusInput) radiusInput.value = ABSENCE_RADIUS_METERS;
+                renderAdminLinkSettingUI();
                 updateIntegrationStatus();
             }
+        }
+
+        // Merender ulang tampilan form Tautan Link di panel Pengaturan Admin
+        // berdasarkan state linkPengaturan yang tersimpan saat ini.
+        function renderAdminLinkSettingUI() {
+            const judulInput = document.getElementById('admin-setting-link-judul');
+            const urlInput = document.getElementById('admin-setting-link-url');
+            if (judulInput) judulInput.value = linkPengaturan.judul || '';
+            if (urlInput) urlInput.value = linkPengaturan.url || '';
+            updateAdminLinkToggleUI();
+        }
+
+        function updateAdminLinkToggleUI() {
+            const toggleBtn = document.getElementById('admin-setting-link-toggle');
+            if (!toggleBtn) return;
+            if (linkPengaturan.aktif) {
+                toggleBtn.innerText = "Aktif";
+                toggleBtn.className = "text-[10px] font-extrabold px-3 py-1.5 rounded-full transition-all bg-emerald-100 text-emerald-700";
+            } else {
+                toggleBtn.innerText = "Nonaktif";
+                toggleBtn.className = "text-[10px] font-extrabold px-3 py-1.5 rounded-full transition-all bg-slate-200 text-slate-500";
+            }
+        }
+
+        function toggleAdminLinkAktif() {
+            linkPengaturan.aktif = !linkPengaturan.aktif;
+            updateAdminLinkToggleUI();
+        }
+
+        // Menyimpan pengaturan Tautan Link (judul, url, status aktif) secara
+        // lokal dan (jika terhubung) ke server, lalu memperbarui tampilan
+        // Profil siswa yang sedang aktif jika ada.
+        function saveAdminLinkSetting() {
+            const judulVal = document.getElementById('admin-setting-link-judul').value.trim();
+            const urlVal = document.getElementById('admin-setting-link-url').value.trim();
+
+            if (linkPengaturan.aktif) {
+                if (!judulVal || !urlVal) {
+                    showToast("Judul dan URL tautan wajib diisi sebelum diaktifkan!");
+                    return;
+                }
+                if (!/^https?:\/\//i.test(urlVal)) {
+                    showToast("Format URL harus diawali http:// atau https://");
+                    return;
+                }
+            }
+
+            linkPengaturan = {
+                judul: judulVal,
+                url: urlVal,
+                aktif: linkPengaturan.aktif
+            };
+            localStorage.setItem('sigesit_link_pengaturan', JSON.stringify(linkPengaturan));
+            showToast("Tautan link berhasil disimpan.");
+
+            if (!isMockUrl() && scriptUrl) {
+                fetch(`${scriptUrl}`, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        action: "updateLinkPengaturan",
+                        judul: linkPengaturan.judul,
+                        url: linkPengaturan.url,
+                        aktif: linkPengaturan.aktif
+                    })
+                }).catch(() => console.log("Gagal sync tautan link ke server."));
+            }
+
+            renderProfilTautanLink();
         }
 
         function populateAdminKelasFilter() {
@@ -2247,7 +2361,6 @@
                 if (rowWali1) rowWali1.classList.remove('hidden');
                 if (rowWali2) rowWali2.classList.remove('hidden');
                 if (mapCard) mapCard.classList.remove('hidden');
-                if (tautanCard) tautanCard.classList.remove('hidden');
                 if (profileFotoSiswa) profileFotoSiswa.classList.remove('hidden');
                 if (profileFotoWali) profileFotoWali.classList.add('hidden');
                 if (badgeIdentitas) {
@@ -2261,12 +2374,28 @@
                 if (currentSiswa.alamat_teks) {
                     document.getElementById('profil-alamat-text').value = currentSiswa.alamat_teks;
                 }
-                if (currentSiswa.tautan_link) {
-                    document.getElementById('profil-tautan-link').value = currentSiswa.tautan_link;
-                }
+                renderProfilTautanLink();
             }
 
             fetchDatabaseState();
+        }
+
+        // Merender kartu "Tautan Dari Administrator" di menu Profil siswa.
+        // Kartu hanya ditampilkan apabila administrator mengaktifkan tautan
+        // (linkPengaturan.aktif === true); jika nonaktif, kartu disembunyikan
+        // sepenuhnya sehingga tautan "menghilang" dari sisi siswa.
+        function renderProfilTautanLink() {
+            const tautanCard = document.getElementById('profil-card-tautan-link');
+            if (!tautanCard || !currentSiswa || currentSiswa.role === 'walikelas') return;
+
+            if (linkPengaturan.aktif && linkPengaturan.url) {
+                document.getElementById('profil-tautan-link-judul').innerText = linkPengaturan.judul || 'Tautan Informasi';
+                const btn = document.getElementById('profil-tautan-link-btn');
+                if (btn) btn.href = linkPengaturan.url;
+                tautanCard.classList.remove('hidden');
+            } else {
+                tautanCard.classList.add('hidden');
+            }
         }
 
         function switchView(target) {
@@ -2335,6 +2464,7 @@
                 document.getElementById('view-profil').classList.remove('hidden');
                 document.getElementById('nav-profil').className = "flex flex-col items-center gap-1 text-emerald-600";
                 if (!isWali) {
+                    renderProfilTautanLink();
                     setTimeout(() => { initLeafletMap(); }, 200);
                 }
             }
@@ -3993,6 +4123,7 @@
                 renderSiswaNilai();
                 populateWaliNilaiJudulFilter();
                 renderWaliNilaiSiswa();
+                renderProfilTautanLink();
                 if (currentSiswa && currentSiswa.role === 'walikelas') {
                     updateWaliRekapKehadiranCounters();
                     renderWaliRekapIzinList();
@@ -4031,6 +4162,14 @@
                         localDb.izin = data.izin || [];
                         localDb.poin = data.poin || [];
                         localDb.nilai = data.nilai || []; 
+                        if (data.link_pengaturan) {
+                            linkPengaturan = {
+                                judul: data.link_pengaturan.judul || '',
+                                url: data.link_pengaturan.url || '',
+                                aktif: !!data.link_pengaturan.aktif
+                            };
+                            localStorage.setItem('sigesit_link_pengaturan', JSON.stringify(linkPengaturan));
+                        }
                         localStorage.setItem('local_offline_db', JSON.stringify(localDb));
                         
                         refreshAllViews();
@@ -4152,39 +4291,6 @@
                         alamat_teks: alamatTeks
                     })
                 }).catch(() => console.log("Gagal sync alamat ke server."));
-            }
-        }
-
-        function saveTautanLink() {
-            const linkVal = document.getElementById('profil-tautan-link').value.trim();
-            if (!linkVal) {
-                showToast("Tautan link tidak boleh kosong!");
-                return;
-            }
-            if (!/^https?:\/\//i.test(linkVal)) {
-                showToast("Format tautan harus diawali http:// atau https://");
-                return;
-            }
-
-            currentSiswa.tautan_link = linkVal;
-
-            const match = localDb.siswa.find(s => s.nis === currentSiswa.nis);
-            if (match) {
-                match.tautan_link = linkVal;
-                localStorage.setItem('local_offline_db', JSON.stringify(localDb));
-            }
-            localStorage.setItem('sigesit_active_user', JSON.stringify(currentSiswa));
-            showToast("Tautan link berhasil disimpan.");
-
-            if (!isMockUrl() && scriptUrl) {
-                fetch(`${scriptUrl}`, {
-                    method: 'POST',
-                    body: JSON.stringify({
-                        action: "updateTautanLink",
-                        nis: currentSiswa.nis,
-                        tautan_link: linkVal
-                    })
-                }).catch(() => console.log("Gagal sync tautan link ke server."));
             }
         }
 

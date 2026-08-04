@@ -1397,7 +1397,7 @@
 
     <script>
         // URL Google Apps Script (hardcoded — tidak perlu diinput manual oleh siswa/wali kelas)
-        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbylBPwyB7CzPlazdMlesOLK2o_9cCodIdb1WImZ20p-cVwMh3WQnGTaKfbXlXYmx3IPoQ/exec";
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwfhISKXzK3rnmYpid1CGH5MuS3grYv89FX0evRlHQnNDaZNOJmLC7ijgotyeIGm0cNCA/exec";
         
         // Konfigurasi Geofencing SMAN 1 Parung
         const SCHOOL_LAT = -6.436954848531352; 
@@ -1797,6 +1797,11 @@
             document.getElementById('view-login').classList.remove('hidden');
         }
 
+        // Login administrator: mengikuti pola yang sama dengan handleLogin() untuk
+        // siswa/wali kelas — kalau server (scriptUrl) aktif, validasi dilakukan ke
+        // sheet 'Administrator' via action 'loginAdmin'. Kalau scriptUrl belum
+        // dikonfigurasi (isMockUrl() true), tetap fallback ke localDb.admin (mode
+        // demo/offline) supaya app tetap bisa dicoba tanpa koneksi server.
         function handleAdminLogin() {
             const idInput = document.getElementById('admin-login-identifier').value.trim();
             const passInput = document.getElementById('admin-login-password').value.trim();
@@ -1806,16 +1811,41 @@
                 return;
             }
 
-            if (!localDb.admin) localDb.admin = [];
-            const adminData = localDb.admin.find(a => a.username === idInput && a.password === passInput);
-            if (adminData) {
-                currentAdmin = { ...adminData };
-                localStorage.setItem('sigesit_active_admin', JSON.stringify(currentAdmin));
-                doPostAdminLoginActions();
-                showToast("Masuk Panel Administrator!");
-            } else {
-                showToast("Username atau Password Administrator salah!");
+            if (isMockUrl()) {
+                if (!localDb.admin) localDb.admin = [];
+                const adminData = localDb.admin.find(a => a.username === idInput && a.password === passInput);
+                if (adminData) {
+                    currentAdmin = { ...adminData };
+                    localStorage.setItem('sigesit_active_admin', JSON.stringify(currentAdmin));
+                    doPostAdminLoginActions();
+                    showToast("Masuk Sesi Lokal Administrator!");
+                } else {
+                    showToast("Username atau Password Administrator salah untuk data demo!");
+                }
+                return;
             }
+
+            showToast("Memvalidasi akun administrator...");
+            const params = `action=loginAdmin&identifier=${encodeURIComponent(idInput)}&password=${encodeURIComponent(passInput)}`;
+
+            fetch(`${scriptUrl}?${params}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data && data.success) {
+                        // Password sengaja tidak disimpan di sisi client — cukup
+                        // dipakai server untuk validasi saat ganti password nanti.
+                        currentAdmin = data.user;
+                        delete currentAdmin.password;
+                        localStorage.setItem('sigesit_active_admin', JSON.stringify(currentAdmin));
+                        doPostAdminLoginActions();
+                        showToast("Login administrator berhasil terverifikasi!");
+                    } else {
+                        showToast(data.message || "Login gagal! Periksa kembali kredensial Anda.");
+                    }
+                })
+                .catch(() => {
+                    showToast("Gagal terhubung ke Google Apps Script.");
+                });
         }
 
         function doPostAdminLoginActions() {
@@ -2080,6 +2110,10 @@
             calculateDistance();
         }
 
+        // Ganti password administrator: kalau server (scriptUrl) aktif, validasi
+        // password lama & penyimpanan password baru dilakukan di sheet
+        // 'Administrator' lewat action 'updateAdminPassword'. Kalau isMockUrl()
+        // true (mode demo/offline), tetap pakai localDb.admin seperti sebelumnya.
         function saveAdminPasswordSetting() {
             const passLama = document.getElementById('admin-setting-pass-lama').value.trim();
             const passBaru = document.getElementById('admin-setting-pass-baru').value.trim();
@@ -2087,24 +2121,54 @@
                 showToast("Password lama dan baru wajib diisi!");
                 return;
             }
-            if (!currentAdmin || currentAdmin.password !== passLama) {
-                showToast("Password saat ini tidak sesuai!");
-                return;
-            }
             if (passBaru.length < 4) {
                 showToast("Password baru minimal 4 karakter!");
                 return;
             }
-            const adminMatch = localDb.admin.find(a => a.username === currentAdmin.username);
-            if (adminMatch) {
+            if (!currentAdmin || !currentAdmin.username) {
+                showToast("Sesi administrator tidak valid.");
+                return;
+            }
+
+            if (isMockUrl()) {
+                if (!localDb.admin) localDb.admin = [];
+                const adminMatch = localDb.admin.find(a => a.username === currentAdmin.username && a.password === passLama);
+                if (!adminMatch) {
+                    showToast("Password saat ini tidak sesuai!");
+                    return;
+                }
                 adminMatch.password = passBaru;
                 localStorage.setItem('local_offline_db', JSON.stringify(localDb));
+                currentAdmin.password = passBaru;
+                localStorage.setItem('sigesit_active_admin', JSON.stringify(currentAdmin));
+                document.getElementById('admin-setting-pass-lama').value = "";
+                document.getElementById('admin-setting-pass-baru').value = "";
+                showToast("Password administrator (lokal) berhasil diperbarui!");
+                return;
             }
-            currentAdmin.password = passBaru;
-            localStorage.setItem('sigesit_active_admin', JSON.stringify(currentAdmin));
-            document.getElementById('admin-setting-pass-lama').value = "";
-            document.getElementById('admin-setting-pass-baru').value = "";
-            showToast("Password administrator berhasil diperbarui!");
+
+            fetch(`${scriptUrl}`, {
+                method: 'POST',
+                body: JSON.stringify({
+                    action: "updateAdminPassword",
+                    username: currentAdmin.username,
+                    oldPassword: passLama,
+                    newPassword: passBaru
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    document.getElementById('admin-setting-pass-lama').value = "";
+                    document.getElementById('admin-setting-pass-baru').value = "";
+                    showToast("Password administrator berhasil diperbarui!");
+                } else {
+                    showToast(data.message || "Gagal memperbarui password administrator.");
+                }
+            })
+            .catch(() => {
+                showToast("Gagal terhubung ke server untuk mengganti password.");
+            });
         }
 
         function doPostLoginActions() {
@@ -3955,6 +4019,8 @@
                     syncIcons.forEach(icon => icon.classList.remove('animate-spin'));
                     if (data.success) {
                         localDb.siswa = data.siswa_all || [];
+                        localDb.walikelas = data.walikelas || [];
+                        localDb.admin = data.admin || [];
 
                         const serverPresensi = data.presensi || [];
                         const localOnlyPresensi = localDb.presensi.filter(lp =>

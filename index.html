@@ -219,7 +219,7 @@
             </div>
 
             <!-- Tombol Utama Presensi -->
-            <div class="flex gap-4">
+            <div id="presensi-buttons-container" class="flex gap-4">
                 <!-- Presensi Masuk -->
                 <div class="flex-1 glass-card rounded-3xl p-4 text-center flex flex-col items-center justify-between shadow-sm border-t-4 border-emerald-500">
                     <div class="text-center w-full mb-2">
@@ -1230,6 +1230,42 @@
 
             <div class="bg-white p-4 rounded-3xl border border-slate-100 shadow-sm space-y-3">
                 <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+                    <i class="fa-solid fa-image text-indigo-600"></i> Gambar Pop Up Hari Libur (Sabtu & Minggu)
+                </h4>
+                <p class="text-[11px] text-slate-500">Gambar/pesan ini akan menggantikan tombol Presensi Masuk & Pulang pada tampilan siswa setiap hari Sabtu dan Minggu.</p>
+
+                <div class="space-y-1">
+                    <label class="block text-[10px] font-bold text-slate-400 uppercase ml-1">Unggah Gambar (Maks 2MB)</label>
+                    <div class="border-2 border-dashed border-slate-200 rounded-2xl p-4 text-center cursor-pointer relative hover:bg-slate-50 transition-all">
+                        <input type="file" id="admin-libur-gambar-file" accept=".jpg, .jpeg, .png" onchange="handleUploadLiburGambar(this)" class="absolute inset-0 opacity-0 cursor-pointer">
+                        <i class="fa-solid fa-cloud-arrow-up text-2xl text-slate-400 mb-1"></i>
+                        <p class="text-xs text-slate-500 font-semibold" id="admin-libur-gambar-file-label">Pilih gambar JPG atau PNG</p>
+                    </div>
+                </div>
+
+                <div id="admin-libur-gambar-preview-container" class="hidden">
+                    <img id="admin-libur-gambar-preview" src="" alt="Preview Gambar Libur" class="w-full h-32 object-cover rounded-2xl border border-slate-200">
+                    <button type="button" onclick="hapusLiburGambar()" class="mt-2 w-full bg-rose-50 hover:bg-rose-100 text-rose-600 font-bold py-2 rounded-xl text-[11px] transition-all">
+                        <i class="fa-solid fa-trash"></i> Hapus Gambar
+                    </button>
+                </div>
+
+                <div>
+                    <label class="block text-[10px] font-bold text-slate-400 uppercase ml-1 mb-1">Judul Pop Up</label>
+                    <input type="text" id="admin-libur-judul" placeholder="Contoh: Hari Libur Sekolah" class="w-full p-3 border border-slate-200 rounded-2xl text-sm outline-none focus:ring-2 focus:ring-indigo-500 font-semibold">
+                </div>
+                <div>
+                    <label class="block text-[10px] font-bold text-slate-400 uppercase ml-1 mb-1">Pesan Pop Up</label>
+                    <textarea id="admin-libur-pesan" rows="2" placeholder="Contoh: Presensi tidak tersedia pada hari Sabtu & Minggu." class="w-full p-3 border border-slate-200 rounded-2xl text-sm outline-none focus:ring-2 focus:ring-indigo-500"></textarea>
+                </div>
+
+                <button onclick="saveLiburGambarSetting()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-2xl transition-all text-xs flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-floppy-disk"></i> Simpan Pengaturan Libur
+                </button>
+            </div>
+
+            <div class="bg-white p-4 rounded-3xl border border-slate-100 shadow-sm space-y-3">
+                <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
                     <i class="fa-solid fa-key text-indigo-600"></i> Ubah Password Administrator
                 </h4>
                 <div class="space-y-2">
@@ -1486,6 +1522,22 @@
         let linkPengaturan = { judul: '', url: '', aktif: false };
 
         // ================================================================
+        // PENGATURAN GAMBAR POP UP HARI LIBUR AKHIR PEKAN (dikontrol Admin)
+        // Ditampilkan menggantikan tombol Presensi Masuk/Pulang pada
+        // tampilan siswa setiap hari Sabtu & Minggu.
+        // ================================================================
+        let liburPengaturan = {
+            gambar: '',
+            judul: 'Hari Libur Sekolah',
+            pesan: 'Presensi tidak tersedia pada hari Sabtu & Minggu. Selamat beristirahat!'
+        };
+
+        function isHariLibur() {
+            const dow = new Date().getDay();
+            return dow === 0 || dow === 6; // 0 = Minggu, 6 = Sabtu
+        }
+
+        // ================================================================
         // KONFIGURASI JADWAL PRESENSI PER HARI PER JENJANG KELAS (X, XI, XII)
         // Format: { jenjang: { hari: { masukBuka, masukBatas, pulangBuka } } }
         // ================================================================
@@ -1590,6 +1642,42 @@ function saveJadwalToStorage() {
             const labelPulang = document.getElementById('label-batas-pulang-jam');
             if (labelMasuk) labelMasuk.innerText = `${formatMenitKeJam(getBatasMasukMenit(currentSiswa.kelas, 6 * 60 + 30))} WIB`;
             if (labelPulang) labelPulang.innerText = `${formatMenitKeJam(getPulangBukaMenit(currentSiswa.kelas, 15 * 60))} WIB`;
+        }
+
+        // ================================================================
+        // TAMPILAN LIBUR AKHIR PEKAN (Sabtu & Minggu) - SISWA
+        // Menyembunyikan tombol presensi dan menampilkan banner/gambar
+        // yang diatur oleh Administrator sebagai gantinya.
+        // ================================================================
+        function updateWeekendPresensiUI() {
+            if (!currentSiswa || currentSiswa.role === 'walikelas') return;
+            const btnContainer = document.getElementById('presensi-buttons-container');
+            const banner = document.getElementById('libur-weekend-banner');
+            if (!btnContainer || !banner) return;
+
+            if (isHariLibur()) {
+                btnContainer.classList.add('hidden');
+                banner.classList.remove('hidden');
+
+                const imgEl = document.getElementById('libur-weekend-gambar');
+                const judulEl = document.getElementById('libur-weekend-judul');
+                const pesanEl = document.getElementById('libur-weekend-pesan');
+
+                if (imgEl) {
+                    if (liburPengaturan.gambar) {
+                        imgEl.src = liburPengaturan.gambar;
+                        imgEl.classList.remove('hidden');
+                    } else {
+                        imgEl.classList.add('hidden');
+                        imgEl.src = '';
+                    }
+                }
+                if (judulEl) judulEl.innerText = liburPengaturan.judul || 'Hari Libur Sekolah';
+                if (pesanEl) pesanEl.innerText = liburPengaturan.pesan || 'Presensi tidak tersedia pada hari Sabtu & Minggu.';
+            } else {
+                btnContainer.classList.remove('hidden');
+                banner.classList.add('hidden');
+            }
         }
 
         // ====== PENGATURAN JADWAL PRESENSI (Panel Admin) ======
@@ -1768,6 +1856,20 @@ function saveJadwalToStorage() {
                     };
                 } catch (e) {
                     linkPengaturan = { judul: '', url: '', aktif: false };
+                }
+            }
+
+            const storedLiburPengaturan = localStorage.getItem('sigesit_libur_pengaturan');
+            if (storedLiburPengaturan) {
+                try {
+                    const parsedLibur = JSON.parse(storedLiburPengaturan);
+                    liburPengaturan = {
+                        gambar: parsedLibur.gambar || '',
+                        judul: parsedLibur.judul || 'Hari Libur Sekolah',
+                        pesan: parsedLibur.pesan || 'Presensi tidak tersedia pada hari Sabtu & Minggu. Selamat beristirahat!'
+                    };
+                } catch (e) {
+                    console.log("Gagal load pengaturan libur, gunakan default.");
                 }
             }
 
@@ -2149,6 +2251,7 @@ function saveJadwalToStorage() {
                 const radiusInput = document.getElementById('admin-setting-radius');
                 if (radiusInput) radiusInput.value = ABSENCE_RADIUS_METERS;
                 renderAdminLinkSettingUI();
+                renderAdminLiburSettingUI();
                 updateIntegrationStatus();
                 renderJadwalTable();
                 switchJadwalJenjang(currentJadwalJenjang);
@@ -2221,6 +2324,88 @@ function saveJadwalToStorage() {
             }
 
             renderProfilTautanLink();
+        }
+
+        // ================================================================
+        // PANEL ADMIN: PENGATURAN GAMBAR POP UP HARI LIBUR AKHIR PEKAN
+        // ================================================================
+        function renderAdminLiburSettingUI() {
+            const judulInput = document.getElementById('admin-libur-judul');
+            const pesanInput = document.getElementById('admin-libur-pesan');
+            if (judulInput) judulInput.value = liburPengaturan.judul || '';
+            if (pesanInput) pesanInput.value = liburPengaturan.pesan || '';
+
+            const previewContainer = document.getElementById('admin-libur-gambar-preview-container');
+            const previewImg = document.getElementById('admin-libur-gambar-preview');
+            const fileLabel = document.getElementById('admin-libur-gambar-file-label');
+            if (liburPengaturan.gambar) {
+                if (previewImg) previewImg.src = liburPengaturan.gambar;
+                if (previewContainer) previewContainer.classList.remove('hidden');
+                if (fileLabel) fileLabel.innerText = "Gambar tersimpan (unggah ulang untuk mengganti)";
+            } else {
+                if (previewContainer) previewContainer.classList.add('hidden');
+                if (fileLabel) fileLabel.innerText = "Pilih gambar JPG atau PNG";
+            }
+        }
+
+        function handleUploadLiburGambar(input) {
+            const file = input.files[0];
+            if (!file) return;
+            if (file.size > 2 * 1024 * 1024) {
+                showToast("Ukuran gambar melebihi batas 2MB!");
+                input.value = "";
+                return;
+            }
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                liburPengaturan.gambar = e.target.result;
+                const previewContainer = document.getElementById('admin-libur-gambar-preview-container');
+                const previewImg = document.getElementById('admin-libur-gambar-preview');
+                const fileLabel = document.getElementById('admin-libur-gambar-file-label');
+                if (previewImg) previewImg.src = liburPengaturan.gambar;
+                if (previewContainer) previewContainer.classList.remove('hidden');
+                if (fileLabel) fileLabel.innerText = file.name;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function hapusLiburGambar() {
+            liburPengaturan.gambar = '';
+            const previewContainer = document.getElementById('admin-libur-gambar-preview-container');
+            const fileInput = document.getElementById('admin-libur-gambar-file');
+            const fileLabel = document.getElementById('admin-libur-gambar-file-label');
+            if (previewContainer) previewContainer.classList.add('hidden');
+            if (fileInput) fileInput.value = "";
+            if (fileLabel) fileLabel.innerText = "Pilih gambar JPG atau PNG";
+            showToast("Gambar libur dihapus. Klik Simpan untuk menerapkan.");
+        }
+
+        // Menyimpan pengaturan gambar/pesan pop up hari libur akhir pekan
+        // secara lokal dan (jika terhubung) ke server, lalu memperbarui
+        // tampilan siswa (jika sedang login & sedang hari Sabtu/Minggu).
+        function saveLiburGambarSetting() {
+            const judulVal = document.getElementById('admin-libur-judul').value.trim();
+            const pesanVal = document.getElementById('admin-libur-pesan').value.trim();
+
+            liburPengaturan.judul = judulVal || 'Hari Libur Sekolah';
+            liburPengaturan.pesan = pesanVal || 'Presensi tidak tersedia pada hari Sabtu & Minggu. Selamat beristirahat!';
+
+            localStorage.setItem('sigesit_libur_pengaturan', JSON.stringify(liburPengaturan));
+            showToast("Pengaturan gambar libur berhasil disimpan.");
+
+            if (!isMockUrl() && scriptUrl) {
+                fetch(`${scriptUrl}`, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        action: "updateLiburPengaturan",
+                        gambar: liburPengaturan.gambar,
+                        judul: liburPengaturan.judul,
+                        pesan: liburPengaturan.pesan
+                    })
+                }).catch(() => console.log("Gagal sync pengaturan libur ke server."));
+            }
+
+            updateWeekendPresensiUI();
         }
 
         function populateAdminKelasFilter() {
@@ -2531,6 +2716,7 @@ function saveJadwalToStorage() {
                 // agar waktu presensi masuk/pulang tidak "hilang" saat aplikasi dibuka kembali,
                 // tanpa perlu menunggu proses sinkronisasi server selesai terlebih dahulu.
                 updateHomePresensiUI();
+                updateWeekendPresensiUI();
                 switchView('home');
             }
 
@@ -2621,6 +2807,7 @@ function saveJadwalToStorage() {
                     document.getElementById('view-home').classList.remove('hidden');
                     renderLivePresensiKelas();
                     updateHomePresensiUI();
+                    updateWeekendPresensiUI();
                 }
                 document.getElementById('nav-home').className = "flex flex-col items-center gap-1 text-emerald-600";
             } else if (target === 'izin') {
@@ -2780,6 +2967,8 @@ function saveJadwalToStorage() {
                     }
                 }
             }
+
+            updateWeekendPresensiUI();
         }
 
         function isTodayInRange(rangeStr, todayStr) {
@@ -2830,6 +3019,10 @@ function saveJadwalToStorage() {
         let webcamStream = null;
 
         function triggerPresensi(type) {
+            if (isHariLibur()) {
+                showToast("Presensi ditutup pada hari Sabtu & Minggu.");
+                return;
+            }
             if (!currentLatitude || !currentLongitude) {
                 showToast("GPS belum mendeteksi lokasi Anda.");
                 return;
@@ -3070,6 +3263,8 @@ function saveJadwalToStorage() {
                     if (badgeDonePulang) badgeDonePulang.classList.add('hidden');
                 }
             }
+
+            updateWeekendPresensiUI();
         }
 
         function renderLivePresensiKelas() {
@@ -4344,6 +4539,7 @@ function saveJadwalToStorage() {
 
             function refreshAllViews() {
                 updateHomePresensiUI();
+                updateWeekendPresensiUI();
                 renderWaliMonitoringPresensi();
                 renderWaliIzinApprovalList();
                 renderRekapPresensi();
@@ -4399,6 +4595,14 @@ function saveJadwalToStorage() {
                                 aktif: !!data.link_pengaturan.aktif
                             };
                             localStorage.setItem('sigesit_link_pengaturan', JSON.stringify(linkPengaturan));
+                        }
+                        if (data.libur_pengaturan) {
+                            liburPengaturan = {
+                                gambar: data.libur_pengaturan.gambar || '',
+                                judul: data.libur_pengaturan.judul || 'Hari Libur Sekolah',
+                                pesan: data.libur_pengaturan.pesan || 'Presensi tidak tersedia pada hari Sabtu & Minggu. Selamat beristirahat!'
+                            };
+                            localStorage.setItem('sigesit_libur_pengaturan', JSON.stringify(liburPengaturan));
                         }
                         localStorage.setItem('local_offline_db', JSON.stringify(localDb));
                         

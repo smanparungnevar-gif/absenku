@@ -2611,6 +2611,16 @@ function saveJadwalToStorage() {
             localStorage.setItem('sigesit_radius_setting', val.toString());
             showToast(`Radius geofence berhasil diperbarui menjadi ${val} meter.`);
             calculateDistance();
+
+            if (!isMockUrl() && scriptUrl) {
+                fetch(`${scriptUrl}`, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        action: "updateRadiusSetting",
+                        radius: val
+                    })
+                }).catch(() => console.log("Gagal sync radius geofence ke server."));
+            }
         }
 
         // Ganti password administrator: kalau server (scriptUrl) aktif, validasi
@@ -4541,7 +4551,14 @@ function saveJadwalToStorage() {
             const syncIcons = document.querySelectorAll('.sync-icon-spin');
             syncIcons.forEach(icon => icon.classList.add('animate-spin'));
 
-            function refreshAllViews() {
+        function refreshAllViews() {
+                updateLabelJadwalUI();
+            if (currentAdmin) {
+                renderJadwalTable();
+                const radiusInputEl = document.getElementById('admin-setting-radius');
+            if (radiusInputEl) radiusInputEl.value = ABSENCE_RADIUS_METERS;
+                }
+                calculateDistance();
                 updateHomePresensiUI();
                 updateWeekendPresensiUI();
                 renderWaliMonitoringPresensi();
@@ -4607,6 +4624,22 @@ function saveJadwalToStorage() {
                                 pesan: data.libur_pengaturan.pesan || 'Presensi tidak tersedia pada hari Sabtu & Minggu. Selamat beristirahat!'
                             };
                             localStorage.setItem('sigesit_libur_pengaturan', JSON.stringify(liburPengaturan));
+                        }
+                        // [BARU] Tarik jadwal presensi (per jenjang X/XI/XII, per hari) dari
+                        // server, supaya perubahan yang disimpan Admin lewat
+                        // saveJadwalPengaturan() ikut tersinkron ke device lain
+                        // (siswa/wali kelas/admin lain), bukan hanya tersimpan
+                        // lokal di browser Admin yang mengubahnya.
+                        if (data.jadwal_presensi) {
+                            JADWAL_PRESENSI = data.jadwal_presensi;
+                            saveJadwalToStorage();
+                        }
+                        // [BARU] Tarik radius geofence terbaru dari server, mengikuti
+                        // pola yang sama dengan jadwal_presensi di atas — supaya
+                        // perubahan radius oleh Admin ikut tersinkron ke semua device.
+                        if (data.radius_setting && data.radius_setting.radius) {
+                            ABSENCE_RADIUS_METERS = parseInt(data.radius_setting.radius, 10) || ABSENCE_RADIUS_METERS;
+                            localStorage.setItem('sigesit_radius_setting', ABSENCE_RADIUS_METERS.toString());
                         }
                         localStorage.setItem('local_offline_db', JSON.stringify(localDb));
                         

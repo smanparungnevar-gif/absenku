@@ -1922,7 +1922,7 @@ function saveJadwalToStorage() {
         }
 
         function populateTanggalOptions() {
-            const els = ['rekap-tanggal', 'rekap-poin-tanggal', 'filter-izin-tanggal'];
+            const els = ['rekap-tanggal', 'rekap-poin-tanggal', 'filter-izin-tanggal', 'admin-rekap-tanggal'];
             els.forEach(id => {
                 const el = document.getElementById(id);
                 if (el) {
@@ -2491,6 +2491,8 @@ function saveJadwalToStorage() {
             if (!currentAdmin) return;
             const thn = document.getElementById('admin-rekap-tahun').value;
             const bln = document.getElementById('admin-rekap-bulan').value;
+            const tglEl = document.getElementById('admin-rekap-tanggal');
+            const tgl = tglEl ? tglEl.value : 'Semua';
             const kelasFilter = document.getElementById('admin-rekap-kelas').value;
 
             const siswaTerfilter = (localDb.siswa || []).filter(s => kelasFilter === 'Semua' || s.kelas === kelasFilter);
@@ -2500,7 +2502,7 @@ function saveJadwalToStorage() {
                 if (!nisTerfilter.includes(p.nis)) return false;
                 const parts = p.tanggal.split('-');
                 if (parts.length !== 3) return false;
-                return parts[0] === thn && (bln === 'Semua' || parts[1] === bln);
+                return parts[0] === thn && (bln === 'Semua' || parts[1] === bln) && (tgl === 'Semua' || parts[2] === tgl);
             });
 
             let totalHadir = 0;
@@ -2524,7 +2526,9 @@ function saveJadwalToStorage() {
                 monthsToCheck.forEach(monthStr => {
                     const lastDay = new Date(yearNum, parseInt(monthStr), 0).getDate();
                     for (let day = 1; day <= lastDay; day++) {
-                        const dateStr = `${thn}-${monthStr}-${day.toString().padStart(2, '0')}`;
+                        const dayStr = day.toString().padStart(2, '0');
+                        if (tgl !== 'Semua' && dayStr !== tgl) continue;
+                        const dateStr = `${thn}-${monthStr}-${dayStr}`;
                         const dateObj = new Date(dateStr);
                         if (dateObj > now) continue;
                         const dow = dateObj.getDay();
@@ -2551,7 +2555,7 @@ function saveJadwalToStorage() {
                     const tglSource = i.tanggal.includes(" s/d ") ? i.tanggal.split(" s/d ")[0] : i.tanggal;
                     const parts = tglSource.split('-');
                     if (parts.length !== 3) return false;
-                    return parts[0] === thn && (bln === 'Semua' || parts[1] === bln);
+                    return parts[0] === thn && (bln === 'Semua' || parts[1] === bln) && (tgl === 'Semua' || parts[2] === tgl);
                 });
                 if (izinTerfilter.length === 0) {
                     izinListEl.innerHTML = `<div class="p-6 text-center text-xs text-slate-400">Tidak ada data perizinan pada periode ini.</div>`;

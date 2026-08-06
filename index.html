@@ -264,6 +264,17 @@
                 </div>
             </div>
 
+            <!-- BANNER HARI LIBUR (SABTU & MINGGU) - ditampilkan menggantikan
+                 tombol presensi di atas, isi & gambar diatur Administrator -->
+            <div id="libur-weekend-banner" class="hidden glass-card rounded-3xl p-5 text-center border-t-4 border-amber-400 space-y-3">
+                <img id="libur-weekend-gambar" src="" alt="Gambar Hari Libur" class="hidden w-full max-h-40 object-cover rounded-2xl border border-slate-100 mx-auto">
+                <div class="w-14 h-14 mx-auto bg-amber-50 text-amber-500 rounded-2xl flex items-center justify-center text-2xl">
+                    <i class="fa-solid fa-mug-hot"></i>
+                </div>
+                <h4 id="libur-weekend-judul" class="text-sm font-extrabold text-slate-800">Hari Libur Sekolah</h4>
+                <p id="libur-weekend-pesan" class="text-xs text-slate-500 leading-relaxed">Presensi tidak tersedia pada hari Sabtu & Minggu. Selamat beristirahat!</p>
+            </div>
+
             <!-- LIVE PRESENSI KELAS -->
             <div class="glass-card rounded-3xl p-4 shadow-sm space-y-3">
                 <div class="flex justify-between items-center border-b border-slate-100 pb-2.5">
@@ -521,7 +532,7 @@
                         <span id="rekap-today-str" class="text-[9px] bg-emerald-650 text-white px-2.5 py-0.5 rounded-full font-extrabold uppercase">Hari Ini</span>
                     </div>
                     
-                    <<p class="text-[9px] text-slate-400 -mt-1.5">Ketuk salah satu kartu untuk melihat daftar siswanya.</p>
+                    <p class="text-[9px] text-slate-400 -mt-1.5">Ketuk salah satu kartu untuk melihat daftar siswanya.</p>
 <div class="grid grid-cols-2 gap-2 text-xs">
     <!-- Hadir -->
     <div onclick="showRekapKehadiranDetail('Hadir')" class="bg-emerald-50/50 p-2.5 rounded-2xl border border-emerald-100 flex items-center justify-between cursor-pointer hover:bg-emerald-100/60 active:scale-95 transition-all">
@@ -1387,6 +1398,7 @@
         
         <div class="relative w-full max-w-sm mx-auto aspect-[3/4] bg-slate-900 rounded-3xl overflow-hidden shadow-2xl border border-white/10 my-auto">
             <video id="webcam" autoplay playsinline class="w-full h-full object-cover scale-x-[-1]"></video>
+            <canvas id="webcam-canvas" class="hidden"></canvas>
             <div class="absolute inset-0 border-[3px] border-emerald-500/30 rounded-3xl flex items-center justify-center">
                 <div class="w-[80%] h-[75%] border-2 border-dashed border-white/60 rounded-[50%] animate-pulse"></div>
             </div>
@@ -1526,7 +1538,7 @@
 
     <script>
         // URL Google Apps Script (hardcoded — tidak perlu diinput manual oleh siswa/wali kelas)
-        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwfhISKXzK3rnmYpid1CGH5MuS3grYv89FX0evRlHQnNDaZNOJmLC7ijgotyeIGm0cNCA/exec";
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycby6FKu5OwOQ3N27NfFtQNT9yrIlgY4V3HujoPU4vLVFgb7etXfmK85OJ9ckrxP6w4CXTg/exec";
         
         // Konfigurasi Geofencing SMAN 1 Parung
         const SCHOOL_LAT = -6.436954848531352; 
@@ -3051,6 +3063,7 @@ function saveJadwalToStorage() {
 
         let activeAbsenceType = '';
         let webcamStream = null;
+        let capturedFotoPresensi = '';
 
         function triggerPresensi(type) {
             if (isHariLibur()) {
@@ -3144,14 +3157,37 @@ function saveJadwalToStorage() {
             document.getElementById('camera-modal').classList.add('hidden');
         }
 
+        // Mengambil frame nyata dari video kamera ke canvas dan menyimpannya
+        // sebagai data URL JPEG (bukan sekadar simulasi toast) supaya ada bukti
+        // foto yang benar-benar tersimpan untuk setiap presensi.
         function capturePhoto() {
+            const video = document.getElementById('webcam');
+            const canvas = document.getElementById('webcam-canvas');
             const now = new Date();
-            const timeString = now.toTimeString().split(' ')[0].substring(0, 5); 
-            showToast("Verifikasi wajah sukses!");
+            const timeString = now.toTimeString().split(' ')[0].substring(0, 5);
+
+            try {
+                if (video && canvas && video.videoWidth > 0) {
+                    canvas.width = video.videoWidth;
+                    canvas.height = video.videoHeight;
+                    const ctx = canvas.getContext('2d');
+                    // Video ditampilkan di-mirror (scale-x-[-1]) untuk kenyamanan
+                    // pengguna, tapi foto yang disimpan tetap orientasi normal.
+                    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                    capturedFotoPresensi = canvas.toDataURL('image/jpeg', 0.7);
+                } else {
+                    capturedFotoPresensi = '';
+                }
+            } catch (e) {
+                capturedFotoPresensi = '';
+                console.log("Gagal mengambil frame kamera:", e);
+            }
+
+            showToast("Foto kehadiran berhasil diambil!");
             setTimeout(() => {
                 closeCamera();
                 prosesAbsensiSelesai(activeAbsenceType, timeString);
-            }, 1000);
+            }, 800);
         }
 
         function prosesAbsensiSelesai(type, jam) {
@@ -3165,7 +3201,8 @@ function saveJadwalToStorage() {
                 jam: jam,
                 keterlambatan: type === 'masuk' ? hitungMenitTerlambat(jam, currentSiswa.kelas) : 0, // <-- BARU
                 latitude: currentLatitude,
-                longitude: currentLongitude
+                longitude: currentLongitude,
+                foto: capturedFotoPresensi || ''
             };
 
             if (isMockUrl()) {
@@ -4066,11 +4103,15 @@ function saveJadwalToStorage() {
             }
         }
 
+        // Validasi ukuran berkas bukti izin (Surat Bukti / Bukti Pendukung).
+        // Batas disamakan menjadi 2MB agar konsisten dengan label UI "Maks 2MB"
+        // dan dengan batas unggah gambar libur di panel Admin.
         function validateFileSize(input) {
             const file = input.files[0];
             if (!file) return;
-            if (file.size > 100 * 1024) {
-                showToast("Berkas melebihi batasan 50KB!");
+            const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB
+            if (file.size > MAX_FILE_SIZE) {
+                showToast("Berkas melebihi batasan 2MB!");
                 input.value = "";
                 const labelId = input.id === 'th-file' ? 'th-file-label' : 'kd-file-label';
                 document.getElementById(labelId).innerText = "Pilih berkas PDF, JPG, atau PNG";
@@ -4785,10 +4826,14 @@ function saveJadwalToStorage() {
             }
         }
 
+        // Validasi ukuran unggah foto profil siswa. Batas disamakan menjadi 2MB
+        // (mengikuti label & pesan yang ditampilkan ke pengguna) — sebelumnya
+        // batas ini hanya sekitar 100KB, tidak sesuai dengan pesan "Maks 2MB".
         function uploadFotoSiswa(input) {
             const file = input.files[0];
             if (!file) return;
-            if (file.size > 100 * 1024) {
+            const MAX_FOTO_SIZE = 2 * 1024 * 1024; // 2MB
+            if (file.size > MAX_FOTO_SIZE) {
                 showToast("Ukuran foto profil melebihi batasan 2MB!");
                 input.value = "";
                 return;

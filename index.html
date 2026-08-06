@@ -1117,7 +1117,7 @@
         <div id="view-admin-rekap" class="hidden flex-1 overflow-y-auto p-4 space-y-4 pb-24">
             <div class="bg-white p-4 rounded-3xl shadow-sm border border-slate-100 space-y-3">
                 <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Filter Rekap Seluruh Sekolah</h4>
-                <div class="grid grid-cols-3 gap-2">
+                <div class="grid grid-cols-4 gap-2">
                     <div>
                         <label class="text-[9px] font-bold text-slate-500">Pilih Tahun</label>
                         <select id="admin-rekap-tahun" onchange="renderAdminRekap()" class="w-full p-2 border border-slate-200 rounded-2xl text-[11px] outline-none bg-white font-semibold">
@@ -1127,7 +1127,7 @@
                     </div>
                     <div>
                         <label class="text-[9px] font-bold text-slate-500">Pilih Bulan</label>
-                        <select id="admin-rekap-bulan" onchange="renderAdminRekap()" class="w-full p-2 border border-slate-200 rounded-2xl text-[11px] outline-none bg-white font-semibold">
+                        <select id="admin-rekap-bulan" onchange="populateAdminTanggalOptions(); renderAdminRekap()" class="w-full p-2 border border-slate-200 rounded-2xl text-[11px] outline-none bg-white font-semibold">
                             <option value="Semua">Semua</option>
                             <option value="01">Januari</option>
                             <option value="02">Februari</option>
@@ -1141,6 +1141,12 @@
                             <option value="10">Oktober</option>
                             <option value="11">November</option>
                             <option value="12">Desember</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="text-[9px] font-bold text-slate-500">Pilih Tanggal</label>
+                        <select id="admin-rekap-tanggal" onchange="renderAdminRekap()" class="w-full p-2 border border-slate-200 rounded-2xl text-[11px] outline-none bg-white font-semibold">
+                            <option value="Semua">Semua Tanggal</option>
                         </select>
                     </div>
                     <div>
@@ -2246,6 +2252,7 @@ function saveJadwalToStorage() {
             if (target === 'dashboard') {
                 renderAdminDashboard();
             } else if (target === 'rekap') {
+                populateAdminTanggalOptions();  // Populate tanggal sesuai bulan yang dipilih
                 renderAdminRekap();
             } else if (target === 'pengaturan') {
                 const radiusInput = document.getElementById('admin-setting-radius');
@@ -2487,6 +2494,41 @@ function saveJadwalToStorage() {
             }
         }
 
+        // ================================================================
+        // Populate Opsi Tanggal pada Filter Admin Rekap
+        // Dipanggil setiap kali user mengubah pilihan bulan
+        // ================================================================
+        function populateAdminTanggalOptions() {
+            const tahunEl = document.getElementById('admin-rekap-tahun');
+            const bulanEl = document.getElementById('admin-rekap-bulan');
+            const tanggalEl = document.getElementById('admin-rekap-tanggal');
+            
+            if (!tahunEl || !bulanEl || !tanggalEl) return;
+            
+            const tahun = tahunEl.value;
+            const bulan = bulanEl.value;
+            
+            if (bulan === 'Semua') {
+                tanggalEl.innerHTML = '<option value="Semua">Semua Tanggal</option>';
+                return;
+            }
+            
+            // Hitung jumlah hari dalam bulan tersebut
+            const lastDay = new Date(parseInt(tahun), parseInt(bulan), 0).getDate();
+            
+            let options = '<option value="Semua">Semua Tanggal</option>';
+            for (let i = 1; i <= lastDay; i++) {
+                const dayStr = i.toString().padStart(2, '0');
+                options += `<option value="${dayStr}">${dayStr}</option>`;
+            }
+            
+            tanggalEl.innerHTML = options;
+        }
+
+        // [DIPERBAIKI] Sebelumnya ada 2 baris deklarasi "function renderAdminRekap()"
+        // beruntun (baris pertama tanpa isi/kurung kurawal), yang membuat seluruh
+        // <script> ini gagal di-parse browser (SyntaxError) sehingga SEMUA fungsi
+        // di file ini tidak pernah berjalan. Sekarang hanya ada SATU deklarasi.
         function renderAdminRekap() {
             if (!currentAdmin) return;
             const thn = document.getElementById('admin-rekap-tahun').value;
@@ -3143,7 +3185,7 @@ function saveJadwalToStorage() {
                 tanggal: hariIni,
                 tipe: type,
                 jam: jam,
-                keterlambatan: type === 'masuk' ? hitungMenitTerlambat(jam, currentSiswa.kelas) : 0, // <-- BARU
+                keterlambatan: type === 'masuk' ? hitungMenitTerlambat(jam, currentSiswa.kelas) : 0,
                 latitude: currentLatitude,
                 longitude: currentLongitude
             };
@@ -4625,18 +4667,10 @@ function saveJadwalToStorage() {
                             };
                             localStorage.setItem('sigesit_libur_pengaturan', JSON.stringify(liburPengaturan));
                         }
-                        // [BARU] Tarik jadwal presensi (per jenjang X/XI/XII, per hari) dari
-                        // server, supaya perubahan yang disimpan Admin lewat
-                        // saveJadwalPengaturan() ikut tersinkron ke device lain
-                        // (siswa/wali kelas/admin lain), bukan hanya tersimpan
-                        // lokal di browser Admin yang mengubahnya.
                         if (data.jadwal_presensi) {
                             JADWAL_PRESENSI = data.jadwal_presensi;
                             saveJadwalToStorage();
                         }
-                        // [BARU] Tarik radius geofence terbaru dari server, mengikuti
-                        // pola yang sama dengan jadwal_presensi di atas — supaya
-                        // perubahan radius oleh Admin ikut tersinkron ke semua device.
                         if (data.radius_setting && data.radius_setting.radius) {
                             ABSENCE_RADIUS_METERS = parseInt(data.radius_setting.radius, 10) || ABSENCE_RADIUS_METERS;
                             localStorage.setItem('sigesit_radius_setting', ABSENCE_RADIUS_METERS.toString());

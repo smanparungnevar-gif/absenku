@@ -199,6 +199,13 @@
                 </div>
             </div>
 
+            <!-- Banner Libur Akhir Pekan (ditampilkan menggantikan tombol presensi) -->
+            <div id="libur-weekend-banner" class="hidden glass-card rounded-3xl p-5 text-center space-y-3 border-t-4 border-amber-400">
+                <img id="libur-weekend-gambar" src="" alt="Gambar Libur" class="w-full h-32 object-cover rounded-2xl hidden">
+                <h4 id="libur-weekend-judul" class="font-extrabold text-slate-800 text-sm">Hari Libur Sekolah</h4>
+                <p id="libur-weekend-pesan" class="text-xs text-slate-500">Presensi tidak tersedia pada hari Sabtu & Minggu.</p>
+            </div>
+
             <!-- Lokasi & Geofence Status -->
             <div class="glass-card rounded-3xl p-4 shadow-sm space-y-3">
                 <div class="flex items-start gap-3">
@@ -1463,44 +1470,50 @@
             </div>
             
             <div class="space-y-3 text-xs">
-                <div>
-                    <label class="block font-bold text-slate-550 mb-1">Nama Siswa</label>
-                    <p id="modal-nilai-student-name" class="font-extrabold text-slate-800 text-sm">Loading...</p>
-                </div>
-                <div class="grid grid-cols-2 gap-2">
-                    <div>
-                        <label class="block font-bold text-slate-550 mb-1">Mata Pelajaran</label>
-                        <p id="modal-nilai-mapel-text" class="font-extrabold text-indigo-700 text-xs">Loading...</p>
-                    </div>
-                    <div>
-                        <label class="block font-bold text-slate-550 mb-1">Judul Penilaian</label>
-                        <p id="modal-nilai-judul-text" class="font-extrabold text-teal-700 text-xs">Loading...</p>
-                    </div>
-                </div>
-                
-                <div class="grid grid-cols-3 gap-2">
-                    <div>
-                        <label class="block font-bold text-slate-500 mb-1">Nilai Tugas</label>
-                        <input type="number" id="modal-nilai-tugas" oninput="hitungKalkulasiNilaiAkhir()" class="w-full p-2.5 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-emerald-500 font-bold text-center" min="0" max="100">
-                    </div>
-                    <div>
-                        <label class="block font-bold text-slate-500 mb-1">Nilai UTS</label>
-                        <input type="number" id="modal-nilai-uts" oninput="hitungKalkulasiNilaiAkhir()" class="w-full p-2.5 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-emerald-500 font-bold text-center" min="0" max="100">
-                    </div>
-                    <div>
-                        <label class="block font-bold text-slate-500 mb-1">Nilai UAS</label>
-                        <input type="number" id="modal-nilai-uas" oninput="hitungKalkulasiNilaiAkhir()" class="w-full p-2.5 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-emerald-500 font-bold text-center" min="0" max="100">
-                    </div>
-                </div>
+  <div>
+    <label class="block font-bold text-slate-550 mb-1">Nama Siswa</label>
+    <p id="modal-nilai-student-name" class="font-extrabold text-slate-800 text-sm">Loading...</p>
+  </div>
+  
+  <div class="grid grid-cols-2 gap-2">
+    <div>
+      <label class="block font-bold text-slate-550 mb-1">Mata Pelajaran</label>
+      <p id="modal-nilai-mapel-text" class="font-extrabold text-indigo-700 text-xs">Loading...</p>
+    </div>
+    <div>
+      <label class="block font-bold text-slate-550 mb-1">Judul Penilaian</label>
+      <p id="modal-nilai-judul-text" class="font-extrabold text-teal-700 text-xs">Loading...</p>
+    </div>
+  </div>
+  
+  <div>
+    <label class="block font-bold text-slate-500 mb-1">Nilai</label>
+    <input type="number" id="modal-nilai-tugas" oninput="hitungKalkulasiNilaiAkhir()" class="w-full p-2.5 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-emerald-500 font-bold text-center" min="0" max="100">
+  </div>
 
-                <div class="bg-indigo-50/60 p-3 rounded-2xl border border-indigo-100 flex justify-between items-center mt-2">
-                    <span class="text-[10px] font-bold text-indigo-800 uppercase">Perkiraan Nilai Akhir:</span>
-                    <span id="modal-nilai-akhir-preview" class="font-black text-indigo-700 text-base">0</span>
-                </div>
-            </div>
+  <div>
+    <label class="block font-bold text-slate-500 mb-1">Jenis Penilaian</label>
+    <input type="text" id="modal-nilai-jenis" placeholder="Contoh: Harian, Mid Semester, Akhir Semester" class="w-full p-2.5 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-emerald-500 font-semibold text-sm">
+  </div>
 
-            <button type="button" onclick="submitNilaiSiswa()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-2xl text-xs shadow-md transition transform active:scale-95">
-                Simpan & Update Nilai
+  <div>
+    <label class="block font-bold text-slate-500 mb-1">Nama Guru Pengajar</label>
+    <input type="text" id="modal-nilai-guru" placeholder="Nama guru yang mengajar" class="w-full p-2.5 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-emerald-500 font-semibold text-sm">
+  </div>
+
+  <div>
+    <label class="block font-bold text-slate-500 mb-1">Tugas Ke</label>
+    <input type="text" id="modal-nilai-tasuke" placeholder="Contoh: 1, 2, 3" class="w-full p-2.5 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-emerald-500 font-semibold text-sm">
+  </div>
+
+  <div class="bg-indigo-50 p-3 rounded-2xl border border-indigo-100 flex justify-between items-center mt-2">
+    <span class="text-[10px] font-bold text-indigo-800 uppercase">Nilai Akhir:</span>
+    <span id="modal-nilai-akhir-preview" class="font-black text-indigo-700 text-base">0</span>
+  </div>
+</div>
+
+            <button type="button" onclick="submitNilaiSiswa()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-2xl text-xs shadow-md transition transform active:scale-95">
+                Simpan & Sinkronkan Nilai
             </button>
         </div>
     </div>
@@ -1911,16 +1924,16 @@ function saveJadwalToStorage() {
                 izin: [],
                 poin: [],
                 nilai: [
-                    { id: "1", judul: "PH 1", mapel: "Matematika", kelas: "XII MIPA 1", nama: "Ahmad Dani", harian: 85, uts: 80, uas: 90, nilai_akhir: 85, kkm: 75 },
-                    { id: "2", judul: "PTS", mapel: "Matematika", kelas: "XII MIPA 1", nama: "Ahmad Dani", harian: 88, uts: 85, uas: 90, nilai_akhir: 88, kkm: 75 },
-                    { id: "3", judul: "PAS", mapel: "Matematika", kelas: "XII MIPA 1", nama: "Ahmad Dani", harian: 90, uts: 88, uas: 92, nilai_akhir: 90, kkm: 75 },
-                    { id: "4", judul: "PH 1", mapel: "Fisika", kelas: "XII MIPA 1", nama: "Ahmad Dani", harian: 80, uts: 75, uas: 85, nilai_akhir: 80, kkm: 75 },
-                    { id: "5", judul: "PH 1", mapel: "Kimia", kelas: "XII MIPA 1", nama: "Ahmad Dani", harian: 90, uts: 85, uas: 80, nilai_akhir: 85, kkm: 75 },
-                    { id: "6", judul: "PH 1", mapel: "Biologi", kelas: "XII MIPA 1", nama: "Ahmad Dani", harian: 95, uts: 90, uas: 90, nilai_akhir: 92, kkm: 75 },
-                    { id: "7", judul: "PH 1", mapel: "Bahasa Indonesia", kelas: "XII MIPA 1", nama: "Ahmad Dani", harian: 88, uts: 82, uas: 95, nilai_akhir: 89, kkm: 75 },
-                    { id: "8", judul: "PH 1", mapel: "Bahasa Inggris", kelas: "XII MIPA 1", nama: "Ahmad Dani", harian: 92, uts: 88, uas: 90, nilai_akhir: 90, kkm: 75 },
-                    { id: "9", judul: "PH 1", mapel: "Matematika", kelas: "XII MIPA 1", nama: "Lina Marlina", harian: 75, uts: 70, uas: 78, nilai_akhir: 74, kkm: 75 },
-                    { id: "10", judul: "PH 1", mapel: "Fisika", kelas: "XII MIPA 1", nama: "Lina Marlina", harian: 65, uts: 60, uas: 70, nilai_akhir: 65, kkm: 75 }
+                    { waktu: '2024-01-15 08:00', judul_penilaian: 'PH 1', jenis: 'Harian', mapel: 'Matematika', kelas: 'XII MIPA 1', nama: 'Ahmad Dani', nilai: 85, nama_guru: 'Siti Rahmawati, M.Pd', tugas_ke: '1' },
+                    { waktu: '2024-01-20 09:30', judul_penilaian: 'PTS', jenis: 'Mid Semester', mapel: 'Matematika', kelas: 'XII MIPA 1', nama: 'Ahmad Dani', nilai: 80, nama_guru: 'Siti Rahmawati, M.Pd', tugas_ke: '2' },
+                    { waktu: '2024-02-01 10:00', judul_penilaian: 'PAS', jenis: 'Akhir Semester', mapel: 'Matematika', kelas: 'XII MIPA 1', nama: 'Ahmad Dani', nilai: 90, nama_guru: 'Siti Rahmawati, M.Pd', tugas_ke: '3' },
+                    { waktu: '2024-01-18 08:30', judul_penilaian: 'PH 1', jenis: 'Harian', mapel: 'Fisika', kelas: 'XII MIPA 1', nama: 'Ahmad Dani', nilai: 80, nama_guru: 'Budi Hartanto, S.Pd', tugas_ke: '1' },
+                    { waktu: '2024-01-22 09:00', judul_penilaian: 'PH 1', jenis: 'Harian', mapel: 'Kimia', kelas: 'XII MIPA 1', nama: 'Ahmad Dani', nilai: 90, nama_guru: 'Eka Putri, M.Si', tugas_ke: '1' },
+                    { waktu: '2024-01-25 08:15', judul_penilaian: 'PH 1', jenis: 'Harian', mapel: 'Biologi', kelas: 'XII MIPA 1', nama: 'Ahmad Dani', nilai: 95, nama_guru: 'Dwi Hermawan, S.Pd', tugas_ke: '1' },
+                    { waktu: '2024-01-28 09:45', judul_penilaian: 'PH 1', jenis: 'Harian', mapel: 'Bahasa Indonesia', kelas: 'XII MIPA 1', nama: 'Ahmad Dani', nilai: 88, nama_guru: 'Hesti Nugroho, S.Pd', tugas_ke: '1' },
+                    { waktu: '2024-01-30 08:00', judul_penilaian: 'PH 1', jenis: 'Harian', mapel: 'Bahasa Inggris', kelas: 'XII MIPA 1', nama: 'Ahmad Dani', nilai: 92, nama_guru: 'Irma Sujanti, M.Pd', tugas_ke: '1' },
+                    { waktu: '2024-01-16 08:30', judul_penilaian: 'PH 1', jenis: 'Harian', mapel: 'Matematika', kelas: 'XII MIPA 1', nama: 'Lina Marlina', nilai: 75, nama_guru: 'Siti Rahmawati, M.Pd', tugas_ke: '1' },
+                    { waktu: '2024-01-19 09:00', judul_penilaian: 'PH 1', jenis: 'Harian', mapel: 'Fisika', kelas: 'XII MIPA 1', nama: 'Lina Marlina', nilai: 65, nama_guru: 'Budi Hartanto, S.Pd', tugas_ke: '1' }
                 ]
             };
             localStorage.setItem('local_offline_db', JSON.stringify(sampleDB));
@@ -2525,10 +2538,6 @@ function saveJadwalToStorage() {
             tanggalEl.innerHTML = options;
         }
 
-        // [DIPERBAIKI] Sebelumnya ada 2 baris deklarasi "function renderAdminRekap()"
-        // beruntun (baris pertama tanpa isi/kurung kurawal), yang membuat seluruh
-        // <script> ini gagal di-parse browser (SyntaxError) sehingga SEMUA fungsi
-        // di file ini tidak pernah berjalan. Sekarang hanya ada SATU deklarasi.
         function renderAdminRekap() {
             if (!currentAdmin) return;
             const thn = document.getElementById('admin-rekap-tahun').value;
@@ -3476,30 +3485,11 @@ function saveJadwalToStorage() {
             }
 
             listEl.innerHTML = muridKelas.map(murid => {
-                if (!localDb.nilai) localDb.nilai = [];
-                let nRecord = localDb.nilai.find(n => n.nama === murid.nama && n.mapel === selectedMapel && n.judul === selectedJudul);
-                if (!nRecord) {
-                    nRecord = { 
-                        id: String(Date.now() + Math.random()), 
-                        judul: selectedJudul, 
-                        mapel: selectedMapel, 
-                        kelas: targetKelas, 
-                        nama: murid.nama, 
-                        harian: 0, 
-                        uts: 0, 
-                        uas: 0, 
-                        nilai_akhir: 0, 
-                        kkm: 75 
-                    };
-                    localDb.nilai.push(nRecord);
-                }
-
-                const harian = Number(nRecord.harian || 0);
-                const uts = Number(nRecord.uts || 0);
-                const uas = Number(nRecord.uas || 0);
-                const kkm = Number(nRecord.kkm || nRecord.KKM || 75);
-                const nilaiAkhir = Math.round((harian * 0.4) + (uts * 0.3) + (uas * 0.3));
-                nRecord.nilai_akhir = nilaiAkhir;
+                const nRecord = (localDb.nilai || []).find(n =>
+                    n.nama === murid.nama && n.mapel === selectedMapel && n.judul_penilaian === selectedJudul
+                );
+                const nilaiAkhir = nRecord ? (parseInt(nRecord.nilai) || 0) : 0;
+                const kkm = 75;
                 const statusClass = nilaiAkhir >= kkm ? "text-emerald-600 bg-emerald-50" : "text-rose-600 bg-rose-50";
 
                 return `
@@ -3513,7 +3503,7 @@ function saveJadwalToStorage() {
                         </div>
                         <div class="flex items-center gap-2">
                             <div class="text-right text-[10px] pr-1">
-                                <span class="block text-[8px] text-slate-400 font-bold uppercase">Nilai Akhir</span>
+                                <span class="block text-[8px] text-slate-400 font-bold uppercase">Nilai</span>
                                 <span class="font-extrabold px-2 py-0.5 rounded-md ${statusClass}">${nilaiAkhir}</span>
                             </div>
                             <button onclick="openEditNilaiModal('${murid.nama}', '${selectedMapel}', '${selectedJudul}')" class="p-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-655 rounded-xl transition-all" title="Edit Nilai">
@@ -3526,91 +3516,88 @@ function saveJadwalToStorage() {
         }
 
         function renderSiswaNilai() {
-            const listContainer = document.getElementById('nilai-mata-pelajaran-list');
-            const avgRaporEl = document.getElementById('nilai-rata-rapor');
-            const statusAkademisEl = document.getElementById('nilai-status-akademis');
-            if (!listContainer || !currentSiswa) return;
+  const listContainer = document.getElementById('nilai-mata-pelajaran-list');
+  const avgRaporEl = document.getElementById('nilai-rata-rapor');
+  const statusAkademisEl = document.getElementById('nilai-status-akademis');
+  if (!listContainer || !currentSiswa) return;
 
-            const userNilai = localDb.nilai ? localDb.nilai.filter(n => n.nama === currentSiswa.nama) : [];
-            if (userNilai.length === 0) {
-                listContainer.innerHTML = `<div class="p-6 text-center text-xs text-slate-400">Belum ada nilai terinput atas nama "${currentSiswa.nama}". Silakan hubungi wali kelas Anda atau gunakan tombol sinkronisasi.</div>`;
-                if (avgRaporEl) avgRaporEl.innerText = "0.0";
-                if (statusAkademisEl) statusAkademisEl.innerText = "Tidak Ada Data";
-                return;
-            }
+  const userNilai = localDb.nilai ? localDb.nilai.filter(n => n.nama === currentSiswa.nama) : [];
+  if (userNilai.length === 0) {
+    listContainer.innerHTML = `<div class="p-6 text-center text-xs text-slate-400">Belum ada nilai terinput atas nama "${currentSiswa.nama}". Silakan hubungi wali kelas Anda atau gunakan tombol sinkronisasi.</div>`;
+    if (avgRaporEl) avgRaporEl.innerText = "0.0";
+    if (statusAkademisEl) statusAkademisEl.innerText = "Tidak Ada Data";
+    return;
+  }
 
-            let totalNilaiAkhir = 0;
-            let listHTML = "";
+  let totalNilai = 0;
+  let nilaiCount = 0;
+  let listHTML = "";
 
-            userNilai.forEach(n => {
-                const harian = Number(n.harian || 0);
-                const uts = Number(n.uts || 0);
-                const uas = Number(n.uas || 0);
-                const kkm = Number(n.kkm || n.KKM || 75);
-                const judul = n.judul || "Penilaian";
-                const mapel = n.mapel || "Mata Pelajaran";
-                const nilaiAkhir = Math.round((harian * 0.4) + (uts * 0.3) + (uas * 0.3));
-                totalNilaiAkhir += nilaiAkhir;
-                const isTuntas = nilaiAkhir >= kkm;
-                const statusBadge = isTuntas 
-                    ? `<span class="bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded text-[9px] font-bold border border-emerald-200">Tuntas</span>`
-                    : `<span class="bg-rose-50 text-rose-700 px-2 py-0.5 rounded text-[9px] font-bold border border-rose-200">Remedial</span>`;
+  const grouped = {};
+  userNilai.forEach(n => {
+    const key = `${n.mapel}|${n.judul_penilaian}`;
+    if (!grouped[key]) {
+      grouped[key] = [];
+    }
+    grouped[key].push(n);
+  });
 
-                listHTML += `
-                    <div class="p-4 bg-white flex flex-col gap-2 transition-all border-b border-slate-100 last:border-b-0">
-                        <div class="flex justify-between items-center">
-                            <div>
-                                <span class="font-extrabold text-slate-800 text-xs">${mapel}</span>
-                                <span class="text-[9px] text-slate-400 block font-semibold mt-0.5">Judul: ${judul} | Kelas: ${n.kelas || '-'}</span>
-                            </div>
-                            ${statusBadge}
-                        </div>
-                        <div class="grid grid-cols-4 gap-1 text-center text-[10px] text-slate-500 font-semibold bg-slate-50 p-2 rounded-xl">
-                            <div>
-                                <span class="block text-[8px] uppercase text-slate-400 font-bold">Harian</span>
-                                <span class="text-slate-700">${harian}</span>
-                            </div>
-                            <div>
-                                <span class="block text-[8px] uppercase text-slate-400 font-bold">UTS</span>
-                                <span class="text-slate-700">${uts}</span>
-                            </div>
-                            <div>
-                                <span class="block text-[8px] uppercase text-slate-400 font-bold">UAS</span>
-                                <span class="text-slate-700">${uas}</span>
-                            </div>
-                            <div class="border-l border-slate-200 font-bold">
-                                <span class="block text-[8px] uppercase text-indigo-500 font-bold">Akhir</span>
-                                <span class="text-indigo-655">${nilaiAkhir} (KKM ${kkm})</span>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            });
+  Object.keys(grouped).forEach(key => {
+    const items = grouped[key];
+    const firstItem = items[0];
+    const mapel = firstItem.mapel || "Mata Pelajaran";
+    const judul = firstItem.judul_penilaian || "Penilaian";
+    const jenis = firstItem.jenis || "-";
+    
+    const nilaiList = items.map(n => parseInt(n.nilai) || 0);
+    const avgNilai = Math.round(nilaiList.reduce((a, b) => a + b, 0) / nilaiList.length);
+    
+    totalNilai += avgNilai;
+    nilaiCount++;
 
-            listContainer.innerHTML = listHTML;
-            const avgRapor = (totalNilaiAkhir / userNilai.length).toFixed(1);
-            if (avgRaporEl) avgRaporEl.innerText = avgRapor;
+    const statusBadge = avgNilai >= 75 
+      ? `<span class="bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded text-[9px] font-bold border border-emerald-200">Tuntas</span>`
+      : `<span class="bg-rose-50 text-rose-700 px-2 py-0.5 rounded text-[9px] font-bold border border-rose-200">Remedial</span>`;
 
-            if (statusAkademisEl) {
-                if (avgRapor >= 85) {
-                    statusAkademisEl.innerText = "Sangat Memuaskan (A)";
-                    statusAkademisEl.parentElement.className = "mt-3 text-xs bg-emerald-500/20 px-3 py-1 rounded-xl inline-flex items-center gap-1.5 font-bold text-white";
-                } else if (avgRapor >= 75) {
-                    statusAkademisEl.innerText = "Tuntas Kompetensi (B)";
-                    statusAkademisEl.parentElement.className = "mt-3 text-xs bg-teal-500/20 px-3 py-1 rounded-xl inline-flex items-center gap-1.5 font-bold text-white";
-                } else {
-                    statusAkademisEl.innerText = "Perlu Bimbingan (C)";
-                    statusAkademisEl.parentElement.className = "mt-3 text-xs bg-rose-500/20 px-3 py-1 rounded-xl inline-flex items-center gap-1.5 font-bold text-white";
-                }
-            }
-        }
+    listHTML += `
+      <div class="p-4 bg-white flex flex-col gap-2 transition-all border-b border-slate-100 last:border-b-0">
+        <div class="flex justify-between items-center">
+          <div>
+            <span class="font-extrabold text-slate-800 text-xs">${mapel}</span>
+            <span class="text-[9px] text-slate-400 block font-semibold mt-0.5">Judul: ${judul} | Jenis: ${jenis}</span>
+          </div>
+          ${statusBadge}
+        </div>
+        <div class="bg-slate-50 p-3 rounded-xl border border-slate-100 flex justify-between items-center">
+          <span class="text-[10px] text-slate-500 font-semibold">Nilai Perolehan</span>
+          <span class="text-2xl font-black text-indigo-600">${avgNilai}</span>
+        </div>
+      </div>
+    `;
+  });
+
+  listContainer.innerHTML = listHTML;
+  
+  const avgRapor = nilaiCount > 0 ? (totalNilai / nilaiCount).toFixed(1) : 0;
+  if (avgRaporEl) avgRaporEl.innerText = avgRapor;
+
+  if (statusAkademisEl) {
+    if (avgRapor >= 85) {
+      statusAkademisEl.innerText = "Sangat Memuaskan (A)";
+    } else if (avgRapor >= 75) {
+      statusAkademisEl.innerText = "Tuntas Kompetensi (B)";
+    } else {
+      statusAkademisEl.innerText = "Perlu Bimbingan (C)";
+    }
+  }
+}
 
         function populateWaliNilaiJudulFilter() {
             const judulSelector = document.getElementById('wali-nilai-judul');
             if (!judulSelector) return;
             let uniqueJuduls = [];
             if (localDb.nilai && localDb.nilai.length > 0) {
-                uniqueJuduls = [...new Set(localDb.nilai.map(n => n.judul).filter(Boolean))];
+                uniqueJuduls = [...new Set(localDb.nilai.map(n => n.judul_penilaian).filter(Boolean))];
             }
             if (uniqueJuduls.length === 0) {
                 uniqueJuduls = ["PH 1", "PH 2", "PTS", "PAS"];
@@ -3663,23 +3650,21 @@ function saveJadwalToStorage() {
             renderWaliNilaiSiswa();
         }
 
-        function openEditNilaiModal(studentNama, mapel, judul) {
+        function openEditNilaiModal(studentNama, mapel, judulPenilaian) {
             const modal = document.getElementById('modal-nilai-input');
             if (!modal) return;
             document.getElementById('modal-nilai-student-name').innerText = studentNama;
             document.getElementById('modal-nilai-mapel-text').innerText = mapel;
-            document.getElementById('modal-nilai-judul-text').innerText = judul;
+            document.getElementById('modal-nilai-judul-text').innerText = judulPenilaian;
 
-            const nRecord = localDb.nilai.find(n => n.nama === studentNama && n.mapel === mapel && n.judul === judul);
-            if (nRecord) {
-                document.getElementById('modal-nilai-tugas').value = nRecord.harian || nRecord.tugas || 0;
-                document.getElementById('modal-nilai-uts').value = nRecord.uts || 0;
-                document.getElementById('modal-nilai-uas').value = nRecord.uas || 0;
-            } else {
-                document.getElementById('modal-nilai-tugas').value = 0;
-                document.getElementById('modal-nilai-uts').value = 0;
-                document.getElementById('modal-nilai-uas').value = 0;
-            }
+            const nRecord = (localDb.nilai || []).find(n =>
+                n.nama === studentNama && n.mapel === mapel && n.judul_penilaian === judulPenilaian
+            );
+            document.getElementById('modal-nilai-tugas').value = nRecord ? (nRecord.nilai || 0) : 0;
+            document.getElementById('modal-nilai-jenis').value = nRecord ? (nRecord.jenis || '') : '';
+            document.getElementById('modal-nilai-guru').value  = nRecord ? (nRecord.nama_guru || '') : '';
+            document.getElementById('modal-nilai-tasuke').value = nRecord ? (nRecord.tugas_ke || '') : '';
+
             hitungKalkulasiNilaiAkhir();
             modal.classList.remove('hidden');
         }
@@ -3690,69 +3675,70 @@ function saveJadwalToStorage() {
         }
 
         function hitungKalkulasiNilaiAkhir() {
-            const harian = parseInt(document.getElementById('modal-nilai-tugas').value) || 0;
-            const uts = parseInt(document.getElementById('modal-nilai-uts').value) || 0;
-            const uas = parseInt(document.getElementById('modal-nilai-uas').value) || 0;
-            const akhir = Math.round((harian * 0.4) + (uts * 0.3) + (uas * 0.3));
-            document.getElementById('modal-nilai-akhir-preview').innerText = akhir;
+            const nilai = parseInt(document.getElementById('modal-nilai-tugas').value) || 0;
+            document.getElementById('modal-nilai-akhir-preview').innerText = nilai;
         }
 
         function submitNilaiSiswa() {
-            const studentNama = document.getElementById('modal-nilai-student-name').innerText;
-            const mapel = document.getElementById('modal-nilai-mapel-text').innerText;
-            const judul = document.getElementById('modal-nilai-judul-text').innerText;
-            const harian = parseInt(document.getElementById('modal-nilai-tugas').value) || 0;
-            const uts = parseInt(document.getElementById('modal-nilai-uts').value) || 0;
-            const uas = parseInt(document.getElementById('modal-nilai-uas').value) || 0;
-            const nilaiAkhir = Math.round((harian * 0.4) + (uts * 0.3) + (uas * 0.3));
+  const studentNama = document.getElementById('modal-nilai-student-name').innerText;
+  const mapel = document.getElementById('modal-nilai-mapel-text').innerText;
+  const judulPenilaian = document.getElementById('modal-nilai-judul-text').innerText;
+  const nilai = parseInt(document.getElementById('modal-nilai-tugas').value) || 0;
+  const namaGuru = document.getElementById('modal-nilai-guru').value.trim();
+  const jenis = document.getElementById('modal-nilai-jenis').value.trim();
+  const tugasKe = document.getElementById('modal-nilai-tasuke').value.trim();
+  const waktu = new Date().toISOString().substring(0, 16).replace('T', ' ');
 
-            let nRecord = localDb.nilai.find(n => n.nama === studentNama && n.mapel === mapel && n.judul === judul);
-            if (nRecord) {
-                nRecord.harian = harian;
-                nRecord.tugas = harian; 
-                nRecord.uts = uts;
-                nRecord.uas = uas;
-                nRecord.nilai_akhir = nilaiAkhir;
-            } else {
-                nRecord = { 
-                    id: String(Date.now()), 
-                    judul: judul, 
-                    mapel: mapel, 
-                    kelas: currentSiswa.kelas, 
-                    nama: studentNama, 
-                    harian: harian, 
-                    tugas: harian, 
-                    uts: uts, 
-                    uas: uas, 
-                    nilai_akhir: nilaiAkhir, 
-                    kkm: 75 
-                };
-                localDb.nilai.push(nRecord);
-            }
+  if (!localDb.nilai) localDb.nilai = [];
 
-            localStorage.setItem('local_offline_db', JSON.stringify(localDb));
-            closeNilaiModal();
-            showToast("Nilai akademik berhasil diperbarui!");
-            renderWaliNilaiSiswa();
+  let nRecord = localDb.nilai.find(n => 
+    n.nama === studentNama && n.mapel === mapel && n.judul_penilaian === judulPenilaian
+  );
+  
+  if (nRecord) {
+    nRecord.nilai = nilai;
+    nRecord.nama_guru = namaGuru;
+    nRecord.jenis = jenis;
+    nRecord.tugas_ke = tugasKe;
+    nRecord.waktu = waktu;
+  } else {
+    nRecord = {
+      waktu: waktu,
+      judul_penilaian: judulPenilaian,
+      jenis: jenis,
+      mapel: mapel,
+      kelas: currentSiswa.kelas,
+      nama: studentNama,
+      nilai: nilai,
+      nama_guru: namaGuru,
+      tugas_ke: tugasKe
+    };
+    localDb.nilai.push(nRecord);
+  }
 
-            if (!isMockUrl() && scriptUrl) {
-                fetch(`${scriptUrl}`, { 
-                    method: 'POST',
-                    body: JSON.stringify({
-                        action: "updateNilai",
-                        judul: judul,
-                        mapel: mapel,
-                        kelas: currentSiswa.kelas,
-                        nama: studentNama,
-                        harian: harian,
-                        uts: uts,
-                        uas: uas,
-                        nilai_akhir: nilaiAkhir,
-                        kkm: 75
-                    })
-                }).catch(() => console.log("Gagal sync nilai ke Sheets."));
-            }
-        }
+  localStorage.setItem('local_offline_db', JSON.stringify(localDb));
+  closeNilaiModal();
+  showToast("Nilai akademik berhasil diperbarui!");
+  renderWaliNilaiSiswa();
+
+  if (!isMockUrl() && scriptUrl) {
+    fetch(`${scriptUrl}`, {
+      method: 'POST',
+      body: JSON.stringify({
+        action: "updateNilai",
+        waktu: waktu,
+        judul_penilaian: judulPenilaian,
+        jenis: jenis,
+        mapel: mapel,
+        kelas: currentSiswa.kelas,
+        nama: studentNama,
+        nilai: nilai,
+        nama_guru: namaGuru,
+        tugas_ke: tugasKe
+      })
+    }).catch(() => console.log("Gagal sync nilai ke Sheets."));
+  }
+}
 
         function openInputPoinModal(nis, nama) {
             const modal = document.getElementById('modal-point-input');
@@ -4091,8 +4077,8 @@ function saveJadwalToStorage() {
         function validateFileSize(input) {
             const file = input.files[0];
             if (!file) return;
-            if (file.size > 100 * 1024) {
-                showToast("Berkas melebihi batasan 50KB!");
+            if (file.size > 2 * 1024 * 1024) {
+                showToast("Berkas melebihi batasan 2MB!");
                 input.value = "";
                 const labelId = input.id === 'th-file' ? 'th-file-label' : 'kd-file-label';
                 document.getElementById(labelId).innerText = "Pilih berkas PDF, JPG, atau PNG";
@@ -4802,7 +4788,7 @@ function saveJadwalToStorage() {
         function uploadFotoSiswa(input) {
             const file = input.files[0];
             if (!file) return;
-            if (file.size > 100 * 1024) {
+            if (file.size > 2 * 1024 * 1024) {
                 showToast("Ukuran foto profil melebihi batasan 2MB!");
                 input.value = "";
                 return;

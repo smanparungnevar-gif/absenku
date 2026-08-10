@@ -530,7 +530,7 @@
                     
                     <div class="grid grid-cols-2 gap-2 text-xs">
                         <!-- Hadir -->
-                        <div class="bg-emerald-50/50 p-2.5 rounded-2xl border border-emerald-100 flex items-center justify-between">
+                        <div onclick="openWaliRekapDetail('hadir')" class="bg-emerald-50/50 p-2.5 rounded-2xl border border-emerald-100 flex items-center justify-between cursor-pointer active:scale-95 transition-transform">
                             <div>
                                 <span class="text-[10px] text-emerald-800 font-extrabold block uppercase tracking-wider">Hadir</span>
                                 <span id="rekap-count-hadir" class="text-sm font-black text-slate-800">0 siswa</span>
@@ -538,7 +538,7 @@
                             <i class="fa-solid fa-user-check text-emerald-600 text-lg opacity-80"></i>
                         </div>
                         <!-- Sakit -->
-                        <div class="bg-amber-50/50 p-2.5 rounded-2xl border border-amber-100 flex items-center justify-between">
+                        <div onclick="openWaliRekapDetail('sakit')" class="bg-amber-50/50 p-2.5 rounded-2xl border border-amber-100 flex items-center justify-between cursor-pointer active:scale-95 transition-transform">
                             <div>
                                 <span class="text-[10px] text-amber-800 font-extrabold block uppercase tracking-wider">Sakit</span>
                                 <span id="rekap-count-sakit" class="text-sm font-black text-slate-800">0 siswa</span>
@@ -546,7 +546,7 @@
                             <i class="fa-solid fa-house-medical text-amber-600 text-lg opacity-80"></i>
                         </div>
                         <!-- Izin Tidak Masuk -->
-                        <div class="bg-indigo-50/50 p-2.5 rounded-2xl border border-indigo-100 flex items-center justify-between">
+                        <div onclick="openWaliRekapDetail('izin')" class="bg-indigo-50/50 p-2.5 rounded-2xl border border-indigo-100 flex items-center justify-between cursor-pointer active:scale-95 transition-transform">
                             <div>
                                 <span class="text-[10px] text-indigo-800 font-extrabold block uppercase tracking-wider">Izin Tidak Masuk</span>
                                 <span id="rekap-count-izin" class="text-sm font-black text-slate-800">0 siswa</span>
@@ -554,7 +554,7 @@
                             <i class="fa-solid fa-envelope text-indigo-600 text-lg opacity-80"></i>
                         </div>
                         <!-- Izin Dispen -->
-                        <div class="bg-teal-50/50 p-2.5 rounded-2xl border border-teal-100 flex items-center justify-between">
+                        <div onclick="openWaliRekapDetail('dispen')" class="bg-teal-50/50 p-2.5 rounded-2xl border border-teal-100 flex items-center justify-between cursor-pointer active:scale-95 transition-transform">
                             <div>
                                 <span class="text-[10px] text-teal-800 font-extrabold block uppercase tracking-wider">Izin Dispen</span>
                                 <span id="rekap-count-dispen" class="text-sm font-black text-slate-800">0 siswa</span>
@@ -562,7 +562,7 @@
                             <i class="fa-solid fa-briefcase text-teal-600 text-lg opacity-80"></i>
                         </div>
                         <!-- Izin Terlambat -->
-                        <div class="bg-sky-50/50 p-2.5 rounded-2xl border border-sky-100 flex items-center justify-between">
+                        <div onclick="openWaliRekapDetail('terlambat')" class="bg-sky-50/50 p-2.5 rounded-2xl border border-sky-100 flex items-center justify-between cursor-pointer active:scale-95 transition-transform">
                             <div>
                                 <span class="text-[10px] text-sky-800 font-extrabold block uppercase tracking-wider">Izin Terlambat</span>
                                 <span id="rekap-count-terlambat" class="text-sm font-black text-slate-800">0 siswa</span>
@@ -570,7 +570,7 @@
                             <i class="fa-solid fa-clock-rotate-left text-sky-600 text-lg opacity-80"></i>
                         </div>
                         <!-- Izin Pulang Cepat -->
-                        <div class="bg-rose-50/40 p-2.5 rounded-2xl border border-rose-100 flex items-center justify-between">
+                        <div onclick="openWaliRekapDetail('pulangcepat')" class="bg-rose-50/40 p-2.5 rounded-2xl border border-rose-100 flex items-center justify-between cursor-pointer active:scale-95 transition-transform">
                             <div>
                                 <span class="text-[10px] text-rose-800 font-extrabold block uppercase tracking-wider">Izin Pulang Cepat</span>
                                 <span id="rekap-count-pulangcepat" class="text-sm font-black text-slate-800">0 siswa</span>
@@ -1161,15 +1161,15 @@
             </div>
 
             <div class="grid grid-cols-3 gap-2">
-                <div class="bg-white p-3 rounded-2xl border border-slate-100 shadow-sm text-center">
+                <div onclick="openAdminRekapDetail('hadir')" class="bg-white p-3 rounded-2xl border border-slate-100 shadow-sm text-center cursor-pointer active:scale-95 transition-transform">
                     <span class="text-[9px] font-bold text-emerald-600 uppercase block">Total Hadir</span>
                     <span id="admin-rekap-total-hadir" class="text-lg font-black text-slate-800">0</span>
                 </div>
-                <div class="bg-white p-3 rounded-2xl border border-slate-100 shadow-sm text-center">
+                <div onclick="openAdminRekapDetail('terlambat')" class="bg-white p-3 rounded-2xl border border-slate-100 shadow-sm text-center cursor-pointer active:scale-95 transition-transform">
                     <span class="text-[9px] font-bold text-amber-600 uppercase block">Total Terlambat</span>
                     <span id="admin-rekap-total-terlambat" class="text-lg font-black text-slate-800">0</span>
                 </div>
-                <div class="bg-white p-3 rounded-2xl border border-slate-100 shadow-sm text-center">
+                <div onclick="openAdminRekapDetail('alpha')" class="bg-white p-3 rounded-2xl border border-slate-100 shadow-sm text-center cursor-pointer active:scale-95 transition-transform">
                     <span class="text-[9px] font-bold text-rose-600 uppercase block">Total Alpha</span>
                     <span id="admin-rekap-total-alpha" class="text-lg font-black text-slate-800">0</span>
                 </div>
@@ -1603,6 +1603,21 @@
         </div>
     </div>
 
+    <!-- MODAL DETAIL REKAP (daftar siswa per kategori) -->
+    <div id="modal-rekap-detail" class="hidden fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4" onclick="if(event.target===this) closeRekapDetailModal()">
+        <div class="bg-white rounded-3xl p-5 w-full max-w-sm shadow-2xl transition transform scale-100 max-h-[80vh] flex flex-col">
+            <div class="flex justify-between items-center border-b border-slate-100 pb-2 mb-3 shrink-0">
+                <h3 id="modal-rekap-detail-title" class="font-bold text-sm text-slate-800 flex items-center gap-1.5">
+                    <i class="fa-solid fa-users text-emerald-600"></i> Daftar Siswa
+                </h3>
+                <button type="button" onclick="closeRekapDetailModal()" class="text-slate-400 text-lg hover:text-slate-600"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div id="modal-rekap-detail-list" class="space-y-2 overflow-y-auto text-xs pr-1">
+                <div class="text-center py-4 text-slate-400">Tidak ada data.</div>
+            </div>
+        </div>
+    </div>
+
     <!-- TOAST NOTIFICATION -->
     <div id="toast" class="hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-slate-900 text-white px-5 py-3 rounded-full text-xs shadow-xl flex items-center gap-2 max-w-xs text-center transition-all duration-300">
         <span id="toast-message">Notifikasi</span>
@@ -1942,6 +1957,8 @@ function saveJadwalToStorage() {
         // STATE UTAMA
         let currentSiswa = null;
         let currentAdmin = null;
+        let adminRekapDetailData = { hadir: [], terlambat: [], alpha: [] };
+        let waliRekapDetailData = { hadir: [], sakit: [], izin: [], dispen: [], terlambat: [], pulangcepat: [] };
         let scriptUrl = SCRIPT_URL;
         let currentLatitude = null;
         let currentLongitude = null;
@@ -2705,18 +2722,31 @@ function saveJadwalToStorage() {
 
             let totalHadir = 0;
             let totalTerlambat = 0;
+            const detailHadir = [];
+            const detailTerlambat = [];
             presensiTerfilter.forEach(p => {
                 if (p.tipe === 'masuk') {
                     totalHadir++;
                     const siswaData = siswaTerfilter.find(s => s.nis === p.nis);
                     const batasMasuk = getBatasMasukMenit(siswaData ? siswaData.kelas : null, 6 * 60 + 30);
                     const [h, m] = p.jam.split(':').map(Number);
-                    if (h * 60 + m > batasMasuk) totalTerlambat++;
+                    const isTerlambat = h * 60 + m > batasMasuk;
+                    const detailItem = {
+                        nama: siswaData ? siswaData.nama : (p.nama || '-'),
+                        kelas: siswaData ? siswaData.kelas : (p.kelas || '-'),
+                        info: `${p.tanggal} • Masuk ${p.jam}`
+                    };
+                    detailHadir.push(detailItem);
+                    if (isTerlambat) {
+                        totalTerlambat++;
+                        detailTerlambat.push(detailItem);
+                    }
                 }
             });
 
             // Hitung Alpha: hari kerja pada periode yang siswa tidak presensi masuk & tidak ada izin disetujui
             let totalAlpha = 0;
+            const detailAlpha = [];
             const now = new Date();
             const yearNum = parseInt(thn);
             const monthsToCheck = bln === 'Semua' ? Array.from({length: 12}, (_, i) => (i + 1).toString().padStart(2, '0')) : [bln];
@@ -2734,11 +2764,16 @@ function saveJadwalToStorage() {
                         const hadir = (localDb.presensi || []).some(p => p.nis === s.nis && p.tanggal === dateStr && p.tipe === 'masuk');
                         if (!hadir) {
                             const izinOk = (localDb.izin || []).some(i => i.nis === s.nis && i.status === 'Disetujui' && isTodayInRange(i.tanggal, dateStr));
-                            if (!izinOk) totalAlpha++;
+                            if (!izinOk) {
+                                totalAlpha++;
+                                detailAlpha.push({ nama: s.nama, kelas: s.kelas, info: dateStr });
+                            }
                         }
                     }
                 });
             });
+
+            adminRekapDetailData = { hadir: detailHadir, terlambat: detailTerlambat, alpha: detailAlpha };
 
             const setText = (id, val) => { const el = document.getElementById(id); if (el) el.innerText = val; };
             setText('admin-rekap-total-hadir', totalHadir);
@@ -2836,6 +2871,61 @@ function saveJadwalToStorage() {
                     }).join('');
                 }
             }
+        }
+
+        // ===== MODAL DETAIL REKAP (dipakai admin & wali kelas) =====
+        function renderRekapDetailModal(title, iconClass, items, emptyText) {
+            const titleEl = document.getElementById('modal-rekap-detail-title');
+            const listEl = document.getElementById('modal-rekap-detail-list');
+            if (!titleEl || !listEl) return;
+
+            titleEl.innerHTML = `<i class="fa-solid ${iconClass || 'fa-users'}"></i> ${title} <span class="text-slate-400 font-semibold">(${items.length})</span>`;
+
+            if (!items || items.length === 0) {
+                listEl.innerHTML = `<div class="text-center py-6 text-slate-400">${emptyText || 'Tidak ada siswa pada kategori ini.'}</div>`;
+            } else {
+                listEl.innerHTML = items.map(item => `
+                    <div class="bg-slate-50 p-2.5 rounded-2xl border border-slate-100 flex justify-between items-center gap-2">
+                        <div>
+                            <p class="font-bold text-slate-800 leading-tight">${item.nama || '-'}</p>
+                            <p class="text-[9px] text-slate-400 mt-0.5">${item.kelas || '-'}</p>
+                        </div>
+                        ${item.info ? `<span class="text-[9px] text-slate-500 font-semibold shrink-0 text-right">${item.info}</span>` : ''}
+                    </div>
+                `).join('');
+            }
+
+            document.getElementById('modal-rekap-detail').classList.remove('hidden');
+        }
+
+        function closeRekapDetailModal() {
+            const modal = document.getElementById('modal-rekap-detail');
+            if (modal) modal.classList.add('hidden');
+        }
+
+        function openAdminRekapDetail(type) {
+            const config = {
+                hadir: { title: 'Siswa Hadir', icon: 'fa-user-check', empty: 'Belum ada siswa yang hadir pada periode ini.' },
+                terlambat: { title: 'Siswa Terlambat', icon: 'fa-clock-rotate-left', empty: 'Tidak ada siswa yang terlambat pada periode ini.' },
+                alpha: { title: 'Siswa Alpha', icon: 'fa-user-xmark', empty: 'Tidak ada siswa alpha pada periode ini.' }
+            };
+            const c = config[type];
+            if (!c) return;
+            renderRekapDetailModal(c.title, c.icon, adminRekapDetailData[type] || [], c.empty);
+        }
+
+        function openWaliRekapDetail(type) {
+            const config = {
+                hadir: { title: 'Siswa Hadir', icon: 'fa-user-check', empty: 'Belum ada siswa yang hadir hari ini.' },
+                sakit: { title: 'Siswa Sakit', icon: 'fa-house-medical', empty: 'Tidak ada siswa sakit hari ini.' },
+                izin: { title: 'Izin Tidak Masuk', icon: 'fa-envelope', empty: 'Tidak ada siswa izin tidak masuk hari ini.' },
+                dispen: { title: 'Izin Dispen', icon: 'fa-briefcase', empty: 'Tidak ada siswa izin dispen hari ini.' },
+                terlambat: { title: 'Izin Terlambat', icon: 'fa-clock-rotate-left', empty: 'Tidak ada siswa izin terlambat hari ini.' },
+                pulangcepat: { title: 'Izin Pulang Cepat', icon: 'fa-person-walking-arrow-right', empty: 'Tidak ada siswa izin pulang cepat hari ini.' }
+            };
+            const c = config[type];
+            if (!c) return;
+            renderRekapDetailModal(c.title, c.icon, waliRekapDetailData[type] || [], c.empty);
         }
 
         function saveAdminRadiusSetting() {
@@ -4178,42 +4268,64 @@ function saveJadwalToStorage() {
             const muridKelas = localDb.siswa.filter(s => s.kelas === targetKelas);
             const muridNisList = muridKelas.map(s => s.nis);
 
-            const countHadir = localDb.presensi.filter(p => p.tanggal === todayStr && p.tipe === 'masuk' && muridNisList.includes(p.nis)).length;
+            const muridNisMapCounters = {};
+            muridKelas.forEach(m => { muridNisMapCounters[m.nis] = m; });
+            const toDetail = (nis, extraInfo) => {
+                const m = muridNisMapCounters[nis];
+                return { nama: m ? m.nama : '-', kelas: m ? m.kelas : targetKelas, info: extraInfo || '' };
+            };
 
-            const countSakit = localDb.izin.filter(i => 
+            const listHadir = localDb.presensi.filter(p => p.tanggal === todayStr && p.tipe === 'masuk' && muridNisList.includes(p.nis));
+            const countHadir = listHadir.length;
+
+            const listSakit = localDb.izin.filter(i => 
                 muridNisList.includes(i.nis) && 
                 i.jenis === 'Sakit' && 
                 i.status === 'Disetujui' &&
                 isTodayInRange(i.tanggal, todayStr)
-            ).length;
+            );
+            const countSakit = listSakit.length;
 
-            const countIzin = localDb.izin.filter(i => 
+            const listIzin = localDb.izin.filter(i => 
                 muridNisList.includes(i.nis) && 
                 i.jenis === 'Izin' && 
                 i.status === 'Disetujui' &&
                 isTodayInRange(i.tanggal, todayStr)
-            ).length;
+            );
+            const countIzin = listIzin.length;
 
-            const countDispen = localDb.izin.filter(i => 
+            const listDispen = localDb.izin.filter(i => 
                 muridNisList.includes(i.nis) && 
                 i.jenis === 'Dispen' && 
                 i.status === 'Disetujui' &&
                 isTodayInRange(i.tanggal, todayStr)
-            ).length;
+            );
+            const countDispen = listDispen.length;
 
-            const countTerlambat = localDb.izin.filter(i => 
+            const listTerlambat = localDb.izin.filter(i => 
                 muridNisList.includes(i.nis) && 
                 i.jenis === 'Izin Terlambat Masuk' && 
                 i.status === 'Disetujui' &&
                 isTodayInRange(i.tanggal, todayStr)
-            ).length;
+            );
+            const countTerlambat = listTerlambat.length;
 
-            const countPulangCepat = localDb.izin.filter(i => 
+            const listPulangCepat = localDb.izin.filter(i => 
                 muridNisList.includes(i.nis) && 
                 i.jenis === 'Izin Pulang Cepat' && 
                 i.status === 'Disetujui' &&
                 isTodayInRange(i.tanggal, todayStr)
-            ).length;
+            );
+            const countPulangCepat = listPulangCepat.length;
+
+            waliRekapDetailData = {
+                hadir: listHadir.map(p => toDetail(p.nis, `Masuk ${p.jam || ''}`)),
+                sakit: listSakit.map(i => toDetail(i.nis, i.tanggal)),
+                izin: listIzin.map(i => toDetail(i.nis, i.tanggal)),
+                dispen: listDispen.map(i => toDetail(i.nis, i.tanggal)),
+                terlambat: listTerlambat.map(i => toDetail(i.nis, i.tanggal)),
+                pulangcepat: listPulangCepat.map(i => toDetail(i.nis, i.tanggal))
+            };
 
             const elHadir = document.getElementById('rekap-count-hadir');
             const elSakit = document.getElementById('rekap-count-sakit');

@@ -1785,7 +1785,7 @@ function getJadwalHariIni(kelasStr) {
 } 
 
         function normalizeNamaForMatch(nama) {
-    return (nama || '').toLowerCase().trim();
+    return (nama || '').toLowerCase().trim().replace(/\s+/g, ' ');
 }
         function loadJadwalFromStorage() {
     const stored = localStorage.getItem('sigesit_jadwal_presensi');
@@ -3811,7 +3811,11 @@ function saveJadwalToStorage() {
   const statusAkademisEl = document.getElementById('nilai-status-akademis');
   if (!listContainer || !currentSiswa) return;
 
-  const userNilai = localDb.nilai ? localDb.nilai.filter(n => normalizeNamaForMatch(n.nama) === normalizeNamaForMatch(currentSiswa.nama)) : [];
+  const userNilai = localDb.nilai ? localDb.nilai.filter(n => {
+    if (n.nis && currentSiswa.nis && String(n.nis).trim() === String(currentSiswa.nis).trim()) return true;
+    if (n.nis && currentSiswa.nis) return false;
+    return normalizeNamaForMatch(n.nama) === normalizeNamaForMatch(currentSiswa.nama);
+  }) : [];
   if (userNilai.length === 0) {
     listContainer.innerHTML = `<div class="p-6 text-center text-xs text-slate-400">Belum ada nilai terinput atas nama "${currentSiswa.nama}". Silakan hubungi wali kelas Anda atau gunakan tombol sinkronisasi.</div>`;
     if (avgRaporEl) avgRaporEl.innerText = "0.0";

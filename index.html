@@ -1672,6 +1672,35 @@
         }
 
         // ================================================================
+        // HELPER TANGGAL "HARI INI" — KONSISTEN DENGAN WAKTU LOKAL PERANGKAT
+        // ================================================================
+        // Semua pengecekan jadwal presensi (jam buka/batas masuk & pulang)
+        // memakai now.getHours()/now.getMinutes() yaitu waktu LOKAL device.
+        // Namun sebelumnya kode ini menandai "tanggal" record presensi
+        // memakai new Date().toISOString().slice(0,10) yang SELALU memakai
+        // waktu UTC. Karena WIB = UTC+7, maka setiap presensi yang dilakukan
+        // dini hari (00:00 - 06:59 WIB) akan tersimpan dengan tanggal HARI
+        // SEBELUMNYA versi UTC. Begitu jam menunjukkan >= 07:00 WIB, variabel
+        // "hari ini" (yang juga dihitung dari toISOString) berubah menjadi
+        // tanggal UTC yang baru, sehingga tidak lagi cocok dengan tanggal
+        // yang tersimpan pada presensi pagi tadi — akibatnya presensi masuk
+        // yang sudah dilakukan sebelum jam 06:30 tampak "hilang"/reset lagi
+        // di tombol Presensi Masuk maupun di Live Kehadiran Kelas.
+        //
+        // Fungsi ini menggantikan seluruh pemakaian toISOString().slice(0,10)
+        // dengan format tanggal berbasis waktu LOKAL perangkat (sama seperti
+        // basis jam yang dipakai untuk cek jadwal), sehingga kunci "tanggal"
+        // presensi selalu konsisten sepanjang hari — tanpa mengubah logika
+        // atau fitur lain apa pun.
+        function getTanggalHariIniLokal(dateObj) {
+            const d = dateObj || new Date();
+            const y = d.getFullYear();
+            const m = (d.getMonth() + 1).toString().padStart(2, '0');
+            const day = d.getDate().toString().padStart(2, '0');
+            return `${y}-${m}-${day}`;
+        }
+
+        // ================================================================
         // KONFIGURASI JADWAL PRESENSI PER HARI PER JENJANG KELAS (X, XI, XII)
         // Format: { jenjang: { hari: { masukBuka, masukBatas, pulangBuka } } }
         // ================================================================
@@ -3651,7 +3680,7 @@ function saveJadwalToStorage() {
 
             listEl.innerHTML = muridKelas.map(murid => {
                 const nRecord = (localDb.nilai || []).find(n =>
-                    n.nama === murid.nama && n.mapel === selectedMapel && n.judul_penilaian === selectedJudul
+                    normalizeNamaForMatch(n.nama) === normalizeNamaForMatch(murid.nama) && n.mapel === selectedMapel && n.judul_penilaian === selectedJudul
                 );
                 const nilaiAkhir = nRecord ? (parseInt(nRecord.nilai) || 0) : 0;
                 const kkm = 75;
@@ -3686,7 +3715,7 @@ function saveJadwalToStorage() {
   const statusAkademisEl = document.getElementById('nilai-status-akademis');
   if (!listContainer || !currentSiswa) return;
 
-  const userNilai = localDb.nilai ? localDb.nilai.filter(n => n.nama === currentSiswa.nama) : [];
+  const userNilai = localDb.nilai ? localDb.nilai.filter(n => normalizeNamaForMatch(n.nama) === normalizeNamaForMatch(currentSiswa.nama)) : [];
   if (userNilai.length === 0) {
     listContainer.innerHTML = `<div class="p-6 text-center text-xs text-slate-400">Belum ada nilai terinput atas nama "${currentSiswa.nama}". Silakan hubungi wali kelas Anda atau gunakan tombol sinkronisasi.</div>`;
     if (avgRaporEl) avgRaporEl.innerText = "0.0";
@@ -3823,7 +3852,7 @@ function saveJadwalToStorage() {
             document.getElementById('modal-nilai-judul-text').innerText = judulPenilaian;
 
             const nRecord = (localDb.nilai || []).find(n =>
-                n.nama === studentNama && n.mapel === mapel && n.judul_penilaian === judulPenilaian
+                normalizeNamaForMatch(n.nama) === normalizeNamaForMatch(murid.nama) && n.mapel === selectedMapel && n.judul_penilaian === selectedJudul
             );
             document.getElementById('modal-nilai-tugas').value = nRecord ? (nRecord.nilai || 0) : 0;
             document.getElementById('modal-nilai-jenis').value = nRecord ? (nRecord.jenis || '') : '';

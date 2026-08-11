@@ -3878,12 +3878,21 @@ function saveJadwalToStorage() {
 
         // Mengambil bagian TANGGAL saja (tanpa jam/waktu) dari sebuah record nilai.
         // Menangani berbagai format sumber data: "YYYY-MM-DD HH:MM", ISO dengan "T",
-        // atau string tanggal dari Google Sheets — lalu diformat rapi tanpa jam.
+        // string tanggal dari Google Sheets, maupun beberapa kemungkinan nama field
+        // lain yang mungkin dipakai backend (tgl, tanggal_nilai, date) — lalu
+        // diformat rapi tanpa jam. Jika data yang tersedia ternyata hanya berupa
+        // jam saja (mis. "08:00", tanpa info tanggal), tampilkan "-" alih-alih
+        // menampilkan jam tersebut di kolom Tanggal.
         function ambilTanggalNilai(item) {
-            const raw = item.tanggal || item.waktu;
+            const raw = item.tanggal || item.tgl || item.tanggal_nilai || item.date || item.waktu;
             if (!raw) return '-';
             const rawStr = String(raw).trim();
             if (!rawStr || rawStr === '-') return '-';
+
+            // Jika seluruh nilai field hanya berupa jam (mis. "08:00" atau "08:00:00"),
+            // berarti sumber data tidak menyertakan tanggal sama sekali.
+            const hanyaJamSaja = /^\d{1,2}:\d{2}(:\d{2})?$/.test(rawStr);
+            if (hanyaJamSaja) return '-';
 
             // Buang bagian jam jika sudah dalam format "YYYY-MM-DD HH:MM" atau "...T..."
             const bagianTanggal = rawStr.split(/[T ]/)[0];

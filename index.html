@@ -843,8 +843,23 @@
                     <h5 class="text-xs font-bold text-slate-655">Daftar Nilai Mata Pelajaran</h5>
                     <span class="text-[9px] bg-emerald-50 text-emerald-700 font-extrabold px-2.5 py-0.5 rounded-full">Nilai Akademik</span>
                 </div>
-                <div id="nilai-mata-pelajaran-list" class="divide-y divide-slate-100 overflow-y-auto max-h-[360px]">
-                    <div class="p-6 text-center text-xs text-slate-400">Belum ada data nilai masuk.</div>
+                <p class="px-4 pt-2.5 text-[9px] text-slate-400 font-semibold">Ketuk nilai untuk melihat rincian tugas.</p>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-[10px] min-w-[420px]">
+                        <thead>
+                            <tr class="text-slate-400 uppercase text-[8.5px] font-extrabold border-b border-slate-100">
+                                <th class="text-left py-2 px-3 sticky left-0 bg-white">Mata Pelajaran</th>
+                                <th class="text-center py-2 px-1.5">Tugas</th>
+                                <th class="text-center py-2 px-1.5">UH</th>
+                                <th class="text-center py-2 px-1.5">UTS</th>
+                                <th class="text-center py-2 px-1.5">US</th>
+                                <th class="text-center py-2 px-1.5">Poin</th>
+                            </tr>
+                        </thead>
+                        <tbody id="nilai-mata-pelajaran-list" class="divide-y divide-slate-100">
+                            <tr><td colspan="6" class="p-6 text-center text-xs text-slate-400">Belum ada data nilai masuk.</td></tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
@@ -1600,6 +1615,40 @@
             <button type="button" onclick="submitNilaiSiswa()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-2xl text-xs shadow-md transition transform active:scale-95">
                 Simpan & Sinkronkan Nilai
             </button>
+        </div>
+    </div>
+
+    <!-- MODAL RINCIAN NILAI (Siswa - rincian per kategori penilaian) -->
+    <div id="modal-rincian-nilai" class="hidden fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4" onclick="if(event.target===this) closeRincianNilaiModal()">
+        <div class="bg-white rounded-3xl p-5 w-full max-w-sm shadow-2xl transition transform scale-100 max-h-[80vh] flex flex-col">
+            <div class="flex justify-between items-center border-b border-slate-100 pb-2 mb-3 shrink-0">
+                <div>
+                    <h3 id="modal-rincian-mapel-title" class="font-bold text-sm text-slate-800 flex items-center gap-1.5">
+                        <i class="fa-solid fa-list-check text-indigo-600"></i> Rincian Nilai
+                    </h3>
+                    <p id="modal-rincian-kategori-subtitle" class="text-[10px] text-slate-400 font-semibold mt-0.5">Kategori</p>
+                </div>
+                <button type="button" onclick="closeRincianNilaiModal()" class="text-slate-400 text-lg hover:text-slate-600"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="overflow-y-auto pr-1">
+                <table class="w-full text-[10px] border-collapse">
+                    <thead class="sticky top-0 bg-white">
+                        <tr class="text-slate-400 uppercase text-[9px] font-extrabold border-b border-slate-100">
+                            <th class="text-left py-1.5 pr-1 w-6">No</th>
+                            <th class="text-left py-1.5 pr-1">Judul</th>
+                            <th class="text-left py-1.5 pr-1">Tanggal</th>
+                            <th class="text-right py-1.5 pl-1">Nilai</th>
+                        </tr>
+                    </thead>
+                    <tbody id="modal-rincian-nilai-list">
+                        <tr><td colspan="4" class="text-center py-4 text-slate-400">Tidak ada data.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="bg-indigo-50 p-3 rounded-2xl border border-indigo-100 flex justify-between items-center mt-3 shrink-0">
+                <span class="text-[10px] font-bold text-indigo-800 uppercase">Rata-Rata:</span>
+                <span id="modal-rincian-rata-rata" class="font-black text-indigo-700 text-base">0</span>
+            </div>
         </div>
     </div>
 
@@ -3805,6 +3854,35 @@ function saveJadwalToStorage() {
             }).join('');
         }
 
+        // Kategori penilaian yang ditampilkan sejajar dengan nama mata pelajaran
+        const KATEGORI_NILAI_LIST = ['Tugas', 'UH', 'UTS', 'US', 'Poin'];
+
+        // Menyimpan rincian tugas per (mapel|kategori) agar bisa dibuka lewat popup
+        let siswaNilaiKategoriData = {};
+
+        // Mengklasifikasikan satu record nilai ke salah satu kategori:
+        // Tugas, UH (Ulangan Harian), UTS, US, atau Poin — berdasarkan
+        // teks bebas pada field "jenis" dan "judul_penilaian".
+        function classifyKategoriNilai(item) {
+            const jenis = String(item.jenis || '').toLowerCase();
+            const judul = String(item.judul_penilaian || '').toLowerCase();
+            const gabungan = `${jenis} ${judul}`;
+
+            if (gabungan.includes('poin') || gabungan.includes('prestasi')) return 'Poin';
+            if (gabungan.includes('tugas') || gabungan.includes('pekerjaan rumah') || /\bpr\b/.test(gabungan)) return 'Tugas';
+            if (gabungan.includes('akhir semester') || gabungan.includes('ujian sekolah') || gabungan.includes('uas') || /\bpas\b/.test(gabungan) || /\bus\b/.test(gabungan)) return 'US';
+            if (gabungan.includes('tengah semester') || gabungan.includes('mid') || /\bpts\b/.test(gabungan) || /\buts\b/.test(gabungan)) return 'UTS';
+            if (gabungan.includes('harian') || gabungan.includes('ulangan') || /\bph\b/.test(gabungan) || /\buh\b/.test(gabungan)) return 'UH';
+            return 'UH';
+        }
+
+        // Mengambil tanggal (YYYY-MM-DD) dari field waktu, jika ada
+        function ambilTanggalNilai(item) {
+            if (item.tanggal) return item.tanggal;
+            if (item.waktu) return String(item.waktu).split(' ')[0];
+            return '-';
+        }
+
         function renderSiswaNilai() {
   const listContainer = document.getElementById('nilai-mata-pelajaran-list');
   const avgRaporEl = document.getElementById('nilai-rata-rapor');
@@ -3817,62 +3895,62 @@ function saveJadwalToStorage() {
     return normalizeNamaForMatch(n.nama) === normalizeNamaForMatch(currentSiswa.nama);
   }) : [];
   if (userNilai.length === 0) {
-    listContainer.innerHTML = `<div class="p-6 text-center text-xs text-slate-400">Belum ada nilai terinput atas nama "${currentSiswa.nama}". Silakan hubungi wali kelas Anda atau gunakan tombol sinkronisasi.</div>`;
+    listContainer.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-xs text-slate-400">Belum ada nilai terinput atas nama "${currentSiswa.nama}". Silakan hubungi wali kelas Anda atau gunakan tombol sinkronisasi.</td></tr>`;
     if (avgRaporEl) avgRaporEl.innerText = "0.0";
     if (statusAkademisEl) statusAkademisEl.innerText = "Tidak Ada Data";
+    siswaNilaiKategoriData = {};
     return;
   }
 
-  let totalNilai = 0;
-  let nilaiCount = 0;
-  let listHTML = "";
-
-  const grouped = {};
+  // Kelompokkan per mata pelajaran, lalu per kategori penilaian
+  const groupedMapel = {};
   userNilai.forEach(n => {
-    const key = `${n.mapel}|${n.judul_penilaian}`;
-    if (!grouped[key]) {
-      grouped[key] = [];
-    }
-    grouped[key].push(n);
+    const mapel = n.mapel || "Mata Pelajaran";
+    const kategori = classifyKategoriNilai(n);
+    if (!groupedMapel[mapel]) groupedMapel[mapel] = {};
+    if (!groupedMapel[mapel][kategori]) groupedMapel[mapel][kategori] = [];
+    groupedMapel[mapel][kategori].push(n);
   });
 
-  Object.keys(grouped).forEach(key => {
-    const items = grouped[key];
-    const firstItem = items[0];
-    const mapel = firstItem.mapel || "Mata Pelajaran";
-    const judul = firstItem.judul_penilaian || "Penilaian";
-    const jenis = firstItem.jenis || "-";
-    
-    const nilaiList = items.map(n => parseInt(n.nilai) || 0);
-    const avgNilai = Math.round(nilaiList.reduce((a, b) => a + b, 0) / nilaiList.length);
-    
-    totalNilai += avgNilai;
-    nilaiCount++;
+  siswaNilaiKategoriData = {};
+  let totalNilaiKeseluruhan = 0;
+  let jumlahNilaiKeseluruhan = 0;
+  let listHTML = "";
 
-    const statusBadge = avgNilai >= 75 
-      ? `<span class="bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded text-[9px] font-bold border border-emerald-200">Tuntas</span>`
-      : `<span class="bg-rose-50 text-rose-700 px-2 py-0.5 rounded text-[9px] font-bold border border-rose-200">Remedial</span>`;
+  Object.keys(groupedMapel).sort().forEach(mapel => {
+    const kategoriMap = groupedMapel[mapel];
+
+    const kolomHTML = KATEGORI_NILAI_LIST.map(kategori => {
+      const items = kategoriMap[kategori];
+      if (!items || items.length === 0) {
+        return `<td class="text-center py-2.5 px-1.5 text-slate-300 font-semibold">-</td>`;
+      }
+
+      const nilaiList = items.map(n => parseInt(n.nilai) || 0);
+      const avgNilai = Math.round(nilaiList.reduce((a, b) => a + b, 0) / nilaiList.length);
+      totalNilaiKeseluruhan += avgNilai;
+      jumlahNilaiKeseluruhan++;
+
+      const dataKey = `${mapel}|${kategori}`;
+      siswaNilaiKategoriData[dataKey] = items;
+
+      const warnaTeks = avgNilai >= 75 ? 'text-emerald-600' : 'text-rose-600';
+      return `<td class="text-center py-2.5 px-1.5">
+                <button type="button" onclick="openRincianNilaiModal('${mapel.replace(/'/g, "\\'")}', '${kategori}')" class="font-extrabold ${warnaTeks} underline decoration-dotted underline-offset-2 active:scale-95 transition">${avgNilai}</button>
+              </td>`;
+    }).join('');
 
     listHTML += `
-      <div class="p-4 bg-white flex flex-col gap-2 transition-all border-b border-slate-100 last:border-b-0">
-        <div class="flex justify-between items-center">
-          <div>
-            <span class="font-extrabold text-slate-800 text-xs">${mapel}</span>
-            <span class="text-[9px] text-slate-400 block font-semibold mt-0.5">Judul: ${judul} | Jenis: ${jenis}</span>
-          </div>
-          ${statusBadge}
-        </div>
-        <div class="bg-slate-50 p-3 rounded-xl border border-slate-100 flex justify-between items-center">
-          <span class="text-[10px] text-slate-500 font-semibold">Nilai Perolehan</span>
-          <span class="text-2xl font-black text-indigo-600">${avgNilai}</span>
-        </div>
-      </div>
+      <tr class="hover:bg-slate-50/50">
+        <td class="py-2.5 px-3 font-extrabold text-slate-800 sticky left-0 bg-white">${mapel}</td>
+        ${kolomHTML}
+      </tr>
     `;
   });
 
   listContainer.innerHTML = listHTML;
-  
-  const avgRapor = nilaiCount > 0 ? (totalNilai / nilaiCount).toFixed(1) : 0;
+
+  const avgRapor = jumlahNilaiKeseluruhan > 0 ? (totalNilaiKeseluruhan / jumlahNilaiKeseluruhan).toFixed(1) : 0;
   if (avgRaporEl) avgRaporEl.innerText = avgRapor;
 
   if (statusAkademisEl) {
@@ -3885,6 +3963,52 @@ function saveJadwalToStorage() {
     }
   }
 }
+
+        // Membuka popup rincian tugas untuk satu kategori pada satu mata pelajaran
+        function openRincianNilaiModal(mapel, kategori) {
+            const modal = document.getElementById('modal-rincian-nilai');
+            const listEl = document.getElementById('modal-rincian-nilai-list');
+            const titleEl = document.getElementById('modal-rincian-mapel-title');
+            const subtitleEl = document.getElementById('modal-rincian-kategori-subtitle');
+            const rataRataEl = document.getElementById('modal-rincian-rata-rata');
+            if (!modal || !listEl) return;
+
+            const dataKey = `${mapel}|${kategori}`;
+            const items = siswaNilaiKategoriData[dataKey] || [];
+
+            titleEl.innerHTML = `<i class="fa-solid fa-list-check text-indigo-600"></i> ${mapel}`;
+            subtitleEl.innerText = `Kategori: ${kategori}`;
+
+            if (items.length === 0) {
+                listEl.innerHTML = `<tr><td colspan="4" class="text-center py-4 text-slate-400">Tidak ada data.</td></tr>`;
+                rataRataEl.innerText = "0";
+            } else {
+                let totalNilai = 0;
+                listEl.innerHTML = items.map((item, index) => {
+                    const nilai = parseInt(item.nilai) || 0;
+                    totalNilai += nilai;
+                    const judul = item.judul_penilaian || '-';
+                    const tanggal = ambilTanggalNilai(item);
+                    return `
+                        <tr class="border-b border-slate-50 last:border-b-0">
+                            <td class="py-2 pr-1 text-slate-500 font-semibold">${index + 1}</td>
+                            <td class="py-2 pr-1 font-bold text-slate-700">${judul}</td>
+                            <td class="py-2 pr-1 text-slate-500">${tanggal}</td>
+                            <td class="py-2 pl-1 text-right font-extrabold text-indigo-600">${nilai}</td>
+                        </tr>
+                    `;
+                }).join('');
+                const rataRata = (totalNilai / items.length).toFixed(1);
+                rataRataEl.innerText = rataRata;
+            }
+
+            modal.classList.remove('hidden');
+        }
+
+        function closeRincianNilaiModal() {
+            const modal = document.getElementById('modal-rincian-nilai');
+            if (modal) modal.classList.add('hidden');
+        }
 
         function populateWaliNilaiJudulFilter() {
             const judulSelector = document.getElementById('wali-nilai-judul');

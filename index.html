@@ -3876,11 +3876,25 @@ function saveJadwalToStorage() {
             return 'UH';
         }
 
-        // Mengambil tanggal (YYYY-MM-DD) dari field waktu, jika ada
+        // Mengambil bagian TANGGAL saja (tanpa jam/waktu) dari sebuah record nilai.
+        // Menangani berbagai format sumber data: "YYYY-MM-DD HH:MM", ISO dengan "T",
+        // atau string tanggal dari Google Sheets — lalu diformat rapi tanpa jam.
         function ambilTanggalNilai(item) {
-            if (item.tanggal) return item.tanggal;
-            if (item.waktu) return String(item.waktu).split(' ')[0];
-            return '-';
+            const raw = item.tanggal || item.waktu;
+            if (!raw) return '-';
+            const rawStr = String(raw).trim();
+            if (!rawStr || rawStr === '-') return '-';
+
+            // Buang bagian jam jika sudah dalam format "YYYY-MM-DD HH:MM" atau "...T..."
+            const bagianTanggal = rawStr.split(/[T ]/)[0];
+
+            const dateObj = new Date(rawStr);
+            if (!isNaN(dateObj.getTime())) {
+                return dateObj.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+            }
+
+            // Fallback jika gagal di-parse sebagai Date: tampilkan bagian tanggal mentahnya saja
+            return bagianTanggal || rawStr;
         }
 
         function renderSiswaNilai() {

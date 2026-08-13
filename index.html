@@ -3190,10 +3190,17 @@ function saveJadwalToStorage() {
 
             if (!rec || !rec.file) {
                 emptyEl.classList.remove('hidden');
-            } else if (rec.file.startsWith('data:application/pdf')) {
+            } else if (rec.file.startsWith('data:application/pdf') || rec.file.indexOf('drive.google.com/file/d/') !== -1) {
+                // data:application/pdf... => berkas PDF hasil unggah offline/mock
+                // (base64 langsung). drive.google.com/file/d/... => berkas PDF
+                // yang sudah diunggah ke Drive oleh server (code.gs/saveBase64ToDrive),
+                // dibuka sebagai link viewer, bukan <img>.
                 pdfEl.href = rec.file;
                 pdfEl.classList.remove('hidden');
             } else {
+                // Sisanya: data:image/...;base64,... (offline/mock) ATAU URL
+                // thumbnail Drive drive.google.com/thumbnail?id=... (server) —
+                // keduanya valid langsung dipakai sebagai src gambar.
                 imgEl.src = rec.file;
                 imgEl.classList.remove('hidden');
             }

@@ -577,6 +577,14 @@
                             </div>
                             <i class="fa-solid fa-person-walking-arrow-right text-rose-600 text-lg opacity-80"></i>
                         </div>
+                        <!-- Bolos -->
+                        <div onclick="openWaliRekapDetail('bolos')" class="bg-fuchsia-50/50 p-2.5 rounded-2xl border border-fuchsia-100 flex items-center justify-between cursor-pointer active:scale-95 transition-transform">
+                            <div>
+                                <span class="text-[10px] text-fuchsia-800 font-extrabold block uppercase tracking-wider">Bolos</span>
+                                <span id="rekap-count-bolos" class="text-sm font-black text-slate-800">0 siswa</span>
+                            </div>
+                            <i class="fa-solid fa-door-open text-fuchsia-600 text-lg opacity-80"></i>
+                        </div>
                     </div>
                 </div>
 
@@ -3126,7 +3134,8 @@ function saveJadwalToStorage() {
                 izin: { title: 'Izin Tidak Masuk', icon: 'fa-envelope', empty: 'Tidak ada siswa izin tidak masuk hari ini.' },
                 dispen: { title: 'Izin Dispen', icon: 'fa-briefcase', empty: 'Tidak ada siswa izin dispen hari ini.' },
                 terlambat: { title: 'Izin Terlambat', icon: 'fa-clock-rotate-left', empty: 'Tidak ada siswa izin terlambat hari ini.' },
-                pulangcepat: { title: 'Izin Pulang Cepat', icon: 'fa-person-walking-arrow-right', empty: 'Tidak ada siswa izin pulang cepat hari ini.' }
+                pulangcepat: { title: 'Izin Pulang Cepat', icon: 'fa-person-walking-arrow-right', empty: 'Tidak ada siswa izin pulang cepat hari ini.' },
+                bolos: { title: 'Siswa Bolos', icon: 'fa-door-open', empty: 'Tidak ada siswa bolos (presensi masuk tanpa presensi pulang) hari ini.' }
             };
             const c = config[type];
             if (!c) return;
@@ -4625,13 +4634,28 @@ function saveJadwalToStorage() {
             );
             const countPulangCepat = listPulangCepat.length;
 
+            // Hitung Bolos: siswa di kelas ini yang sudah presensi masuk hari
+            // ini namun TIDAK melakukan presensi pulang pada tanggal yang
+            // sama. Dikelompokkan per siswa supaya satu siswa hanya dihitung
+            // satu kali meski ada lebih dari satu record presensi masuk.
+            const bolosGroupedWali = {};
+            (localDb.presensi || []).forEach(p => {
+                if (p.tanggal !== todayStr || !muridNisList.includes(p.nis)) return;
+                if (!bolosGroupedWali[p.nis]) bolosGroupedWali[p.nis] = { nis: p.nis, masuk: null, pulang: null };
+                if (p.tipe === 'masuk') bolosGroupedWali[p.nis].masuk = p;
+                else if (p.tipe === 'pulang') bolosGroupedWali[p.nis].pulang = p;
+            });
+            const listBolos = Object.values(bolosGroupedWali).filter(row => row.masuk && !row.pulang);
+            const countBolos = listBolos.length;
+
             waliRekapDetailData = {
                 hadir: listHadir.map(p => toDetail(p.nis, `Masuk ${p.jam || ''}`)),
                 sakit: listSakit.map(i => toDetail(i.nis, i.tanggal)),
                 izin: listIzin.map(i => toDetail(i.nis, i.tanggal)),
                 dispen: listDispen.map(i => toDetail(i.nis, i.tanggal)),
                 terlambat: listTerlambat.map(i => toDetail(i.nis, i.tanggal)),
-                pulangcepat: listPulangCepat.map(i => toDetail(i.nis, i.tanggal))
+                pulangcepat: listPulangCepat.map(i => toDetail(i.nis, i.tanggal)),
+                bolos: listBolos.map(row => toDetail(row.nis, `Masuk ${row.masuk.jam || ''} • Tidak presensi pulang`))
             };
 
             const elHadir = document.getElementById('rekap-count-hadir');
@@ -4640,6 +4664,7 @@ function saveJadwalToStorage() {
             const elDispen = document.getElementById('rekap-count-dispen');
             const elTerlambat = document.getElementById('rekap-count-terlambat');
             const elPulangCepat = document.getElementById('rekap-count-pulangcepat');
+            const elBolos = document.getElementById('rekap-count-bolos');
             const elTodayStr = document.getElementById('rekap-today-str');
 
             if (elHadir) elHadir.innerText = `${countHadir} siswa`;
@@ -4648,6 +4673,7 @@ function saveJadwalToStorage() {
             if (elDispen) elDispen.innerText = `${countDispen} siswa`;
             if (elTerlambat) elTerlambat.innerText = `${countTerlambat} siswa`;
             if (elPulangCepat) elPulangCepat.innerText = `${countPulangCepat} siswa`;
+            if (elBolos) elBolos.innerText = `${countBolos} siswa`;
 
             if (elTodayStr) {
                 const todayObj = new Date();

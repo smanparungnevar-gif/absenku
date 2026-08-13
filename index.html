@@ -3172,39 +3172,155 @@ function saveJadwalToStorage() {
         // Terlambat, Pulang Cepat, dst) karena field `file` sama-sama
         // tersimpan di record `localDb.izin`.
         function openBuktiIzin(nis, createdAt) {
-            const rec = (localDb.izin || []).find(i => i.nis === nis && i.created_at === createdAt);
+            // =========================================================================
+            // PERBAIKAN: PENCARIAN RECORD DENGAN MULTIPLE FALLBACK
+            // =========================================================================
+            // Coba 3 metode pencarian karena created_at bisa format berbeda
+            
+            // Metode 1: Exact match (jika created_at format konsisten)
+            let rec = (localDb.izin || []).find(i => i.nis === nis && i.created_at === createdAt);
+            
+            // Metode 2: Normalize whitespace (jika ada trailing space)
+            if (!rec && createdAt) {
+                const normalizedCreatedAt = createdAt.toString().trim();
+                rec = (localDb.izin || []).find(i => 
+                    i.nis === nis && 
+                    (i.created_at || '').toString().trim() === normalizedCreatedAt
+                );
+            }
+            
+            // Metode 3: Ambil izin terbaru untuk siswa ini (fallback jika truly tidak ketemu)
+            if (!rec) {
+                const allIzinForNis = (localDb.izin || []).filter(i => i.nis === nis && i.file);
+                if (allIzinForNis.length > 0) {
+                    // Ambil yang paling baru (terakhir di list)
+                    rec = allIzinForNis[allIzinForNis.length - 1];
+                }
+            }
+            
+            // =========================================================================
+            // VALIDASI ELEMEN MODAL
+            // =========================================================================
             const modal = document.getElementById('modal-bukti-izin');
             const imgEl = document.getElementById('bukti-izin-image');
             const pdfEl = document.getElementById('bukti-izin-pdf-link');
             const emptyEl = document.getElementById('bukti-izin-empty');
             const titleEl = document.getElementById('modal-bukti-izin-title');
+            
             if (!modal || !imgEl || !pdfEl || !emptyEl) return;
 
+            // =========================================================================
+            // RESET SEMUA ELEMEN MODAL
+            // =========================================================================
             imgEl.classList.add('hidden');
             pdfEl.classList.add('hidden');
             emptyEl.classList.add('hidden');
             imgEl.src = "";
             pdfEl.href = "";
+            imgEl.onerror = null;
 
-            if (titleEl) titleEl.innerHTML = `<i class="fa-solid fa-paperclip text-emerald-600"></i> Bukti Izin${rec ? ' - ' + rec.jenis : ''}`;
-
-            if (!rec || !rec.file) {
-                emptyEl.classList.remove('hidden');
-            } else if (rec.file.startsWith('data:application/pdf') || rec.file.indexOf('drive.google.com/file/d/') !== -1) {
-                // data:application/pdf... => berkas PDF hasil unggah offline/mock
-                // (base64 langsung). drive.google.com/file/d/... => berkas PDF
-                // yang sudah diunggah ke Drive oleh server (code.gs/saveBase64ToDrive),
-                // dibuka sebagai link viewer, bukan <img>.
-                pdfEl.href = rec.file;
-                pdfEl.classList.remove('hidden');
-            } else {
-                // Sisanya: data:image/...;base64,... (offline/mock) ATAU URL
-                // thumbnail Drive drive.google.com/thumbnail?id=... (server) —
-                // keduanya valid langsung dipakai sebagai src gambar.
-                imgEl.src = rec.file;
-                imgEl.classList.remove('hidden');
+            // =========================================================================
+            // UPDATE TITLE
+            // =========================================================================
+            if (titleEl) {
+                titleEl.innerHTML = `<i class="fa-solid fa-paperclip text-emerald-600"></i> Bukti Izin${rec ? ' - ' + rec.jenis : ''}`;
             }
 
+            // =========================================================================
+            // TAMPILKAN FILE ATAU PESAN KOSONG (DENGAN MULTIPLE FORMAT SUPPORT)
+            // =========================================================================
+            if (!rec || !rec.file) {
+                // Tidak ada record atau file kosong
+                emptyEl.classList.remove('hidden');
+                console.warn(`File bukti tidak ditemukan. NIS: ${nis}, CreatedAt: ${createdAt}`);
+            } else {
+                // File ada - determine format dan tampilkan
+                const fileData = rec.file.toString().trim();
+                
+                // ===== CASE 1: PDF Base64 (offline/mock upload) =====
+                if (fileData.startsWith('data:application/pdf')) {
+                    pdfEl.href = fileData;
+                    pdfEl.innerHTML = '<i class="fa-solid fa-file-pdf text-lg block mb-1"></i> Buka Berkas PDF';
+                    pdfEl.classList.remove('hidden');
+                }
+                
+                // ===== CASE 2: Google Drive File Link (format: drive.google.com/file/d/...) =====
+                else if (fileData.indexOf('drive.google.com/file/d/') !== -1) {
+                    // Ekstrak file ID dari URL
+                    const fileIdMatch = fileData.match(/\/file\/d\/([a-zA-Z0-9-_]+)/);
+                    
+                    if (fileIdMatch && fileIdMatch[1]) {
+                        const fileId = fileIdMatch[1];
+                        
+                        // Coba tampilkan sebagai thumbnail/preview dulu
+                        const thumbnailUrl = `https://drive.google.com/thumbnail?id=${fileId}&sz=w500`;
+                        imgEl.src = thumbnailUrl;
+                        
+                        // Jika thumbnail gagal diload, fallback ke link
+                        imgEl.onerror = () => {
+                            imgEl.classList.add('hidden');
+                            pdfEl.href = fileData;
+                            pdfEl.innerHTML = '<i class="fa-solid fa-file-pdf text-lg block mb-1"></i> Buka di Google Drive';
+                            pdfEl.classList.remove('hidden');
+                        };
+                        
+                        imgEl.classList.remove('hidden');
+                    } else {
+                        // File ID tidak bisa diextract, buka sebagai link
+                        pdfEl.href = fileData;
+                        pdfEl.innerHTML = '<i class="fa-solid fa-file-pdf text-lg block mb-1"></i> Buka Berkas';
+                        pdfEl.classList.remove('hidden');
+                    }
+                }
+                
+                // ===== CASE 3: Google Drive Thumbnail URL (format: drive.google.com/thumbnail?id=...) =====
+                else if (fileData.indexOf('drive.google.com/thumbnail') !== -1 || 
+                         fileData.indexOf('googleusercontent.com') !== -1) {
+                    imgEl.src = fileData;
+                    
+                    // Error handler jika thumbnail tidak bisa diload
+                    imgEl.onerror = () => {
+                        imgEl.classList.add('hidden');
+                        emptyEl.classList.remove('hidden');
+                        emptyEl.innerHTML = `<div class="text-center py-6 text-slate-400 text-xs">Tidak dapat memuat berkas.<br><small>${fileData.substring(0, 50)}...</small></div>`;
+                    };
+                    
+                    imgEl.classList.remove('hidden');
+                }
+                
+                // ===== CASE 4: Image Base64 (offline/mock upload) =====
+                else if (fileData.startsWith('data:image/')) {
+                    imgEl.src = fileData;
+                    imgEl.classList.remove('hidden');
+                }
+                
+                // ===== CASE 5: External URL (generic HTTP/HTTPS) =====
+                else if (fileData.startsWith('http://') || fileData.startsWith('https://')) {
+                    // Coba sebagai image dulu
+                    imgEl.src = fileData;
+                    
+                    // Jika gagal, fallback ke PDF link
+                    imgEl.onerror = () => {
+                        imgEl.classList.add('hidden');
+                        pdfEl.href = fileData;
+                        pdfEl.innerHTML = '<i class="fa-solid fa-file-pdf text-lg block mb-1"></i> Buka File';
+                        pdfEl.classList.remove('hidden');
+                    };
+                    
+                    imgEl.classList.remove('hidden');
+                }
+                
+                // ===== CASE 6: Format tidak dikenal =====
+                else {
+                    emptyEl.classList.remove('hidden');
+                    emptyEl.innerHTML = `<div class="text-center py-6 text-slate-400 text-xs">Format file tidak dikenal<br><small class="text-slate-300">${fileData.substring(0, 50)}</small></div>`;
+                    console.warn(`Format file tidak dikenal untuk NIS ${nis}:`, fileData);
+                }
+            }
+
+            // =========================================================================
+            // TAMPILKAN MODAL
+            // =========================================================================
             modal.classList.remove('hidden');
         }
 

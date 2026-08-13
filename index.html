@@ -96,12 +96,12 @@
                 <!-- FORM INPUT LOGIN -->
                 <div class="w-full space-y-4">
                     <div>
-                        <label id="label-input-1" class="block text-xs font-bold text-slate-600 mb-1.5 ml-1">Nomor Induk Siswa Nasional (NISN)</label>
+                        <label id="label-input-1" class="block text-xs font-bold text-slate-600 mb-1.5 ml-1">Nomor Induk Siswa (NIS)</label>
                         <div class="relative">
                             <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400">
                                 <i id="icon-input-1" class="fa-solid fa-graduation-cap"></i>
                             </span>
-                            <input type="text" id="login-identifier" placeholder="Masukkan NISN Anda" class="w-full pl-11 pr-4 py-3.5 bg-white border border-slate-200 rounded-2xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition text-sm shadow-sm">
+                            <input type="text" id="login-identifier" placeholder="Masukkan NIS Anda" class="w-full pl-11 pr-4 py-3.5 bg-white border border-slate-200 rounded-2xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition text-sm shadow-sm">
                         </div>
                     </div>
                     
@@ -2337,8 +2337,8 @@ function saveJadwalToStorage() {
             } else {
                 btnSiswa.className = "flex-1 py-3 rounded-xl text-center transition-all duration-300 bg-white text-emerald-700 shadow-md";
                 btnWali.className = "flex-1 py-3 rounded-xl text-center transition-all duration-300 text-slate-500 hover:text-slate-850";
-                label1.innerText = "Nomor Induk Siswa Nasional (NISN)";
-                input1.placeholder = "Masukkan NISN Anda";
+                label1.innerText = "Nomor Induk Siswa (NIS)";
+                input1.placeholder = "Masukkan NIS Anda";
                 label2.innerText = "Password (NISN)";
                 input2.placeholder = "Masukkan NISN Anda";
             }
@@ -3671,6 +3671,10 @@ function saveJadwalToStorage() {
                 showToast("Anda sudah absen pulang hari ini.");
                 return;
             }
+            if (type === 'pulang' && !statusAbsen.masuk) {
+                showToast("Anda belum presensi masuk. Silakan presensi masuk terlebih dahulu.");
+                return;
+            }
             activeAbsenceType = type;
             openCamera();
         }
@@ -3748,6 +3752,17 @@ function saveJadwalToStorage() {
         }
 
         function savePresensiToState(record) {
+            // Cegah data presensi dobel/duplikat (nis + tanggal + tipe sama):
+            // jika sudah ada record presensi pertama untuk kombinasi ini,
+            // pertahankan yang pertama dan abaikan yang baru masuk.
+            const sudahAdaPresensi = (localDb.presensi || []).some(p =>
+                p.nis === record.nis && p.tanggal === record.tanggal && p.tipe === record.tipe
+            );
+            if (sudahAdaPresensi) {
+                updateHomePresensiUI();
+                renderLivePresensiKelas();
+                return;
+            }
             localDb.presensi.push(record);
             localStorage.setItem('local_offline_db', JSON.stringify(localDb));
             updateHomePresensiUI();
@@ -3847,7 +3862,8 @@ function saveJadwalToStorage() {
                 } else {
                     iconPulang.className = "fa-solid fa-bell text-2xl";
                     textPulang.className = "text-[10px] text-slate-455 mt-0.5";
-                    textPulang.innerText = "Belum Presensi";
+                    textPulang.innerText = status.masuk ? "Belum Presensi" : "Presensi masuk dahulu";
+                    btnPulang.disabled = !status.masuk;
                     if (badgeDonePulang) badgeDonePulang.classList.add('hidden');
                 }
             }
@@ -4891,6 +4907,17 @@ function saveJadwalToStorage() {
                 });
             };
 
+            // Cegah pengiriman ganda ke server: jika pengajuan jenis izin yang
+            // sama untuk tanggal yang sama sudah ada di data lokal, hentikan
+            // di sini tanpa mengirim request duplikat ke server.
+            const sudahDiajukanTh = (localDb.izin || []).some(i =>
+                i.nis === record.nis && i.jenis === record.jenis && i.tanggal === record.tanggal
+            );
+            if (sudahDiajukanTh) {
+                saveIzinToState(record);
+                return;
+            }
+
             if (fileInput.files.length > 0) {
                 fileToCompressedDataUrl(fileInput.files[0]).then(function(dataUrl) {
                     record.file = dataUrl;
@@ -4948,6 +4975,17 @@ function saveJadwalToStorage() {
                 });
             };
 
+            // Cegah pengiriman ganda ke server: jika pengajuan jenis izin yang
+            // sama untuk tanggal yang sama sudah ada di data lokal, hentikan
+            // di sini tanpa mengirim request duplikat ke server.
+            const sudahDiajukanKd = (localDb.izin || []).some(i =>
+                i.nis === record.nis && i.jenis === record.jenis && i.tanggal === record.tanggal
+            );
+            if (sudahDiajukanKd) {
+                saveIzinToState(record);
+                return;
+            }
+
             if (fileInput.files.length > 0) {
                 fileToCompressedDataUrl(fileInput.files[0]).then(function(dataUrl) {
                     record.file = dataUrl;
@@ -4961,6 +4999,22 @@ function saveJadwalToStorage() {
         }
 
         function saveIzinToState(record) {
+            // Cegah pengajuan izin dobel/duplikat (semua jenis izin): jika
+            // siswa yang sama sudah pernah mengajukan jenis izin yang sama
+            // untuk tanggal yang sama, pertahankan pengajuan pertama saja
+            // dan abaikan pengajuan berikutnya yang duplikat.
+            const sudahAdaIzin = (localDb.izin || []).some(i =>
+                i.nis === record.nis && i.jenis === record.jenis && i.tanggal === record.tanggal
+            );
+            if (sudahAdaIzin) {
+                showToast("Pengajuan izin ini sudah pernah dikirim sebelumnya.");
+                document.getElementById('form-izin-tidak-hadir').reset();
+                document.getElementById('form-izin-kondisional').reset();
+                document.getElementById('th-file-label').innerText = "Pilih berkas PDF, JPG, atau PNG";
+                document.getElementById('kd-file-label').innerText = "Pilih berkas PDF, JPG, atau PNG";
+                switchIzinTab('riwayat');
+                return;
+            }
             localDb.izin.push(record);
             localStorage.setItem('local_offline_db', JSON.stringify(localDb));
             if (record.status === 'Disetujui') {
@@ -5381,13 +5435,34 @@ function saveJadwalToStorage() {
                         localDb.walikelas = data.walikelas || [];
                         localDb.admin = data.admin || [];
 
-                        const serverPresensi = data.presensi || [];
-                        const localOnlyPresensi = localDb.presensi.filter(lp =>
-                            !serverPresensi.some(sp => sp.nis === lp.nis && sp.tanggal === lp.tanggal && sp.tipe === lp.tipe)
-                        );
+                        // Dedup data presensi dari server: jika ada baris dobel/duplikat
+                        // (nis + tanggal + tipe sama, misal dari spreadsheet), pertahankan
+                        // hanya kemunculan pertamanya saja.
+                        const seenPresensiKeys = new Set();
+                        const serverPresensi = (data.presensi || []).filter(sp => {
+                            const key = `${sp.nis}|${sp.tanggal}|${sp.tipe}`;
+                            if (seenPresensiKeys.has(key)) return false;
+                            seenPresensiKeys.add(key);
+                            return true;
+                        });
+                        const localOnlyPresensi = localDb.presensi.filter(lp => {
+                            const key = `${lp.nis}|${lp.tanggal}|${lp.tipe}`;
+                            if (seenPresensiKeys.has(key)) return false;
+                            seenPresensiKeys.add(key);
+                            return true;
+                        });
                         localDb.presensi = [...serverPresensi, ...localOnlyPresensi];
 
-                        localDb.izin = data.izin || [];
+                        // Dedup data izin dari server: jika ada baris dobel/duplikat
+                        // (nis + jenis + tanggal sama), pertahankan hanya
+                        // kemunculan pertamanya saja.
+                        const seenIzinKeys = new Set();
+                        localDb.izin = (data.izin || []).filter(i => {
+                            const key = `${i.nis}|${i.jenis}|${i.tanggal}`;
+                            if (seenIzinKeys.has(key)) return false;
+                            seenIzinKeys.add(key);
+                            return true;
+                        });
                         localDb.poin = data.poin || [];
                         localDb.nilai = data.nilai || []; 
                         if (data.link_pengaturan_list) {

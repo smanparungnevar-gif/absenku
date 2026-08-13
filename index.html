@@ -3025,6 +3025,14 @@ function saveJadwalToStorage() {
             );
             const nisHadirSet = new Set(listHadir.map(p => p.nis));
 
+            // Bolos: siswa yang sudah presensi masuk hari ini tapi TIDAK
+            // melakukan presensi pulang hari ini.
+            const listPulang = (localDb.presensi || []).filter(p =>
+                p.tanggal === todayStr && p.tipe === 'pulang' && muridNisList.includes(p.nis)
+            );
+            const nisPulangSet = new Set(listPulang.map(p => p.nis));
+            const listBolos = listHadir.filter(p => !nisPulangSet.has(p.nis));
+
             const listSakit = (localDb.izin || []).filter(i =>
                 muridNisList.includes(i.nis) && i.jenis === 'Sakit' &&
                 i.status === 'Disetujui' && isTodayInRange(i.tanggal, todayStr)
@@ -3064,6 +3072,7 @@ function saveJadwalToStorage() {
                 { key: 'hadir', label: 'Hadir', icon: 'fa-user-check', color: 'emerald', names: listHadir.map(p => namaByNis(p.nis)) },
                 { key: 'terlambat', label: 'Izin Terlambat', icon: 'fa-clock-rotate-left', color: 'amber', names: listIzinTerlambat.map(i => namaByNis(i.nis)) },
                 { key: 'alpha', label: 'Alpha', icon: 'fa-user-xmark', color: 'rose', names: listAlpha.map(s => s.nama) },
+                { key: 'bolos', label: 'Bolos', icon: 'fa-door-open', color: 'fuchsia', names: listBolos.map(p => namaByNis(p.nis)) },
                 { key: 'sakit', label: 'Izin Sakit', icon: 'fa-house-medical', color: 'pink', names: listSakit.map(i => namaByNis(i.nis)) },
                 { key: 'izin', label: 'Izin Tidak Masuk', icon: 'fa-envelope', color: 'sky', names: listIzinTidakMasuk.map(i => namaByNis(i.nis)) },
                 { key: 'dispen', label: 'Izin Dispen', icon: 'fa-briefcase', color: 'indigo', names: listDispen.map(i => namaByNis(i.nis)) }

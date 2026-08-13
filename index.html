@@ -2133,6 +2133,7 @@ function saveJadwalToStorage() {
 
             startClock();
             initLocationTracking();
+            startLiveKehadiranKelasPolling();
             populateTanggalOptions();
             updateIntegrationStatus();
             
@@ -2211,6 +2212,24 @@ function saveJadwalToStorage() {
                 if (homeJamEl) homeJamEl.innerText = `${hh}:${mm}:${ss}`;
                 updateClockColorAndButtons(now, hh, mm);
             }, 1000);
+        }
+
+        // Polling ringan khusus untuk panel "Live Kehadiran Kelas" di beranda
+        // siswa. Berjalan terpisah dari alur presensi yang sudah ada (tidak
+        // mengubah triggerPresensi/savePresensiToState sama sekali) — fungsi
+        // ini hanya menarik data terbaru dari server setiap 2 detik supaya
+        // presensi masuk/pulang teman sekelas lain (yang sudah tercentang
+        // & DONE di perangkat mereka) langsung muncul realtime, sesuai
+        // kelasnya masing-masing, tanpa perlu refresh manual.
+        let liveKehadiranPollingInterval = null;
+        function startLiveKehadiranKelasPolling() {
+            if (liveKehadiranPollingInterval) return;
+            liveKehadiranPollingInterval = setInterval(() => {
+                if (!currentSiswa || currentSiswa.role === 'walikelas') return;
+                const homeView = document.getElementById('view-home');
+                if (!homeView || homeView.classList.contains('hidden')) return;
+                fetchDatabaseState(false);
+            }, 2000);
         }
 
         function initLocationTracking() {

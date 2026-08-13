@@ -1679,6 +1679,25 @@
         </div>
     </div>
 
+    <!-- MODAL: Preview Bukti Izin (Foto/Surat) - Wali Kelas -->
+    <div id="modal-bukti-izin" class="hidden fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4" onclick="if(event.target===this) closeBuktiIzinModal()">
+        <div class="bg-white rounded-3xl p-5 w-full max-w-sm shadow-2xl transition transform scale-100 max-h-[85vh] flex flex-col">
+            <div class="flex justify-between items-center border-b border-slate-100 pb-2 mb-3 shrink-0">
+                <h3 id="modal-bukti-izin-title" class="font-bold text-sm text-slate-800 flex items-center gap-1.5">
+                    <i class="fa-solid fa-paperclip text-emerald-600"></i> Bukti Pengajuan Izin
+                </h3>
+                <button type="button" onclick="closeBuktiIzinModal()" class="text-slate-400 text-lg hover:text-slate-600"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="overflow-y-auto flex-1 flex items-center justify-center">
+                <img id="bukti-izin-image" src="" class="hidden max-w-full max-h-[65vh] rounded-xl border border-slate-100 object-contain mx-auto">
+                <a id="bukti-izin-pdf-link" href="" target="_blank" rel="noopener" class="hidden w-full text-center bg-indigo-50 text-indigo-700 font-bold text-xs py-4 rounded-xl border border-indigo-100">
+                    <i class="fa-solid fa-file-pdf text-lg block mb-1"></i> Buka Berkas PDF
+                </a>
+                <div id="bukti-izin-empty" class="hidden text-center py-6 text-slate-400 text-xs">Tidak ada berkas bukti untuk pengajuan ini.</div>
+            </div>
+        </div>
+    </div>
+
     <!-- MODAL: Detail Kehadiran per Kelas (Admin Dashboard) -->
     <div id="modal-admin-kelas-detail" class="hidden fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4" onclick="if(event.target===this) closeAdminKelasDetailModal()">
         <div class="bg-white rounded-3xl p-5 w-full max-w-sm shadow-2xl transition transform scale-100 max-h-[85vh] flex flex-col">
@@ -3146,6 +3165,47 @@ function saveJadwalToStorage() {
             renderRekapDetailModal(c.title, c.icon, adminRekapDetailData[type] || [], c.empty);
         }
 
+        // Preview bukti/foto/surat yang diunggah siswa saat mengajukan izin.
+        // Dicari lewat kombinasi nis + created_at (unik per pengajuan) supaya
+        // tidak perlu menaruh data base64 yang besar langsung di atribut
+        // onclick. Berfungsi untuk semua jenis izin (Sakit, Izin, Dispen,
+        // Terlambat, Pulang Cepat, dst) karena field `file` sama-sama
+        // tersimpan di record `localDb.izin`.
+        function openBuktiIzin(nis, createdAt) {
+            const rec = (localDb.izin || []).find(i => i.nis === nis && i.created_at === createdAt);
+            const modal = document.getElementById('modal-bukti-izin');
+            const imgEl = document.getElementById('bukti-izin-image');
+            const pdfEl = document.getElementById('bukti-izin-pdf-link');
+            const emptyEl = document.getElementById('bukti-izin-empty');
+            const titleEl = document.getElementById('modal-bukti-izin-title');
+            if (!modal || !imgEl || !pdfEl || !emptyEl) return;
+
+            imgEl.classList.add('hidden');
+            pdfEl.classList.add('hidden');
+            emptyEl.classList.add('hidden');
+            imgEl.src = "";
+            pdfEl.href = "";
+
+            if (titleEl) titleEl.innerHTML = `<i class="fa-solid fa-paperclip text-emerald-600"></i> Bukti Izin${rec ? ' - ' + rec.jenis : ''}`;
+
+            if (!rec || !rec.file) {
+                emptyEl.classList.remove('hidden');
+            } else if (rec.file.startsWith('data:application/pdf')) {
+                pdfEl.href = rec.file;
+                pdfEl.classList.remove('hidden');
+            } else {
+                imgEl.src = rec.file;
+                imgEl.classList.remove('hidden');
+            }
+
+            modal.classList.remove('hidden');
+        }
+
+        function closeBuktiIzinModal() {
+            const modal = document.getElementById('modal-bukti-izin');
+            if (modal) modal.classList.add('hidden');
+        }
+
         function openWaliRekapDetail(type) {
             const config = {
                 hadir: { title: 'Siswa Hadir', icon: 'fa-user-check', empty: 'Belum ada siswa yang hadir hari ini.' },
@@ -4520,6 +4580,7 @@ function saveJadwalToStorage() {
                             <span><i class="fa-regular fa-calendar"></i> Tanggal: ${item.tanggal}</span>
                             ${item.waktu && item.waktu !== '-' ? '<span><i class="fa-regular fa-clock"></i> Jam: ' + item.waktu + '</span>' : ''}
                         </div>
+                        ${item.file ? `<button type="button" onclick="openBuktiIzin('${item.nis}','${item.created_at}')" class="text-[10px] text-indigo-600 font-bold underline flex items-center gap-1"><i class="fa-regular fa-image"></i> Lihat Bukti/Surat</button>` : ''}
                         <div class="flex gap-2 pt-1">
                             <button onclick="approveOrRejectWaliIzin(${index}, 'Disetujui')" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 rounded-xl transition text-[11px]">Setujui</button>
                             <button onclick="approveOrRejectWaliIzin(${index}, 'Ditolak')" class="flex-1 bg-rose-50 hover:bg-rose-100 text-rose-600 font-bold py-2.5 rounded-xl transition text-[11px] border border-rose-100">Tolak</button>
@@ -4604,6 +4665,7 @@ function saveJadwalToStorage() {
                             <p class="text-[9px] text-slate-500 mt-0.5">Kategori: <span class="font-bold text-indigo-700">${item.jenis}</span></p>
                             <p class="text-[9px] text-slate-400 mt-0.5">Alasan: "${item.keterangan || '-'}"</p>
                             <p class="text-[8px] text-slate-400 font-semibold mt-1"><i class="fa-regular fa-calendar"></i> ${item.tanggal}</p>
+                            ${item.file ? `<button type="button" onclick="openBuktiIzin('${item.nis}','${item.created_at}')" class="text-[9px] text-indigo-600 font-bold underline mt-1 flex items-center gap-1"><i class="fa-regular fa-image"></i> Lihat Bukti/Surat</button>` : ''}
                         </div>
                         <span class="px-2 py-0.5 rounded text-[8px] font-bold border shrink-0 ${badgeClass}">${item.status}</span>
                     </div>

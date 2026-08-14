@@ -3190,8 +3190,9 @@ function saveJadwalToStorage() {
             }
             
             // Metode 3: Ambil izin terbaru untuk siswa ini (fallback jika truly tidak ketemu)
+            // PERBAIKAN: TIDAK MEMFILTER BERDASARKAN i.file AGAR SEMUA JENIS IZIN BISA DITAMPILKAN
             if (!rec) {
-                const allIzinForNis = (localDb.izin || []).filter(i => i.nis === nis && i.file);
+                const allIzinForNis = (localDb.izin || []).filter(i => i.nis === nis);
                 if (allIzinForNis.length > 0) {
                     // Ambil yang paling baru (terakhir di list)
                     rec = allIzinForNis[allIzinForNis.length - 1];
@@ -3229,9 +3230,31 @@ function saveJadwalToStorage() {
             // =========================================================================
             // TAMPILKAN FILE ATAU PESAN KOSONG (DENGAN MULTIPLE FORMAT SUPPORT)
             // =========================================================================
-            if (!rec || !rec.file) {
-                // Tidak ada record atau file kosong
+            if (!rec) {
+                // Tidak ada record sama sekali
                 emptyEl.classList.remove('hidden');
+                emptyEl.innerHTML = `<div class="text-center py-6 text-slate-400 text-xs">Data izin tidak ditemukan untuk siswa ini.</div>`;
+                console.warn(`Data izin tidak ditemukan. NIS: ${nis}, CreatedAt: ${createdAt}`);
+            } else if (!rec.file) {
+                // Record ada tapi file kosong - tampilkan info detail izin
+                emptyEl.classList.remove('hidden');
+                const muridData = (localDb.siswa || []).find(s => s.nis === rec.nis);
+                const muridNama = muridData ? muridData.nama : 'Siswa';
+                emptyEl.innerHTML = `
+                    <div class="text-center py-4 space-y-2 text-xs">
+                        <p class="font-bold text-slate-600">Detail Pengajuan Izin</p>
+                        <div class="bg-white/50 rounded-lg p-3 space-y-1.5 text-left text-slate-600 text-[9px]">
+                            <p><strong>Siswa:</strong> ${muridNama}</p>
+                            <p><strong>Jenis Izin:</strong> ${rec.jenis || '-'}</p>
+                            <p><strong>Tanggal:</strong> ${rec.tanggal || '-'}</p>
+                            ${rec.waktu && rec.waktu !== '-' ? `<p><strong>Waktu:</strong> ${rec.waktu}</p>` : ''}
+                            <p><strong>Alasan:</strong> ${rec.keterangan || '-'}</p>
+                            ${rec.status ? `<p><strong>Status:</strong> <span class="font-bold text-indigo-600">${rec.status}</span></p>` : ''}
+                            ${rec.dispen_alamat ? `<p><strong>Lokasi Dispen:</strong> ${rec.dispen_alamat}</p>` : ''}
+                        </div>
+                        <p class="text-slate-400 text-[9px] mt-2">Bukti/Surat belum diunggah untuk izin ini.</p>
+                    </div>
+                `;
                 console.warn(`File bukti tidak ditemukan. NIS: ${nis}, CreatedAt: ${createdAt}`);
             } else {
                 // File ada - determine format dan tampilkan
@@ -4703,7 +4726,7 @@ function saveJadwalToStorage() {
                             <span><i class="fa-regular fa-calendar"></i> Tanggal: ${item.tanggal}</span>
                             ${item.waktu && item.waktu !== '-' ? '<span><i class="fa-regular fa-clock"></i> Jam: ' + item.waktu + '</span>' : ''}
                         </div>
-                        ${item.file ? `<button type="button" onclick="openBuktiIzin('${item.nis}','${item.created_at}')" class="text-[10px] text-indigo-600 font-bold underline flex items-center gap-1"><i class="fa-regular fa-image"></i> Lihat Bukti/Surat</button>` : ''}
+                        <button type="button" onclick="openBuktiIzin('${item.nis}','${item.created_at}')" class="text-[10px] text-indigo-600 font-bold underline flex items-center gap-1"><i class="fa-regular fa-image"></i> Lihat Bukti/Surat</button>
                         <div class="flex gap-2 pt-1">
                             <button onclick="approveOrRejectWaliIzin(${index}, 'Disetujui')" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 rounded-xl transition text-[11px]">Setujui</button>
                             <button onclick="approveOrRejectWaliIzin(${index}, 'Ditolak')" class="flex-1 bg-rose-50 hover:bg-rose-100 text-rose-600 font-bold py-2.5 rounded-xl transition text-[11px] border border-rose-100">Tolak</button>
@@ -4788,7 +4811,7 @@ function saveJadwalToStorage() {
                             <p class="text-[9px] text-slate-500 mt-0.5">Kategori: <span class="font-bold text-indigo-700">${item.jenis}</span></p>
                             <p class="text-[9px] text-slate-400 mt-0.5">Alasan: "${item.keterangan || '-'}"</p>
                             <p class="text-[8px] text-slate-400 font-semibold mt-1"><i class="fa-regular fa-calendar"></i> ${item.tanggal}</p>
-                            ${item.file ? `<button type="button" onclick="openBuktiIzin('${item.nis}','${item.created_at}')" class="text-[9px] text-indigo-600 font-bold underline mt-1 flex items-center gap-1"><i class="fa-regular fa-image"></i> Lihat Bukti/Surat</button>` : ''}
+                            <button type="button" onclick="openBuktiIzin('${item.nis}','${item.created_at}')" class="text-[9px] text-indigo-600 font-bold underline mt-1 flex items-center gap-1"><i class="fa-regular fa-image"></i> Lihat Bukti/Surat</button>
                         </div>
                         <span class="px-2 py-0.5 rounded text-[8px] font-bold border shrink-0 ${badgeClass}">${item.status}</span>
                     </div>

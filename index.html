@@ -1389,6 +1389,98 @@
                 </button>
             </div>
 
+            <!-- ============================================================ -->
+            <!-- PAMPLATE POP UP PRESENSI MASUK (muncul setelah tersimpan)     -->
+            <!-- ============================================================ -->
+            <div class="bg-white p-4 rounded-3xl border border-slate-100 shadow-sm space-y-3">
+                <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+                    <i class="fa-solid fa-image text-indigo-600"></i> Pamplate Pop Up Presensi Masuk
+                </h4>
+                <p class="text-[11px] text-slate-500">Gambar/pesan ini akan muncul sebagai pop up kepada siswa tepat setelah presensi masuk berhasil disimpan.</p>
+
+                <div class="space-y-1">
+                    <label class="block text-[10px] font-bold text-slate-400 uppercase ml-1">Unggah Gambar (Maks 2MB)</label>
+                    <div class="border-2 border-dashed border-slate-200 rounded-2xl p-4 text-center cursor-pointer relative hover:bg-slate-50 transition-all">
+                        <input type="file" id="admin-pamplate-masuk-gambar-file" accept=".jpg, .jpeg, .png" onchange="handleUploadPamplateGambar(this, 'masuk')" class="absolute inset-0 opacity-0 cursor-pointer">
+                        <i class="fa-solid fa-cloud-arrow-up text-2xl text-slate-400 mb-1"></i>
+                        <p class="text-xs text-slate-500 font-semibold" id="admin-pamplate-masuk-gambar-file-label">Pilih gambar JPG atau PNG</p>
+                    </div>
+                </div>
+
+                <div id="admin-pamplate-masuk-gambar-preview-container" class="hidden">
+                    <img id="admin-pamplate-masuk-gambar-preview" src="" alt="Preview Pamplate Masuk" class="w-full h-32 object-cover rounded-2xl border border-slate-200">
+                    <button type="button" onclick="hapusPamplateGambar('masuk')" class="mt-2 w-full bg-rose-50 hover:bg-rose-100 text-rose-600 font-bold py-2 rounded-xl text-[11px] transition-all">
+                        <i class="fa-solid fa-trash"></i> Hapus Gambar
+                    </button>
+                </div>
+
+                <div>
+                    <label class="block text-[10px] font-bold text-slate-400 uppercase ml-1 mb-1">Judul Pop Up</label>
+                    <input type="text" id="admin-pamplate-masuk-judul" placeholder="Contoh: Presensi Masuk Berhasil" class="w-full p-3 border border-slate-200 rounded-2xl text-sm outline-none focus:ring-2 focus:ring-indigo-500 font-semibold">
+                </div>
+                <div>
+                    <label class="block text-[10px] font-bold text-slate-400 uppercase ml-1 mb-1">Pesan Pop Up</label>
+                    <textarea id="admin-pamplate-masuk-pesan" rows="2" placeholder="Contoh: Terima kasih, kehadiran Anda telah tercatat." class="w-full p-3 border border-slate-200 rounded-2xl text-sm outline-none focus:ring-2 focus:ring-indigo-500"></textarea>
+                </div>
+
+                <div class="flex justify-between items-center bg-slate-50 rounded-2xl px-3.5 py-3 border border-slate-100">
+                    <span class="text-xs font-bold text-slate-600">Status Pop Up untuk Siswa</span>
+                    <button type="button" id="admin-pamplate-masuk-toggle" onclick="toggleAdminPamplateAktif('masuk')" class="text-[10px] font-extrabold px-3 py-1.5 rounded-full transition-all bg-slate-200 text-slate-500">
+                        Nonaktif
+                    </button>
+                </div>
+
+                <button onclick="savePamplateGambarSetting('masuk')" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-2xl transition-all text-xs flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-floppy-disk"></i> Simpan Pamplate Presensi Masuk
+                </button>
+            </div>
+
+            <!-- ============================================================ -->
+            <!-- PAMPLATE POP UP PRESENSI PULANG (muncul setelah tersimpan)    -->
+            <!-- ============================================================ -->
+            <div class="bg-white p-4 rounded-3xl border border-slate-100 shadow-sm space-y-3">
+                <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+                    <i class="fa-solid fa-image text-indigo-600"></i> Pamplate Pop Up Presensi Pulang
+                </h4>
+                <p class="text-[11px] text-slate-500">Gambar/pesan ini akan muncul sebagai pop up kepada siswa tepat setelah presensi pulang berhasil disimpan.</p>
+
+                <div class="space-y-1">
+                    <label class="block text-[10px] font-bold text-slate-400 uppercase ml-1">Unggah Gambar (Maks 2MB)</label>
+                    <div class="border-2 border-dashed border-slate-200 rounded-2xl p-4 text-center cursor-pointer relative hover:bg-slate-50 transition-all">
+                        <input type="file" id="admin-pamplate-pulang-gambar-file" accept=".jpg, .jpeg, .png" onchange="handleUploadPamplateGambar(this, 'pulang')" class="absolute inset-0 opacity-0 cursor-pointer">
+                        <i class="fa-solid fa-cloud-arrow-up text-2xl text-slate-400 mb-1"></i>
+                        <p class="text-xs text-slate-500 font-semibold" id="admin-pamplate-pulang-gambar-file-label">Pilih gambar JPG atau PNG</p>
+                    </div>
+                </div>
+
+                <div id="admin-pamplate-pulang-gambar-preview-container" class="hidden">
+                    <img id="admin-pamplate-pulang-gambar-preview" src="" alt="Preview Pamplate Pulang" class="w-full h-32 object-cover rounded-2xl border border-slate-200">
+                    <button type="button" onclick="hapusPamplateGambar('pulang')" class="mt-2 w-full bg-rose-50 hover:bg-rose-100 text-rose-600 font-bold py-2 rounded-xl text-[11px] transition-all">
+                        <i class="fa-solid fa-trash"></i> Hapus Gambar
+                    </button>
+                </div>
+
+                <div>
+                    <label class="block text-[10px] font-bold text-slate-400 uppercase ml-1 mb-1">Judul Pop Up</label>
+                    <input type="text" id="admin-pamplate-pulang-judul" placeholder="Contoh: Presensi Pulang Berhasil" class="w-full p-3 border border-slate-200 rounded-2xl text-sm outline-none focus:ring-2 focus:ring-indigo-500 font-semibold">
+                </div>
+                <div>
+                    <label class="block text-[10px] font-bold text-slate-400 uppercase ml-1 mb-1">Pesan Pop Up</label>
+                    <textarea id="admin-pamplate-pulang-pesan" rows="2" placeholder="Contoh: Terima kasih, sampai jumpa besok!" class="w-full p-3 border border-slate-200 rounded-2xl text-sm outline-none focus:ring-2 focus:ring-indigo-500"></textarea>
+                </div>
+
+                <div class="flex justify-between items-center bg-slate-50 rounded-2xl px-3.5 py-3 border border-slate-100">
+                    <span class="text-xs font-bold text-slate-600">Status Pop Up untuk Siswa</span>
+                    <button type="button" id="admin-pamplate-pulang-toggle" onclick="toggleAdminPamplateAktif('pulang')" class="text-[10px] font-extrabold px-3 py-1.5 rounded-full transition-all bg-slate-200 text-slate-500">
+                        Nonaktif
+                    </button>
+                </div>
+
+                <button onclick="savePamplateGambarSetting('pulang')" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-2xl transition-all text-xs flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-floppy-disk"></i> Simpan Pamplate Presensi Pulang
+                </button>
+            </div>
+
             <div class="bg-white p-4 rounded-3xl border border-slate-100 shadow-sm space-y-3">
                 <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
                     <i class="fa-solid fa-key text-indigo-600"></i> Ubah Password Administrator
@@ -1698,6 +1790,27 @@
         </div>
     </div>
 
+    <!-- ============================================================ -->
+    <!-- MODAL: Pop Up Pamplate Presensi Masuk/Pulang (Siswa)          -->
+    <!-- Muncul otomatis setelah presensi masuk/pulang berhasil        -->
+    <!-- tersimpan. Gambar, judul, pesan, dan status aktif diatur      -->
+    <!-- sepenuhnya oleh Administrator lewat menu Pengaturan.          -->
+    <!-- ============================================================ -->
+    <div id="modal-pamplate-presensi" class="hidden fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4 animate-fadeIn" onclick="if(event.target===this) closePamplatePresensiPopup()">
+        <div class="bg-white rounded-3xl overflow-hidden w-full max-w-sm shadow-2xl transition transform scale-100 max-h-[85vh] flex flex-col">
+            <div class="relative shrink-0">
+                <img id="pamplate-presensi-gambar" src="" alt="Pamplate Presensi" class="hidden w-full max-h-[60vh] object-contain bg-slate-50">
+                <button type="button" onclick="closePamplatePresensiPopup()" class="absolute top-2 right-2 w-8 h-8 rounded-full bg-black/50 hover:bg-black/70 text-white flex items-center justify-center transition-all">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="p-5 space-y-1 text-center overflow-y-auto">
+                <h3 id="pamplate-presensi-judul" class="font-extrabold text-slate-800 text-sm"></h3>
+                <p id="pamplate-presensi-pesan" class="text-xs text-slate-500 whitespace-pre-line"></p>
+            </div>
+        </div>
+    </div>
+
     <!-- MODAL: Detail Kehadiran per Kelas (Admin Dashboard) -->
     <div id="modal-admin-kelas-detail" class="hidden fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4" onclick="if(event.target===this) closeAdminKelasDetailModal()">
         <div class="bg-white rounded-3xl p-5 w-full max-w-sm shadow-2xl transition transform scale-100 max-h-[85vh] flex flex-col">
@@ -1782,6 +1895,54 @@
         function isHariLibur() {
             const dow = new Date().getDay();
             return dow === 0 || dow === 6; // 0 = Minggu, 6 = Sabtu
+        }
+
+        // ================================================================
+        // PENGATURAN GAMBAR POP UP PAMPLATE PRESENSI MASUK & PULANG
+        // (dikontrol Admin, tampil ke siswa TEPAT SETELAH presensi masuk
+        // atau pulang berhasil tersimpan — berbeda dari popup libur di
+        // atas yang menggantikan tombol presensi pada hari Sabtu/Minggu).
+        // ================================================================
+        let pamplatePengaturan = {
+            masuk: {
+                gambar: '',
+                judul: 'Presensi Masuk Berhasil',
+                pesan: 'Terima kasih, kehadiran Anda telah tercatat.',
+                aktif: false
+            },
+            pulang: {
+                gambar: '',
+                judul: 'Presensi Pulang Berhasil',
+                pesan: 'Terima kasih, sampai jumpa besok!',
+                aktif: false
+            }
+        };
+
+        // Menampilkan popup pamplate presensi (masuk/pulang) ke siswa.
+        // Hanya tampil jika Admin sudah mengaktifkan DAN mengunggah gambar
+        // untuk jenis presensi terkait; jika tidak, popup tidak dipanggil
+        // sama sekali sehingga alur presensi yang sudah berjalan tidak
+        // terganggu.
+        function showPamplatePresensiPopup(type) {
+            const setting = pamplatePengaturan[type];
+            if (!setting || !setting.aktif || !setting.gambar) return;
+            const modal = document.getElementById('modal-pamplate-presensi');
+            if (!modal) return;
+            const imgEl = document.getElementById('pamplate-presensi-gambar');
+            const judulEl = document.getElementById('pamplate-presensi-judul');
+            const pesanEl = document.getElementById('pamplate-presensi-pesan');
+            if (imgEl) {
+                imgEl.src = setting.gambar;
+                imgEl.classList.remove('hidden');
+            }
+            if (judulEl) judulEl.innerText = setting.judul || (type === 'masuk' ? 'Presensi Masuk Berhasil' : 'Presensi Pulang Berhasil');
+            if (pesanEl) pesanEl.innerText = setting.pesan || '';
+            modal.classList.remove('hidden');
+        }
+
+        function closePamplatePresensiPopup() {
+            const modal = document.getElementById('modal-pamplate-presensi');
+            if (modal) modal.classList.add('hidden');
         }
 
         // ================================================================
@@ -2147,6 +2308,29 @@ function saveJadwalToStorage() {
                     };
                 } catch (e) {
                     console.log("Gagal load pengaturan libur, gunakan default.");
+                }
+            }
+
+            const storedPamplatePengaturan = localStorage.getItem('sigesit_pamplate_pengaturan');
+            if (storedPamplatePengaturan) {
+                try {
+                    const parsedPamplate = JSON.parse(storedPamplatePengaturan);
+                    pamplatePengaturan = {
+                        masuk: {
+                            gambar: (parsedPamplate.masuk && parsedPamplate.masuk.gambar) || '',
+                            judul: (parsedPamplate.masuk && parsedPamplate.masuk.judul) || 'Presensi Masuk Berhasil',
+                            pesan: (parsedPamplate.masuk && parsedPamplate.masuk.pesan) || 'Terima kasih, kehadiran Anda telah tercatat.',
+                            aktif: !!(parsedPamplate.masuk && parsedPamplate.masuk.aktif)
+                        },
+                        pulang: {
+                            gambar: (parsedPamplate.pulang && parsedPamplate.pulang.gambar) || '',
+                            judul: (parsedPamplate.pulang && parsedPamplate.pulang.judul) || 'Presensi Pulang Berhasil',
+                            pesan: (parsedPamplate.pulang && parsedPamplate.pulang.pesan) || 'Terima kasih, sampai jumpa besok!',
+                            aktif: !!(parsedPamplate.pulang && parsedPamplate.pulang.aktif)
+                        }
+                    };
+                } catch (e) {
+                    console.log("Gagal load pengaturan pamplate presensi, gunakan default.");
                 }
             }
 
@@ -2549,6 +2733,7 @@ function saveJadwalToStorage() {
                 if (radiusInput) radiusInput.value = ABSENCE_RADIUS_METERS;
                 renderAdminLinkSettingUI();
                 renderAdminLiburSettingUI();
+                renderAdminPamplateSettingUI();
                 updateIntegrationStatus();
                 renderJadwalTable();
                 switchJadwalJenjang(currentJadwalJenjang);
@@ -2707,6 +2892,124 @@ function saveJadwalToStorage() {
             }
 
             updateWeekendPresensiUI();
+        }
+
+        // ================================================================
+        // PANEL ADMIN: PENGATURAN GAMBAR POP UP PAMPLATE PRESENSI
+        // MASUK & PULANG (muncul ke siswa setelah presensi tersimpan)
+        // ================================================================
+        function renderAdminPamplateSettingUI() {
+            ['masuk', 'pulang'].forEach(type => renderAdminPamplateSettingUIByType(type));
+        }
+
+        function renderAdminPamplateSettingUIByType(type) {
+            const setting = pamplatePengaturan[type];
+            if (!setting) return;
+            const judulInput = document.getElementById(`admin-pamplate-${type}-judul`);
+            const pesanInput = document.getElementById(`admin-pamplate-${type}-pesan`);
+            if (judulInput) judulInput.value = setting.judul || '';
+            if (pesanInput) pesanInput.value = setting.pesan || '';
+
+            const previewContainer = document.getElementById(`admin-pamplate-${type}-gambar-preview-container`);
+            const previewImg = document.getElementById(`admin-pamplate-${type}-gambar-preview`);
+            const fileLabel = document.getElementById(`admin-pamplate-${type}-gambar-file-label`);
+            if (setting.gambar) {
+                if (previewImg) previewImg.src = setting.gambar;
+                if (previewContainer) previewContainer.classList.remove('hidden');
+                if (fileLabel) fileLabel.innerText = "Gambar tersimpan (unggah ulang untuk mengganti)";
+            } else {
+                if (previewContainer) previewContainer.classList.add('hidden');
+                if (fileLabel) fileLabel.innerText = "Pilih gambar JPG atau PNG";
+            }
+            updateAdminPamplateToggleUI(type);
+        }
+
+        function updateAdminPamplateToggleUI(type) {
+            const toggleBtn = document.getElementById(`admin-pamplate-${type}-toggle`);
+            if (!toggleBtn) return;
+            const setting = pamplatePengaturan[type] || { aktif: false };
+            if (setting.aktif) {
+                toggleBtn.innerText = "Aktif";
+                toggleBtn.className = "text-[10px] font-extrabold px-3 py-1.5 rounded-full transition-all bg-emerald-100 text-emerald-700";
+            } else {
+                toggleBtn.innerText = "Nonaktif";
+                toggleBtn.className = "text-[10px] font-extrabold px-3 py-1.5 rounded-full transition-all bg-slate-200 text-slate-500";
+            }
+        }
+
+        function toggleAdminPamplateAktif(type) {
+            if (!pamplatePengaturan[type]) return;
+            pamplatePengaturan[type].aktif = !pamplatePengaturan[type].aktif;
+            updateAdminPamplateToggleUI(type);
+        }
+
+        function handleUploadPamplateGambar(input, type) {
+            const file = input.files[0];
+            if (!file) return;
+            if (!pamplatePengaturan[type]) return;
+            if (file.size > 2 * 1024 * 1024) {
+                showToast("Ukuran gambar melebihi batas 2MB!");
+                input.value = "";
+                return;
+            }
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                pamplatePengaturan[type].gambar = e.target.result;
+                const previewContainer = document.getElementById(`admin-pamplate-${type}-gambar-preview-container`);
+                const previewImg = document.getElementById(`admin-pamplate-${type}-gambar-preview`);
+                const fileLabel = document.getElementById(`admin-pamplate-${type}-gambar-file-label`);
+                if (previewImg) previewImg.src = pamplatePengaturan[type].gambar;
+                if (previewContainer) previewContainer.classList.remove('hidden');
+                if (fileLabel) fileLabel.innerText = file.name;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function hapusPamplateGambar(type) {
+            if (!pamplatePengaturan[type]) return;
+            pamplatePengaturan[type].gambar = '';
+            const previewContainer = document.getElementById(`admin-pamplate-${type}-gambar-preview-container`);
+            const fileInput = document.getElementById(`admin-pamplate-${type}-gambar-file`);
+            const fileLabel = document.getElementById(`admin-pamplate-${type}-gambar-file-label`);
+            if (previewContainer) previewContainer.classList.add('hidden');
+            if (fileInput) fileInput.value = "";
+            if (fileLabel) fileLabel.innerText = "Pilih gambar JPG atau PNG";
+            showToast(`Gambar pamplate presensi ${type === 'masuk' ? 'masuk' : 'pulang'} dihapus. Klik Simpan untuk menerapkan.`);
+        }
+
+        // Menyimpan pengaturan gambar/judul/pesan/status aktif pamplate pop up
+        // presensi masuk atau pulang secara lokal dan (jika terhubung) ke
+        // server, tanpa mengubah alur presensi yang sudah berjalan.
+        function savePamplateGambarSetting(type) {
+            const setting = pamplatePengaturan[type];
+            if (!setting) return;
+            const judulInput = document.getElementById(`admin-pamplate-${type}-judul`);
+            const pesanInput = document.getElementById(`admin-pamplate-${type}-pesan`);
+            const judulVal = judulInput ? judulInput.value.trim() : '';
+            const pesanVal = pesanInput ? pesanInput.value.trim() : '';
+
+            const defaultJudul = type === 'masuk' ? 'Presensi Masuk Berhasil' : 'Presensi Pulang Berhasil';
+            const defaultPesan = type === 'masuk' ? 'Terima kasih, kehadiran Anda telah tercatat.' : 'Terima kasih, sampai jumpa besok!';
+
+            setting.judul = judulVal || defaultJudul;
+            setting.pesan = pesanVal || defaultPesan;
+
+            localStorage.setItem('sigesit_pamplate_pengaturan', JSON.stringify(pamplatePengaturan));
+            showToast(`Pengaturan pamplate presensi ${type === 'masuk' ? 'masuk' : 'pulang'} berhasil disimpan.`);
+
+            if (!isMockUrl() && scriptUrl) {
+                fetch(`${scriptUrl}`, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        action: "updatePamplatePengaturan",
+                        tipe: type,
+                        gambar: setting.gambar,
+                        judul: setting.judul,
+                        pesan: setting.pesan,
+                        aktif: setting.aktif
+                    })
+                }).catch(() => console.log(`Gagal sync pengaturan pamplate ${type} ke server.`));
+            }
         }
 
         function populateAdminKelasFilter() {
@@ -3973,6 +4276,9 @@ function saveJadwalToStorage() {
             localStorage.setItem('local_offline_db', JSON.stringify(localDb));
             updateHomePresensiUI();
             renderLivePresensiKelas();
+            // Tampilkan popup pamplate (gambar pengumuman yang diatur Admin)
+            // tepat setelah presensi masuk/pulang BARU berhasil tersimpan.
+            showPamplatePresensiPopup(record.tipe);
         }
 
         function kirimNotifikasiWhatsApp(tipe, detail) {
@@ -5688,6 +5994,20 @@ function saveJadwalToStorage() {
                                 pesan: data.libur_pengaturan.pesan || 'Presensi tidak tersedia pada hari Sabtu & Minggu. Selamat beristirahat!'
                             };
                             localStorage.setItem('sigesit_libur_pengaturan', JSON.stringify(liburPengaturan));
+                        }
+                        if (data.pamplate_pengaturan) {
+                            ['masuk', 'pulang'].forEach(type => {
+                                const src = data.pamplate_pengaturan[type];
+                                if (src) {
+                                    pamplatePengaturan[type] = {
+                                        gambar: src.gambar || '',
+                                        judul: src.judul || (type === 'masuk' ? 'Presensi Masuk Berhasil' : 'Presensi Pulang Berhasil'),
+                                        pesan: src.pesan || (type === 'masuk' ? 'Terima kasih, kehadiran Anda telah tercatat.' : 'Terima kasih, sampai jumpa besok!'),
+                                        aktif: !!src.aktif
+                                    };
+                                }
+                            });
+                            localStorage.setItem('sigesit_pamplate_pengaturan', JSON.stringify(pamplatePengaturan));
                         }
                         if (data.jadwal_presensi) {
                             JADWAL_PRESENSI = data.jadwal_presensi;

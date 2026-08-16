@@ -1390,6 +1390,68 @@
             </div>
 
             <!-- ============================================================ -->
+            <!-- HARI LIBUR NASIONAL & KEAGAMAAN (tanggal spesifik)            -->
+            <!-- ============================================================ -->
+            <div class="bg-white p-4 rounded-3xl border border-slate-100 shadow-sm space-y-3">
+                <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+                    <i class="fa-solid fa-calendar-xmark text-indigo-600"></i> Hari Libur Nasional & Keagamaan
+                </h4>
+                <p class="text-[11px] text-slate-500">Tambahkan tanggal libur nasional/keagamaan (mis. Idul Fitri, Natal, HUT RI). Pada tanggal yang terdaftar, presensi masuk & pulang siswa otomatis ditutup dan pamplate di bawah ini akan ditampilkan sebagai gantinya.</p>
+
+                <div class="space-y-2">
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-400 uppercase ml-1 mb-1">Tanggal Libur</label>
+                        <input type="date" id="admin-libur-nasional-tanggal-input" class="w-full p-3 border border-slate-200 rounded-2xl text-sm outline-none focus:ring-2 focus:ring-indigo-500 font-semibold">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-400 uppercase ml-1 mb-1">Keterangan</label>
+                        <input type="text" id="admin-libur-nasional-keterangan-input" placeholder="Contoh: Hari Raya Idul Fitri" class="w-full p-3 border border-slate-200 rounded-2xl text-sm outline-none focus:ring-2 focus:ring-indigo-500">
+                    </div>
+                    <button type="button" onclick="tambahLiburNasionalTanggal()" class="w-full bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold py-2.5 rounded-2xl transition-all text-xs flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-plus"></i> Tambah Tanggal Libur
+                    </button>
+                </div>
+
+                <div>
+                    <label class="block text-[10px] font-bold text-slate-400 uppercase ml-1 mb-1">Daftar Tanggal Libur Terdaftar</label>
+                    <div id="admin-libur-nasional-tanggal-list" class="space-y-2 max-h-56 overflow-y-auto pr-1"></div>
+                </div>
+
+                <div class="border-t border-slate-100 pt-3 space-y-3">
+                    <p class="text-[11px] text-slate-500 font-semibold">Pamplate (gambar/pesan) untuk seluruh tanggal libur nasional di atas:</p>
+
+                    <div class="space-y-1">
+                        <label class="block text-[10px] font-bold text-slate-400 uppercase ml-1">Unggah Gambar (Maks 2MB)</label>
+                        <div class="border-2 border-dashed border-slate-200 rounded-2xl p-4 text-center cursor-pointer relative hover:bg-slate-50 transition-all">
+                            <input type="file" id="admin-libur-nasional-gambar-file" accept=".jpg, .jpeg, .png" onchange="handleUploadLiburNasionalGambar(this)" class="absolute inset-0 opacity-0 cursor-pointer">
+                            <i class="fa-solid fa-cloud-arrow-up text-2xl text-slate-400 mb-1"></i>
+                            <p class="text-xs text-slate-500 font-semibold" id="admin-libur-nasional-gambar-file-label">Pilih gambar JPG atau PNG</p>
+                        </div>
+                    </div>
+
+                    <div id="admin-libur-nasional-gambar-preview-container" class="hidden">
+                        <img id="admin-libur-nasional-gambar-preview" src="" alt="Preview Gambar Libur Nasional" class="w-full h-32 object-cover rounded-2xl border border-slate-200">
+                        <button type="button" onclick="hapusLiburNasionalGambar()" class="mt-2 w-full bg-rose-50 hover:bg-rose-100 text-rose-600 font-bold py-2 rounded-xl text-[11px] transition-all">
+                            <i class="fa-solid fa-trash"></i> Hapus Gambar
+                        </button>
+                    </div>
+
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-400 uppercase ml-1 mb-1">Judul Pop Up</label>
+                        <input type="text" id="admin-libur-nasional-judul" placeholder="Contoh: Hari Libur Nasional" class="w-full p-3 border border-slate-200 rounded-2xl text-sm outline-none focus:ring-2 focus:ring-indigo-500 font-semibold">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-400 uppercase ml-1 mb-1">Pesan Pop Up</label>
+                        <textarea id="admin-libur-nasional-pesan" rows="2" placeholder="Contoh: Presensi tidak tersedia karena hari ini hari libur nasional." class="w-full p-3 border border-slate-200 rounded-2xl text-sm outline-none focus:ring-2 focus:ring-indigo-500"></textarea>
+                    </div>
+                </div>
+
+                <button onclick="saveLiburNasionalSetting()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-2xl transition-all text-xs flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-floppy-disk"></i> Simpan Pengaturan Libur Nasional
+                </button>
+            </div>
+
+            <!-- ============================================================ -->
             <!-- PAMPLATE POP UP PRESENSI MASUK (muncul setelah tersimpan)     -->
             <!-- ============================================================ -->
             <div class="bg-white p-4 rounded-3xl border border-slate-100 shadow-sm space-y-3">
@@ -1892,9 +1954,35 @@
             pesan: 'Presensi tidak tersedia pada hari Sabtu & Minggu. Selamat beristirahat!'
         };
 
+        // ================================================================
+        // PENGATURAN HARI LIBUR NASIONAL & KEAGAMAAN (dikontrol Admin)
+        // Berbeda dari liburPengaturan di atas (khusus Sabtu & Minggu):
+        // ini adalah daftar TANGGAL SPESIFIK (mis. Idul Fitri, Natal, HUT
+        // RI, dll) yang diinput manual oleh Administrator. Pada tanggal
+        // yang terdaftar, presensi masuk & pulang ikut ditutup (memakai
+        // mekanisme isHariLibur() yang sudah ada) dan siswa akan melihat
+        // pamplate/pesan liburNasionalPengaturan sebagai gantinya.
+        // ================================================================
+        let liburNasionalPengaturan = {
+            gambar: '',
+            judul: 'Hari Libur Nasional',
+            pesan: 'Presensi tidak tersedia karena hari ini merupakan hari libur nasional/keagamaan.'
+        };
+        let liburNasionalTanggalList = []; // [{ tanggal: 'YYYY-MM-DD', keterangan: 'Idul Fitri' }, ...]
+
+        // Mengecek apakah sebuah tanggal (format YYYY-MM-DD) terdaftar
+        // sebagai hari libur nasional/keagamaan oleh Admin.
+        function isTanggalLiburNasional(tanggalStr) {
+            return (liburNasionalTanggalList || []).some(item => item && item.tanggal === tanggalStr);
+        }
+
         function isHariLibur() {
             const dow = new Date().getDay();
-            return dow === 0 || dow === 6; // 0 = Minggu, 6 = Sabtu
+            const isWeekend = dow === 0 || dow === 6; // 0 = Minggu, 6 = Sabtu
+            // [TAMBAHAN] Hari libur nasional/keagamaan yang diatur Admin
+            // (tanggal spesifik di luar Sabtu/Minggu) juga menutup presensi,
+            // tanpa mengubah aturan Sabtu/Minggu yang sudah berjalan di atas.
+            return isWeekend || isTanggalLiburNasional(getTanggalHariIniLokal(new Date()));
         }
 
         // ================================================================
@@ -2103,17 +2191,29 @@ function saveJadwalToStorage() {
                 const judulEl = document.getElementById('libur-weekend-judul');
                 const pesanEl = document.getElementById('libur-weekend-pesan');
 
+                // [TAMBAHAN] Jika hari ini terdaftar sebagai hari libur
+                // nasional/keagamaan oleh Admin, tampilkan pamplate libur
+                // nasional (liburNasionalPengaturan). Jika bukan, perilaku
+                // lama tetap berjalan apa adanya: tampilkan pamplate libur
+                // akhir pekan (liburPengaturan).
+                const liburNasionalAktifHariIni = isTanggalLiburNasional(getTanggalHariIniLokal(new Date()));
+                const sumberLiburPengaturan = liburNasionalAktifHariIni ? liburNasionalPengaturan : liburPengaturan;
+                const defaultJudulLibur = liburNasionalAktifHariIni ? 'Hari Libur Nasional' : 'Hari Libur Sekolah';
+                const defaultPesanLibur = liburNasionalAktifHariIni
+                    ? 'Presensi tidak tersedia karena hari ini merupakan hari libur nasional/keagamaan.'
+                    : 'Presensi tidak tersedia pada hari Sabtu & Minggu.';
+
                 if (imgEl) {
-                    if (liburPengaturan.gambar) {
-                        imgEl.src = liburPengaturan.gambar;
+                    if (sumberLiburPengaturan.gambar) {
+                        imgEl.src = sumberLiburPengaturan.gambar;
                         imgEl.classList.remove('hidden');
                     } else {
                         imgEl.classList.add('hidden');
                         imgEl.src = '';
                     }
                 }
-                if (judulEl) judulEl.innerText = liburPengaturan.judul || 'Hari Libur Sekolah';
-                if (pesanEl) pesanEl.innerText = liburPengaturan.pesan || 'Presensi tidak tersedia pada hari Sabtu & Minggu.';
+                if (judulEl) judulEl.innerText = sumberLiburPengaturan.judul || defaultJudulLibur;
+                if (pesanEl) pesanEl.innerText = sumberLiburPengaturan.pesan || defaultPesanLibur;
             } else {
                 btnContainer.classList.remove('hidden');
                 banner.classList.add('hidden');
@@ -2308,6 +2408,30 @@ function saveJadwalToStorage() {
                     };
                 } catch (e) {
                     console.log("Gagal load pengaturan libur, gunakan default.");
+                }
+            }
+
+            const storedLiburNasionalPengaturan = localStorage.getItem('sigesit_libur_nasional_pengaturan');
+            if (storedLiburNasionalPengaturan) {
+                try {
+                    const parsedLiburNasional = JSON.parse(storedLiburNasionalPengaturan);
+                    liburNasionalPengaturan = {
+                        gambar: parsedLiburNasional.gambar || '',
+                        judul: parsedLiburNasional.judul || 'Hari Libur Nasional',
+                        pesan: parsedLiburNasional.pesan || 'Presensi tidak tersedia karena hari ini merupakan hari libur nasional/keagamaan.'
+                    };
+                } catch (e) {
+                    console.log("Gagal load pengaturan libur nasional, gunakan default.");
+                }
+            }
+
+            const storedLiburNasionalTanggalList = localStorage.getItem('sigesit_libur_nasional_tanggal_list');
+            if (storedLiburNasionalTanggalList) {
+                try {
+                    const parsedTanggalList = JSON.parse(storedLiburNasionalTanggalList);
+                    liburNasionalTanggalList = Array.isArray(parsedTanggalList) ? parsedTanggalList : [];
+                } catch (e) {
+                    console.log("Gagal load daftar tanggal libur nasional, gunakan default.");
                 }
             }
 
@@ -2733,6 +2857,7 @@ function saveJadwalToStorage() {
                 if (radiusInput) radiusInput.value = ABSENCE_RADIUS_METERS;
                 renderAdminLinkSettingUI();
                 renderAdminLiburSettingUI();
+                renderAdminLiburNasionalUI();
                 renderAdminPamplateSettingUI();
                 updateIntegrationStatus();
                 renderJadwalTable();
@@ -2889,6 +3014,157 @@ function saveJadwalToStorage() {
                         pesan: liburPengaturan.pesan
                     })
                 }).catch(() => console.log("Gagal sync pengaturan libur ke server."));
+            }
+
+            updateWeekendPresensiUI();
+        }
+
+        // ================================================================
+        // PANEL ADMIN: PENGATURAN HARI LIBUR NASIONAL & KEAGAMAAN
+        // Admin menambah/menghapus tanggal libur nasional/keagamaan
+        // (mis. Idul Fitri, Natal, HUT RI) beserta satu pamplate gambar/
+        // judul/pesan yang dipakai bersama untuk seluruh tanggal tersebut.
+        // Pada tanggal terdaftar, presensi masuk & pulang ikut ditutup
+        // lewat mekanisme isHariLibur() yang sudah ada (lihat di atas).
+        // ================================================================
+        function formatTanggalLiburNasionalIndo(tanggalStr) {
+            const parts = (tanggalStr || '').split('-').map(Number);
+            if (parts.length !== 3 || parts.some(isNaN)) return tanggalStr || '-';
+            const dateObj = new Date(parts[0], parts[1] - 1, parts[2]);
+            if (isNaN(dateObj.getTime())) return tanggalStr;
+            return dateObj.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+        }
+
+        function renderAdminLiburNasionalUI() {
+            renderAdminLiburNasionalTanggalList();
+
+            const judulInput = document.getElementById('admin-libur-nasional-judul');
+            const pesanInput = document.getElementById('admin-libur-nasional-pesan');
+            if (judulInput) judulInput.value = liburNasionalPengaturan.judul || '';
+            if (pesanInput) pesanInput.value = liburNasionalPengaturan.pesan || '';
+
+            const previewContainer = document.getElementById('admin-libur-nasional-gambar-preview-container');
+            const previewImg = document.getElementById('admin-libur-nasional-gambar-preview');
+            const fileLabel = document.getElementById('admin-libur-nasional-gambar-file-label');
+            if (liburNasionalPengaturan.gambar) {
+                if (previewImg) previewImg.src = liburNasionalPengaturan.gambar;
+                if (previewContainer) previewContainer.classList.remove('hidden');
+                if (fileLabel) fileLabel.innerText = "Gambar tersimpan (unggah ulang untuk mengganti)";
+            } else {
+                if (previewContainer) previewContainer.classList.add('hidden');
+                if (fileLabel) fileLabel.innerText = "Pilih gambar JPG atau PNG";
+            }
+        }
+
+        function renderAdminLiburNasionalTanggalList() {
+            const listEl = document.getElementById('admin-libur-nasional-tanggal-list');
+            if (!listEl) return;
+            if (!liburNasionalTanggalList || liburNasionalTanggalList.length === 0) {
+                listEl.innerHTML = `<p class="text-center text-[11px] text-slate-400 py-3">Belum ada tanggal libur nasional yang ditambahkan.</p>`;
+                return;
+            }
+            const sorted = [...liburNasionalTanggalList].sort((a, b) => (a.tanggal || '').localeCompare(b.tanggal || ''));
+            listEl.innerHTML = sorted.map(item => `
+                <div class="flex items-center justify-between bg-slate-50 rounded-xl px-3 py-2.5 border border-slate-100">
+                    <div class="min-w-0">
+                        <p class="text-xs font-bold text-slate-700 truncate">${formatTanggalLiburNasionalIndo(item.tanggal)}</p>
+                        <p class="text-[10px] text-slate-400 truncate">${item.keterangan || '-'}</p>
+                    </div>
+                    <button type="button" onclick="hapusLiburNasionalTanggal('${item.tanggal}')" class="text-rose-500 hover:text-rose-700 text-sm px-2 shrink-0">
+                        <i class="fa-solid fa-trash"></i>
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        // Menambahkan satu tanggal libur nasional/keagamaan baru ke daftar
+        // (lokal dulu, disinkronkan ke server saat tombol Simpan ditekan).
+        function tambahLiburNasionalTanggal() {
+            const tanggalInput = document.getElementById('admin-libur-nasional-tanggal-input');
+            const keteranganInput = document.getElementById('admin-libur-nasional-keterangan-input');
+            const tanggalVal = tanggalInput ? tanggalInput.value : '';
+            const keteranganVal = keteranganInput ? keteranganInput.value.trim() : '';
+
+            if (!tanggalVal) {
+                showToast("Pilih tanggal libur terlebih dahulu.");
+                return;
+            }
+            if (isTanggalLiburNasional(tanggalVal)) {
+                showToast("Tanggal tersebut sudah ada di daftar libur nasional.");
+                return;
+            }
+
+            liburNasionalTanggalList.push({ tanggal: tanggalVal, keterangan: keteranganVal });
+            renderAdminLiburNasionalTanggalList();
+            if (tanggalInput) tanggalInput.value = '';
+            if (keteranganInput) keteranganInput.value = '';
+            showToast("Tanggal libur ditambahkan. Klik Simpan untuk menerapkan.");
+        }
+
+        function hapusLiburNasionalTanggal(tanggalVal) {
+            liburNasionalTanggalList = (liburNasionalTanggalList || []).filter(item => item.tanggal !== tanggalVal);
+            renderAdminLiburNasionalTanggalList();
+            showToast("Tanggal libur dihapus. Klik Simpan untuk menerapkan.");
+        }
+
+        function handleUploadLiburNasionalGambar(input) {
+            const file = input.files[0];
+            if (!file) return;
+            if (file.size > 2 * 1024 * 1024) {
+                showToast("Ukuran gambar melebihi batas 2MB!");
+                input.value = "";
+                return;
+            }
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                liburNasionalPengaturan.gambar = e.target.result;
+                const previewContainer = document.getElementById('admin-libur-nasional-gambar-preview-container');
+                const previewImg = document.getElementById('admin-libur-nasional-gambar-preview');
+                const fileLabel = document.getElementById('admin-libur-nasional-gambar-file-label');
+                if (previewImg) previewImg.src = liburNasionalPengaturan.gambar;
+                if (previewContainer) previewContainer.classList.remove('hidden');
+                if (fileLabel) fileLabel.innerText = file.name;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function hapusLiburNasionalGambar() {
+            liburNasionalPengaturan.gambar = '';
+            const previewContainer = document.getElementById('admin-libur-nasional-gambar-preview-container');
+            const fileInput = document.getElementById('admin-libur-nasional-gambar-file');
+            const fileLabel = document.getElementById('admin-libur-nasional-gambar-file-label');
+            if (previewContainer) previewContainer.classList.add('hidden');
+            if (fileInput) fileInput.value = "";
+            if (fileLabel) fileLabel.innerText = "Pilih gambar JPG atau PNG";
+            showToast("Gambar libur nasional dihapus. Klik Simpan untuk menerapkan.");
+        }
+
+        // Menyimpan daftar tanggal libur nasional beserta gambar/judul/pesan
+        // pamplate-nya secara lokal dan (jika terhubung) ke server, lalu
+        // memperbarui tampilan siswa (jika sedang login & hari ini termasuk
+        // salah satu tanggal libur nasional yang terdaftar).
+        function saveLiburNasionalSetting() {
+            const judulVal = document.getElementById('admin-libur-nasional-judul').value.trim();
+            const pesanVal = document.getElementById('admin-libur-nasional-pesan').value.trim();
+
+            liburNasionalPengaturan.judul = judulVal || 'Hari Libur Nasional';
+            liburNasionalPengaturan.pesan = pesanVal || 'Presensi tidak tersedia karena hari ini merupakan hari libur nasional/keagamaan.';
+
+            localStorage.setItem('sigesit_libur_nasional_pengaturan', JSON.stringify(liburNasionalPengaturan));
+            localStorage.setItem('sigesit_libur_nasional_tanggal_list', JSON.stringify(liburNasionalTanggalList));
+            showToast("Pengaturan libur nasional berhasil disimpan.");
+
+            if (!isMockUrl() && scriptUrl) {
+                fetch(`${scriptUrl}`, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        action: "updateLiburNasionalPengaturan",
+                        gambar: liburNasionalPengaturan.gambar,
+                        judul: liburNasionalPengaturan.judul,
+                        pesan: liburNasionalPengaturan.pesan,
+                        tanggal_list: liburNasionalTanggalList
+                    })
+                }).catch(() => console.log("Gagal sync pengaturan libur nasional ke server."));
             }
 
             updateWeekendPresensiUI();
@@ -4117,7 +4393,13 @@ function saveJadwalToStorage() {
 
         function triggerPresensi(type) {
             if (isHariLibur()) {
-                showToast("Presensi ditutup pada hari Sabtu & Minggu.");
+                // [TAMBAHAN] Pesan toast menyesuaikan alasan penutupan: hari
+                // libur nasional/keagamaan (diatur Admin) atau akhir pekan
+                // biasa seperti semula.
+                const pesanTutupLibur = isTanggalLiburNasional(getTanggalHariIniLokal(new Date()))
+                    ? "Presensi ditutup karena hari ini hari libur nasional/keagamaan."
+                    : "Presensi ditutup pada hari Sabtu & Minggu.";
+                showToast(pesanTutupLibur);
                 return;
             }
             if (!currentLatitude || !currentLongitude) {
@@ -5994,6 +6276,18 @@ function saveJadwalToStorage() {
                                 pesan: data.libur_pengaturan.pesan || 'Presensi tidak tersedia pada hari Sabtu & Minggu. Selamat beristirahat!'
                             };
                             localStorage.setItem('sigesit_libur_pengaturan', JSON.stringify(liburPengaturan));
+                        }
+                        if (data.libur_nasional_pengaturan) {
+                            liburNasionalPengaturan = {
+                                gambar: data.libur_nasional_pengaturan.gambar || '',
+                                judul: data.libur_nasional_pengaturan.judul || 'Hari Libur Nasional',
+                                pesan: data.libur_nasional_pengaturan.pesan || 'Presensi tidak tersedia karena hari ini merupakan hari libur nasional/keagamaan.'
+                            };
+                            localStorage.setItem('sigesit_libur_nasional_pengaturan', JSON.stringify(liburNasionalPengaturan));
+                        }
+                        if (data.libur_nasional_tanggal_list && Array.isArray(data.libur_nasional_tanggal_list)) {
+                            liburNasionalTanggalList = data.libur_nasional_tanggal_list;
+                            localStorage.setItem('sigesit_libur_nasional_tanggal_list', JSON.stringify(liburNasionalTanggalList));
                         }
                         if (data.pamplate_pengaturan) {
                             ['masuk', 'pulang'].forEach(type => {

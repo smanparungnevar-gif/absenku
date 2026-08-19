@@ -4334,9 +4334,8 @@ function saveJadwalToStorage() {
                 document.getElementById('nav-laporan').className = "flex flex-col items-center gap-1 text-emerald-600";
             } else if (target === 'nilai') {
                 if (isWali) {
-                    populateWaliNilaiJudulFilter();
                     document.getElementById('view-wali-nilai').classList.remove('hidden');
-                    renderWaliNilaiSiswa();
+                    renderWaliNilaiAkademis();
                 } else {
                     document.getElementById('view-nilai').classList.remove('hidden');
                     renderSiswaNilai();
@@ -5179,7 +5178,7 @@ function saveJadwalToStorage() {
   localStorage.setItem('local_offline_db', JSON.stringify(localDb));
   closeNilaiModal();
   showToast("Nilai akademik berhasil diperbarui!");
-  renderWaliNilaiSiswa();
+  renderWaliNilaiAkademis();
 
   if (!isMockUrl() && scriptUrl) {
     fetch(`${scriptUrl}`, {
@@ -6222,8 +6221,7 @@ function saveJadwalToStorage() {
                 renderPoinKarakter();
                 renderLivePresensiKelas();
                 renderSiswaNilai();
-                populateWaliNilaiJudulFilter();
-                renderWaliNilaiSiswa();
+                renderWaliNilaiAkademis();
                 renderProfilTautanLink();
                 if (currentSiswa && currentSiswa.role === 'walikelas') {
                     updateWaliRekapKehadiranCounters();
@@ -7012,6 +7010,8 @@ function initWaliNilaiView() {
  *    - Backend harus handle: action='add', action='delete', action='update'
  *    - Atau bisa handle sepenuhnya di frontend dan sync manual
  */
+
+
 </script>
 </body>
 </html>

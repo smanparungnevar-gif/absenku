@@ -117,8 +117,8 @@
 
                     <input type="hidden" id="current-role" value="siswa">
 
-                    <button onclick="handleLogin()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-4 rounded-2xl shadow-lg shadow-emerald-600/30 transition duration-300 flex items-center justify-center gap-2 text-sm mt-4 transform active:scale-95">
-                        Masuk Sistem <i class="fa-solid fa-arrow-right text-xs"></i>
+                    <button id="btn-login-masuk" onclick="handleLogin()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-4 rounded-2xl shadow-lg shadow-emerald-600/30 transition duration-300 flex items-center justify-center gap-2 text-sm mt-4 transform active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed">
+                        <span id="btn-login-masuk-label" class="flex items-center justify-center gap-2">Masuk Sistem <i class="fa-solid fa-arrow-right text-xs"></i></span>
                     </button>
                 </div>
             </div>
@@ -2807,6 +2807,10 @@ function saveJadwalToStorage() {
                 return;
             }
 
+            // Feedback instan begitu tombol diklik, agar tidak terasa "diam"
+            // selama menunggu respons server (proses verifikasi di bawah tidak diubah).
+            setLoginButtonLoading(true);
+
             if (isMockUrl()) {
                 if (role === 'siswa') {
                     const siswaData = localDb.siswa ? localDb.siswa.find(s => s.nis === idInput && s.nisn === passInput) : null;
@@ -2815,6 +2819,7 @@ function saveJadwalToStorage() {
                         localStorage.setItem('sigesit_active_user', JSON.stringify(currentSiswa));
                         doPostLoginActions();
                         showToast("Masuk Sesi Lokal Siswa!");
+                        setLoginButtonLoading(false);
                         return;
                     }
                 } else {
@@ -2824,10 +2829,12 @@ function saveJadwalToStorage() {
                         localStorage.setItem('sigesit_active_user', JSON.stringify(currentSiswa));
                         doPostLoginActions();
                         showToast("Masuk Sesi Lokal Wali!");
+                        setLoginButtonLoading(false);
                         return;
                     }
                 }
                 showToast("NIS/NIP atau Password salah untuk data demo!");
+                setLoginButtonLoading(false);
                 return;
             }
 
@@ -2851,8 +2858,28 @@ function saveJadwalToStorage() {
                 })
                 .catch(() => {
                     showToast("Gagal terhubung ke Google Apps Script.");
+                })
+                .finally(() => {
+                    setLoginButtonLoading(false);
                 });
         }
+
+        // Mengubah tampilan tombol "Masuk Sistem" menjadi status loading (spinner)
+        // secara instan saat diklik, murni untuk feedback visual — tidak mengubah
+        // proses verifikasi/validasi akun yang sudah berjalan di atas.
+        function setLoginButtonLoading(isLoading) {
+            const btn = document.getElementById('btn-login-masuk');
+            const label = document.getElementById('btn-login-masuk-label');
+            if (!btn || !label) return;
+            if (isLoading) {
+                btn.disabled = true;
+                label.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Memvalidasi...';
+            } else {
+                btn.disabled = false;
+                label.innerHTML = 'Masuk Sistem <i class="fa-solid fa-arrow-right text-xs"></i>';
+            }
+        }
+
 
         // ================================================================
         // ADMINISTRATOR: LOGIN, LOGOUT, NAVIGASI

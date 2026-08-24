@@ -373,6 +373,14 @@
                         </div>
                         <i class="fa-solid fa-door-open text-fuchsia-600 text-lg opacity-80"></i>
                     </div>
+                    <!-- Alpha -->
+                    <div onclick="openWaliRekapDetail('alpha')" class="bg-red-50/50 p-2.5 rounded-2xl border border-red-100 flex items-center justify-between cursor-pointer active:scale-95 transition-transform">
+                        <div>
+                            <span class="text-[10px] text-red-800 font-extrabold block uppercase tracking-wider">Alpha</span>
+                            <span id="rekap-count-alpha" class="text-sm font-black text-slate-800">0 siswa</span>
+                        </div>
+                        <i class="fa-solid fa-user-xmark text-red-600 text-lg opacity-80"></i>
+                    </div>
                 </div>
             </div>
 
@@ -2441,7 +2449,7 @@ function saveJadwalToStorage() {
         let currentSiswa = null;
         let currentAdmin = null;
         let adminRekapDetailData = { hadir: [], terlambat: [], alpha: [] };
-        let waliRekapDetailData = { hadir: [], sakit: [], izin: [], dispen: [], terlambat: [], pulangcepat: [] };
+        let waliRekapDetailData = { hadir: [], sakit: [], izin: [], dispen: [], terlambat: [], pulangcepat: [], alpha: [] };
         let scriptUrl = SCRIPT_URL;
         let currentLatitude = null;
         let currentLongitude = null;
@@ -4090,7 +4098,8 @@ function saveJadwalToStorage() {
                 dispen: { title: 'Izin Dispen', icon: 'fa-briefcase', empty: 'Tidak ada siswa izin dispen hari ini.' },
                 terlambat: { title: 'Izin Terlambat', icon: 'fa-clock-rotate-left', empty: 'Tidak ada siswa izin terlambat hari ini.' },
                 pulangcepat: { title: 'Izin Pulang Cepat', icon: 'fa-person-walking-arrow-right', empty: 'Tidak ada siswa izin pulang cepat hari ini.' },
-                bolos: { title: 'Siswa Bolos', icon: 'fa-door-open', empty: 'Tidak ada siswa bolos (presensi masuk tanpa presensi pulang) hari ini.' }
+                bolos: { title: 'Siswa Bolos', icon: 'fa-door-open', empty: 'Tidak ada siswa bolos (presensi masuk tanpa presensi pulang) hari ini.' },
+                alpha: { title: 'Siswa Alpha', icon: 'fa-user-xmark', empty: 'Tidak ada siswa alpha hari ini.' }
             };
             const c = config[type];
             if (!c) return;
@@ -5528,6 +5537,30 @@ function saveJadwalToStorage() {
             const listBolos = Object.values(bolosGroupedWali).filter(row => row.masuk && !row.pulang);
             const countBolos = listBolos.length;
 
+            // Hitung Alpha: siswa di kelas ini yang SAMA SEKALI TIDAK melakukan
+            // presensi (baik masuk maupun pulang) hari ini, DAN tidak punya
+            // pengajuan izin Sakit / Izin Tidak Masuk / Dispen untuk tanggal
+            // hari ini (apapun status persetujuannya, karena yang dinilai
+            // adalah ada/tidaknya pengajuan izin, bukan sudah disetujui atau
+            // belum). Jika salah satu syarat itu terpenuhi (ada presensi ATAU
+            // ada pengajuan izin), siswa TIDAK dianggap alpha.
+            const listAlpha = muridKelas.filter(m => {
+                const sudahPresensi = (localDb.presensi || []).some(p =>
+                    p.tanggal === todayStr && p.nis === m.nis && (p.tipe === 'masuk' || p.tipe === 'pulang')
+                );
+                if (sudahPresensi) return false;
+
+                const adaPengajuanIzin = (localDb.izin || []).some(i =>
+                    i.nis === m.nis &&
+                    (i.jenis === 'Sakit' || i.jenis === 'Izin' || i.jenis === 'Dispen') &&
+                    isTodayInRange(i.tanggal, todayStr)
+                );
+                if (adaPengajuanIzin) return false;
+
+                return true;
+            });
+            const countAlpha = listAlpha.length;
+
             waliRekapDetailData = {
                 hadir: listHadir.map(p => toDetail(p.nis, `Masuk ${p.jam || ''}`)),
                 sakit: listSakit.map(i => toDetail(i.nis, i.tanggal)),
@@ -5535,7 +5568,8 @@ function saveJadwalToStorage() {
                 dispen: listDispen.map(i => toDetail(i.nis, i.tanggal)),
                 terlambat: listTerlambat.map(i => toDetail(i.nis, i.tanggal)),
                 pulangcepat: listPulangCepat.map(i => toDetail(i.nis, i.tanggal)),
-                bolos: listBolos.map(row => toDetail(row.nis, `Masuk ${row.masuk.jam || ''} • Tidak presensi pulang`))
+                bolos: listBolos.map(row => toDetail(row.nis, `Masuk ${row.masuk.jam || ''} • Tidak presensi pulang`)),
+                alpha: listAlpha.map(m => toDetail(m.nis, 'Tidak presensi & tidak ada pengajuan izin'))
             };
 
             const elHadir = document.getElementById('rekap-count-hadir');
@@ -5545,6 +5579,7 @@ function saveJadwalToStorage() {
             const elTerlambat = document.getElementById('rekap-count-terlambat');
             const elPulangCepat = document.getElementById('rekap-count-pulangcepat');
             const elBolos = document.getElementById('rekap-count-bolos');
+            const elAlpha = document.getElementById('rekap-count-alpha');
             const elTodayStr = document.getElementById('rekap-today-str');
 
             if (elHadir) elHadir.innerText = `${countHadir} siswa`;
@@ -5554,6 +5589,7 @@ function saveJadwalToStorage() {
             if (elTerlambat) elTerlambat.innerText = `${countTerlambat} siswa`;
             if (elPulangCepat) elPulangCepat.innerText = `${countPulangCepat} siswa`;
             if (elBolos) elBolos.innerText = `${countBolos} siswa`;
+            if (elAlpha) elAlpha.innerText = `${countAlpha} siswa`;
 
             if (elTodayStr) {
                 const todayObj = new Date();

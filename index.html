@@ -152,7 +152,7 @@
 
                     <input type="hidden" id="current-role" value="siswa">
 
-                    <button id="btn-login-masuk" onclick="handleLogin()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-4 rounded-2xl shadow-lg shadow-emerald-600/30 transition duration-300 flex items-center justify-center gap-2 text-sm mt-4 transform active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed">
+                    <button id="btn-login-masuk" onclick="handleLoginInstant()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-4 rounded-2xl shadow-lg shadow-emerald-600/30 transition duration-300 flex items-center justify-center gap-2 text-sm mt-4 transform active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed">
                         <span id="btn-login-masuk-label" class="flex items-center justify-center gap-2">Masuk Sistem <i class="fa-solid fa-arrow-right text-xs"></i></span>
                     </button>
                 </div>
@@ -2998,6 +2998,116 @@ function saveJadwalToStorage() {
             input2.value = "";
         }
 
+        // ============================================================================
+        // [TAMBAHAN BARU - LOGIN INSTAN] TIDAK mengubah satu baris pun proses login
+        // yang sudah ada di bawah (handleLogin, fetch ke getSiswa/loginWali, dst).
+        // Fungsi baru ini hanya "membungkus" di depannya:
+        //   - Login PERTAMA KALI di suatu perangkat: tetap 100% memakai alur lama
+        //     (handleLogin() asli), karena data siswa memang belum pernah ada di
+        //     perangkat itu sehingga wajib divalidasi dulu ke Google Apps Script.
+        //   - Login BERIKUTNYA dengan NIS/NISN (atau NIP/password wali) yang SAMA
+        //     PERSIS di perangkat yang SAMA: langsung masuk seketika memakai data
+        //     hasil login sukses terakhir yang disimpan di perangkat ini, TANPA
+        //     menunggu koneksi ke Google Apps Script sama sekali. Validasi ke
+        //     server tetap dijalankan diam-diam di belakang layar (silent, tidak
+        //     memblokir tampilan) untuk menyegarkan data & memastikan akun masih
+        //     berlaku; kalau ternyata sudah tidak valid, cache akan dihapus
+        //     otomatis agar tidak dipakai lagi di percobaan berikutnya.
+        // ============================================================================
+        const SIGESIT_LOGIN_CACHE_KEY = 'sigesit_login_cache_v1';
+
+        function getLoginCacheMap() {
+            try {
+                return JSON.parse(localStorage.getItem(SIGESIT_LOGIN_CACHE_KEY)) || {};
+            } catch (e) {
+                return {};
+            }
+        }
+
+        function loginCacheKeyOf(role, idInput) {
+            return role + ':' + idInput.toLowerCase();
+        }
+
+        function saveLoginCache(role, idInput, passInput, user) {
+            try {
+                const cache = getLoginCacheMap();
+                cache[loginCacheKeyOf(role, idInput)] = { password: passInput, user: user, cachedAt: Date.now() };
+                localStorage.setItem(SIGESIT_LOGIN_CACHE_KEY, JSON.stringify(cache));
+            } catch (e) { /* localStorage penuh/gagal, abaikan - tidak fatal */ }
+        }
+
+        function getCachedLoginUser(role, idInput, passInput) {
+            const entry = getLoginCacheMap()[loginCacheKeyOf(role, idInput)];
+            return (entry && entry.password === passInput) ? entry.user : null;
+        }
+
+        function clearLoginCacheEntry(role, idInput) {
+            try {
+                const cache = getLoginCacheMap();
+                delete cache[loginCacheKeyOf(role, idInput)];
+                localStorage.setItem(SIGESIT_LOGIN_CACHE_KEY, JSON.stringify(cache));
+            } catch (e) { /* abaikan */ }
+        }
+
+        function handleLoginInstant() {
+            const role = document.getElementById('current-role').value;
+            const idInput = document.getElementById('login-identifier').value.trim();
+            const passInput = document.getElementById('login-password').value.trim();
+
+            if (!idInput || !passInput) {
+                showToast("Identitas dan Password wajib diisi!");
+                return;
+            }
+
+            // Mode demo lokal: biarkan sepenuhnya ditangani alur asli (tidak diubah).
+            if (isMockUrl()) {
+                handleLogin();
+                return;
+            }
+
+            const cachedUser = getCachedLoginUser(role, idInput, passInput);
+            if (!cachedUser) {
+                // Belum ada data tersimpan untuk akun ini di perangkat ini (login
+                // pertama kali) -> pakai proses ASLI persis seperti sebelumnya.
+                handleLogin();
+                return;
+            }
+
+            // --- LANGSUNG MASUK, tanpa jeda menunggu server ---
+            currentSiswa = { ...cachedUser, role: role };
+            localStorage.setItem('sigesit_active_user', JSON.stringify(currentSiswa));
+            doPostLoginActions();
+            showToast("Login berhasil (mode cepat)!");
+
+            // Validasi ulang ke server tetap berjalan diam-diam di belakang layar,
+            // supaya data siswa/wali (kelas, foto, dll.) tetap ter-update dan cache
+            // tetap segar. Ini TIDAK memblokir/menunda tampilan yang sudah masuk di atas.
+            const paramsSilent = (role === 'walikelas')
+                ? `action=loginWali&identifier=${encodeURIComponent(idInput)}&password=${encodeURIComponent(passInput)}`
+                : `action=getSiswa&nis=${encodeURIComponent(idInput)}&nisn=${encodeURIComponent(passInput)}`;
+            fetch(`${scriptUrl}?${paramsSilent}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data && data.success) {
+                        saveLoginCache(role, idInput, passInput, data.user);
+                        const sessionMasihSama = currentSiswa && (
+                            (data.user.nis && currentSiswa.nis === data.user.nis) ||
+                            (data.user.nip && currentSiswa.nip === data.user.nip) ||
+                            (data.user.username && currentSiswa.username === data.user.username)
+                        );
+                        if (sessionMasihSama) {
+                            currentSiswa = { ...data.user, role: role };
+                            localStorage.setItem('sigesit_active_user', JSON.stringify(currentSiswa));
+                        }
+                    } else {
+                        // Akun sudah tidak valid lagi di server (password diganti admin,
+                        // akun dihapus, dst) -> jangan dipakai instan lagi di lain waktu.
+                        clearLoginCacheEntry(role, idInput);
+                    }
+                })
+                .catch(() => { /* offline / gagal terhubung: cache tetap dipakai apa adanya */ });
+        }
+
         function handleLogin() {
             const role = document.getElementById('current-role').value;
             const idInput = document.getElementById('login-identifier').value.trim();
@@ -3051,6 +3161,7 @@ function saveJadwalToStorage() {
                         currentSiswa = data.user;
                         currentSiswa.role = role;
                         localStorage.setItem('sigesit_active_user', JSON.stringify(currentSiswa));
+                        saveLoginCache(role, idInput, passInput, data.user); // [TAMBAHAN] simpan cache agar login berikutnya instan
                         doPostLoginActions();
                         showToast("Login berhasil terverifikasi!");
                     } else {
